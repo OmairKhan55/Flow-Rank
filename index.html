@@ -88,7 +88,7 @@ function render(){
   document.getElementById("gainers").innerHTML='<div class="empty">Coming soon</div>'; return;
  }
  title.textContent="Top Crypto by 24h Volume";
- status.textContent=liveData.length ? "Live · CoinGecko" : "Loading…";
+ status.textContent=liveData.length ? "Live Data : "Loading…";
  let filtered=liveData.filter(x=>(x.name+" "+x.symbol).toLowerCase().includes(q));
  rows.innerHTML=filtered.map((x,i)=>`<tr><td>${i+1}</td><td><span class="asset">${x.name}</span><span class="symbol">${x.symbol.toUpperCase()}</span></td><td>Crypto</td><td>${money(x.total_volume)}</td><td class="${(x.price_change_percentage_24h||0)>=0?'up':'down'}">${(x.price_change_percentage_24h||0)>=0?'+':''}${(x.price_change_percentage_24h||0).toFixed(2)}%</td></tr>`).join("") || '<tr><td colspan="5"><div class="empty">No matching assets.</div></td></tr>';
  const g=[...liveData].sort((a,b)=>(b.price_change_percentage_24h||0)-(a.price_change_percentage_24h||0)).slice(0,5);
