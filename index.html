@@ -1,111 +1,1075 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FlowRank — Market Data</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#07111f;color:#e8eef8;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
-button,input{font:inherit}.app{display:flex;min-height:100vh}.side{width:230px;background:#0a1626;border-right:1px solid #17263a;padding:24px 14px;position:fixed;inset:0 auto 0 0}
-.logo{font-size:23px;font-weight:800;padding:4px 12px 28px}.logo span{color:#48d597}.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;color:#91a2b8;text-align:left;padding:12px;border-radius:10px;cursor:pointer}.nav button.active,.nav button:hover{background:#12243a;color:#fff}.main{margin-left:230px;width:calc(100% - 230px);padding:30px;max-width:1600px}
-.top{display:flex;justify-content:space-between;gap:18px;align-items:center}.title h1{margin:0;font-size:31px}.title p{margin:7px 0 0;color:#8192a8}.search{background:#0d1b2e;border:1px solid #20334b;border-radius:12px;padding:12px 15px;color:#fff;width:min(390px,100%);outline:none}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:25px 0}.card,.panel{background:#0c1a2d;border:1px solid #1a2b42;border-radius:15px}.card{padding:18px}.muted{color:#8293a8;font-size:13px}.big{font-size:24px;font-weight:750;margin-top:8px}.green{color:#48d597}.tabs{display:flex;gap:8px;margin:4px 0 15px}.tab{border:1px solid #21364f;background:#0c1a2d;color:#8fa0b5;border-radius:9px;padding:9px 16px;cursor:pointer}.tab.active{background:#17324c;color:#fff;border-color:#2c526f}.panel{overflow:hidden}.panelhead{padding:19px 20px;display:flex;justify-content:space-between;align-items:center}.panelhead h2{font-size:17px;margin:0}.status{font-size:12px;color:#8293a8}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:700px}th,td{padding:14px 20px;border-top:1px solid #17283d;text-align:left}th{color:#71839a;font-size:12px;font-weight:600}td{font-size:14px}.asset{font-weight:700}.symbol{color:#71839a;font-size:12px;margin-left:6px}.down{color:#ff7081}.up{color:#48d597}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px}.mini{padding:19px}.mini h3{margin:0 0 14px;font-size:16px}.row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #17283d}.row:last-child{border:0}.empty{padding:35px;text-align:center;color:#8091a7}.foot{margin-top:18px;color:#667991;font-size:11px;line-height:1.6}
-@media(max-width:900px){.side{width:72px}.logo{font-size:0}.logo:after{content:"F";font-size:23px;color:#48d597}.nav button{font-size:0;text-align:center}.nav button:before{content:"•";font-size:20px}.main{margin-left:72px;width:calc(100% - 72px);padding:20px}.cards{grid-template-columns:repeat(2,1fr)}.top{flex-direction:column;align-items:stretch}.search{width:100%}}
-@media(max-width:600px){.main{padding:14px}.cards{grid-template-columns:1fr 1fr;gap:8px}.card{padding:13px}.big{font-size:18px}.grid2{grid-template-columns:1fr}.title h1{font-size:25px}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlowRank — Live Market Data</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #07111f;
+      color: #e8eef8;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .side {
+      width: 230px;
+      background: #0a1626;
+      border-right: 1px solid #17263a;
+      padding: 24px 14px;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 800;
+      padding: 4px 12px 28px;
+    }
+
+    .logo span {
+      color: #48d597;
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav button {
+      border: 0;
+      background: transparent;
+      color: #91a2b8;
+      text-align: left;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      background: #12243a;
+      color: white;
+    }
+
+    /* MAIN */
+    .main {
+      margin-left: 230px;
+      width: calc(100% - 230px);
+      padding: 30px;
+      max-width: 1600px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 31px;
+    }
+
+    .title p {
+      margin: 7px 0 0;
+      color: #8192a8;
+    }
+
+    .search {
+      background: #0d1b2e;
+      border: 1px solid #20334b;
+      border-radius: 12px;
+      padding: 12px 15px;
+      color: white;
+      width: min(390px, 100%);
+      outline: none;
+    }
+
+    .search:focus {
+      border-color: #48d597;
+    }
+
+    /* CARDS */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin: 25px 0;
+    }
+
+    .card,
+    .panel {
+      background: #0c1a2d;
+      border: 1px solid #1a2b42;
+      border-radius: 15px;
+    }
+
+    .card {
+      padding: 18px;
+    }
+
+    .muted {
+      color: #8293a8;
+      font-size: 13px;
+    }
+
+    .big {
+      font-size: 24px;
+      font-weight: 750;
+      margin-top: 8px;
+    }
+
+    .green,
+    .up {
+      color: #48d597;
+    }
+
+    .down {
+      color: #ff7081;
+    }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 4px 0 15px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      border: 1px solid #21364f;
+      background: #0c1a2d;
+      color: #8fa0b5;
+      border-radius: 9px;
+      padding: 9px 16px;
+      cursor: pointer;
+    }
+
+    .tab:hover,
+    .tab.active {
+      background: #17324c;
+      color: white;
+      border-color: #2c526f;
+    }
+
+    /* TABLE */
+    .panel {
+      overflow: hidden;
+    }
+
+    .panelhead {
+      padding: 19px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .panelhead h2 {
+      font-size: 17px;
+      margin: 0;
+    }
+
+    .status {
+      font-size: 12px;
+      color: #48d597;
+    }
+
+    .status.error {
+      color: #ff7081;
+    }
+
+    .tablewrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      padding: 14px 20px;
+      border-top: 1px solid #17283d;
+      text-align: left;
+    }
+
+    th {
+      color: #71839a;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    td {
+      font-size: 14px;
+    }
+
+    .asset {
+      font-weight: 700;
+    }
+
+    .symbol {
+      color: #71839a;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+
+    .rank {
+      color: #71839a;
+    }
+
+    /* LOWER PANELS */
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .mini {
+      padding: 19px;
+    }
+
+    .mini h3 {
+      margin: 0 0 14px;
+      font-size: 16px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 11px 0;
+      border-bottom: 1px solid #17283d;
+    }
+
+    .row:last-child {
+      border: 0;
+    }
+
+    .empty {
+      padding: 35px;
+      text-align: center;
+      color: #8091a7;
+    }
+
+    .foot {
+      margin-top: 18px;
+      color: #667991;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    /* LOADING */
+    .loading {
+      padding: 35px;
+      text-align: center;
+      color: #8293a8;
+    }
+
+    /* MOBILE */
+    @media (max-width: 900px) {
+      .side {
+        width: 72px;
+      }
+
+      .logo {
+        font-size: 0;
+        text-align: center;
+      }
+
+      .logo:after {
+        content: "F";
+        font-size: 23px;
+        color: #48d597;
+      }
+
+      .nav button {
+        font-size: 0;
+        text-align: center;
+      }
+
+      .nav button:before {
+        content: "•";
+        font-size: 20px;
+      }
+
+      .main {
+        margin-left: 72px;
+        width: calc(100% - 72px);
+        padding: 20px;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .top {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .main {
+        padding: 14px;
+      }
+
+      .cards {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .card {
+        padding: 13px;
+      }
+
+      .big {
+        font-size: 18px;
+      }
+
+      .grid2 {
+        grid-template-columns: 1fr;
+      }
+
+      .title h1 {
+        font-size: 25px;
+      }
+
+      .panelhead {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
+
 <body>
+
 <div class="app">
-<aside class="side">
-<div class="logo">Flow<span>Rank</span></div>
-<div class="nav">
-<button class="active" onclick="setTab('Crypto',this)">Home</button>
-<button onclick="setTab('Crypto',this)">Crypto</button>
-<button onclick="setTab('Stocks',this)">Stocks</button>
-<button onclick="setTab('Forex',this)">Forex</button>
-<button onclick="setTab('On-Chain',this)">On-Chain</button>
-<button onclick="alert('Watchlist is coming next.')">Watchlist</button>
-<button onclick="alert('Settings are coming next.')">Settings</button>
-</div>
-</aside>
-<main class="main">
-<section class="top">
-<div class="title"><h1>See where the volume flows.</h1><p>Market activity, ranked in one place.</p></div>
-<input id="search" class="search" placeholder="Search assets or symbols..." oninput="render()">
-</section>
 
-<section class="cards">
-<div class="card"><div class="muted">Crypto</div><div class="big" id="cryptoCount">Top 100</div></div>
-<div class="card"><div class="muted">Stocks</div><div class="big">Coming soon</div></div>
-<div class="card"><div class="muted">Forex</div><div class="big">Coming soon</div></div>
-<div class="card"><div class="muted">On-Chain</div><div class="big">Coming soon</div></div>
-</section>
+  <!-- SIDEBAR -->
+  <aside class="side">
 
-<div class="tabs">
-<button class="tab active" onclick="setTab('Crypto',this)">Crypto</button>
-<button class="tab" onclick="setTab('Stocks',this)">Stocks</button>
-<button class="tab" onclick="setTab('Forex',this)">Forex</button>
-<button class="tab" onclick="setTab('On-Chain',this)">On-Chain</button>
+    <div class="logo">
+      Flow<span>Rank</span>
+    </div>
+
+    <div class="nav">
+      <button class="active" onclick="setTab('Crypto', this)">Home</button>
+      <button onclick="setTab('Crypto', this)">Crypto</button>
+      <button onclick="setTab('Stocks', this)">Stocks</button>
+      <button onclick="setTab('Forex', this)">Forex</button>
+      <button onclick="setTab('On-Chain', this)">On-Chain</button>
+      <button onclick="comingSoon('Watchlist')">Watchlist</button>
+      <button onclick="comingSoon('Settings')">Settings</button>
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <section class="top">
+
+      <div class="title">
+        <h1>See where the volume flows.</h1>
+        <p>Live market activity, ranked in one place.</p>
+      </div>
+
+      <input
+        id="search"
+        class="search"
+        type="text"
+        placeholder="Search assets or symbols..."
+        autocomplete="off"
+      >
+
+    </section>
+
+
+    <!-- STAT CARDS -->
+    <section class="cards">
+
+      <div class="card">
+        <div class="muted">Crypto</div>
+        <div class="big" id="cryptoCount">Loading...</div>
+      </div>
+
+      <div class="card">
+        <div class="muted">Stocks</div>
+        <div class="big">Coming soon</div>
+      </div>
+
+      <div class="card">
+        <div class="muted">Forex</div>
+        <div class="big">Coming soon</div>
+      </div>
+
+      <div class="card">
+        <div class="muted">On-Chain</div>
+        <div class="big">Coming soon</div>
+      </div>
+
+    </section>
+
+
+    <!-- TABS -->
+    <div class="tabs">
+
+      <button
+        class="tab active"
+        onclick="setTab('Crypto', this)"
+      >
+        Crypto
+      </button>
+
+      <button
+        class="tab"
+        onclick="setTab('Stocks', this)"
+      >
+        Stocks
+      </button>
+
+      <button
+        class="tab"
+        onclick="setTab('Forex', this)"
+      >
+        Forex
+      </button>
+
+      <button
+        class="tab"
+        onclick="setTab('On-Chain', this)"
+      >
+        On-Chain
+      </button>
+
+    </div>
+
+
+    <!-- MARKET TABLE -->
+    <section class="panel">
+
+      <div class="panelhead">
+
+        <h2 id="tableTitle">
+          Top Crypto by 24h Volume
+        </h2>
+
+        <span
+          class="status"
+          id="status"
+        >
+          Connecting...
+        </span>
+
+      </div>
+
+
+      <div class="tablewrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Asset</th>
+              <th>Market</th>
+              <th>24h Volume</th>
+              <th>24h Change</th>
+            </tr>
+          </thead>
+
+          <tbody id="rows">
+
+            <tr>
+              <td colspan="5">
+                <div class="loading">
+                  Loading live crypto data...
+                </div>
+              </td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- LOWER SECTIONS -->
+    <div class="grid2">
+
+      <section class="panel mini">
+
+        <h3>
+          Top Gainers (24h)
+        </h3>
+
+        <div id="gainers">
+          <div class="loading">
+            Loading...
+          </div>
+        </div>
+
+      </section>
+
+
+      <section class="panel mini">
+
+        <h3>
+          Market Overview
+        </h3>
+
+        <div class="row">
+          <span class="muted">Data source</span>
+          <span>CoinGecko</span>
+        </div>
+
+        <div class="row">
+          <span class="muted">Ranking</span>
+          <span>24h volume</span>
+        </div>
+
+        <div class="row">
+          <span class="muted">Assets</span>
+          <span id="overviewCount">—</span>
+        </div>
+
+        <div class="row">
+          <span class="muted">Update</span>
+          <span>On refresh</span>
+        </div>
+
+      </section>
+
+    </div>
+
+
+    <div class="foot">
+      Market data is for informational and educational purposes only.
+      Data can be delayed or unavailable.
+      FlowRank is not financial advice.
+    </div>
+
+  </main>
+
 </div>
 
-<section class="panel">
-<div class="panelhead"><h2 id="tableTitle">Top Crypto by 24h Volume</h2><span class="status" id="status">Demo data</span></div>
-<div class="tablewrap">
-<table><thead><tr><th>#</th><th>Asset</th><th>Market</th><th>24h Volume</th><th>24h Change</th></tr></thead>
-<tbody id="rows"></tbody></table>
-</div>
-</section>
 
-<div class="grid2">
-<section class="panel mini"><h3>Top Gainers (24h)</h3><div id="gainers"></div></section>
-<section class="panel mini"><h3>Market Overview</h3><div class="row"><span class="muted">Data source</span><span>CoinGecko</span></div><div class="row"><span class="muted">Ranking</span><span>24h volume</span></div><div class="row"><span class="muted">Update</span><span>On refresh</span></div></section>
-</div>
-<div class="foot">Market data is for informational and educational purposes only. Data can be delayed or unavailable. FlowRank is not financial advice.</div>
-</main>
-</div>
 <script>
-let current="Crypto", liveData=[];
-function setTab(tab,el){
- current=tab;
- document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
- document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));
- if(el) el.classList.add("active");
- if(tab==="Crypto") document.querySelectorAll(".tab")[0].classList.add("active");
- render();
-}
-function money(n){
- if(n==null) return "—";
- if(n>=1e9) return "$"+(n/1e9).toFixed(2)+"B";
- if(n>=1e6) return "$"+(n/1e6).toFixed(2)+"M";
- if(n>=1e3) return "$"+(n/1e3).toFixed(2)+"K";
- return "$"+Number(n).toFixed(2);
-}
-function render(){
- const q=document.getElementById("search").value.toLowerCase();
- const rows=document.getElementById("rows"), title=document.getElementById("tableTitle"), status=document.getElementById("status");
- if(current!=="Crypto"){
-  title.textContent=current+" market data"; status.textContent="Feed coming next";
-  rows.innerHTML='<tr><td colspan="5"><div class="empty">The '+current+' data feed will be connected next.</div></td></tr>';
-  document.getElementById("gainers").innerHTML='<div class="empty">Coming soon</div>'; return;
- }
- title.textContent="Top Crypto by 24h Volume";
- status.textContent=liveData.length ? "Live Data : "Loading…";
- let filtered=liveData.filter(x=>(x.name+" "+x.symbol).toLowerCase().includes(q));
- rows.innerHTML=filtered.map((x,i)=>`<tr><td>${i+1}</td><td><span class="asset">${x.name}</span><span class="symbol">${x.symbol.toUpperCase()}</span></td><td>Crypto</td><td>${money(x.total_volume)}</td><td class="${(x.price_change_percentage_24h||0)>=0?'up':'down'}">${(x.price_change_percentage_24h||0)>=0?'+':''}${(x.price_change_percentage_24h||0).toFixed(2)}%</td></tr>`).join("") || '<tr><td colspan="5"><div class="empty">No matching assets.</div></td></tr>';
- const g=[...liveData].sort((a,b)=>(b.price_change_percentage_24h||0)-(a.price_change_percentage_24h||0)).slice(0,5);
- document.getElementById("gainers").innerHTML=g.map(x=>`<div class="row"><span>${x.name} <span class="symbol">${x.symbol.toUpperCase()}</span></span><span class="up">+${(x.price_change_percentage_24h||0).toFixed(2)}%</span></div>`).join("");
-}
-async function loadCrypto(){
- try{
-  const r=await fetch('/api/crypto');
-  if(!r.ok) throw new Error('API error');
-  liveData=await r.json();
+
+  let currentTab = "Crypto";
+  let liveData = [];
+
+
+  /* FORMAT MONEY */
+  function money(value) {
+
+    if (value === null || value === undefined) {
+      return "—";
+    }
+
+    const number = Number(value);
+
+    if (number >= 1e12) {
+      return "$" + (number / 1e12).toFixed(2) + "T";
+    }
+
+    if (number >= 1e9) {
+      return "$" + (number / 1e9).toFixed(2) + "B";
+    }
+
+    if (number >= 1e6) {
+      return "$" + (number / 1e6).toFixed(2) + "M";
+    }
+
+    if (number >= 1e3) {
+      return "$" + (number / 1e3).toFixed(2) + "K";
+    }
+
+    return "$" + number.toFixed(2);
+  }
+
+
+  /* FORMAT PRICE */
+  function price(value) {
+
+    if (value === null || value === undefined) {
+      return "—";
+    }
+
+    const number = Number(value);
+
+    if (number >= 1000) {
+      return "$" + number.toLocaleString(
+        "en-US",
+        {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }
+      );
+    }
+
+    if (number >= 1) {
+      return "$" + number.toFixed(2);
+    }
+
+    return "$" + number.toFixed(6);
+  }
+
+
+  /* FORMAT CHANGE */
+  function change(value) {
+
+    if (value === null || value === undefined) {
+      return "—";
+    }
+
+    const number = Number(value);
+
+    return (
+      number >= 0 ? "+" : ""
+    ) + number.toFixed(2) + "%";
+  }
+
+
+  /* TAB */
+  function setTab(tab, element) {
+
+    currentTab = tab;
+
+    document
+      .querySelectorAll(".tab")
+      .forEach(button => {
+        button.classList.remove("active");
+      });
+
+    if (element) {
+      element.classList.add("active");
+    }
+
+    render();
+  }
+
+
+  /* COMING SOON */
+  function comingSoon(name) {
+
+    alert(name + " is coming next.");
+  }
+
+
+  /* RENDER */
+  function render() {
+
+    const searchInput =
+      document.getElementById("search");
+
+    const query =
+      searchInput.value
+        .trim()
+        .toLowerCase();
+
+    const rows =
+      document.getElementById("rows");
+
+    const title =
+      document.getElementById("tableTitle");
+
+    const status =
+      document.getElementById("status");
+
+    const gainers =
+      document.getElementById("gainers");
+
+
+    /* NON CRYPTO */
+    if (currentTab !== "Crypto") {
+
+      title.textContent =
+        currentTab + " market data";
+
+      status.textContent =
+        "Coming next";
+
+      status.className = "status";
+
+      rows.innerHTML = `
+        <tr>
+          <td colspan="5">
+            <div class="empty">
+              The ${currentTab} data feed will be connected next.
+            </div>
+          </td>
+        </tr>
+      `;
+
+      gainers.innerHTML = `
+        <div class="empty">
+          Coming soon
+        </div>
+      `;
+
+      return;
+    }
+
+
+    /* CRYPTO */
+    title.textContent =
+      "Top Crypto by 24h Volume";
+
+
+    if (liveData.length > 0) {
+
+      status.textContent =
+        "Live Data";
+
+      status.className =
+        "status";
+
+    } else {
+
+      status.textContent =
+        "Connecting...";
+
+      status.className =
+        "status";
+    }
+
+
+    /* SEARCH */
+    const filtered =
+      liveData.filter(coin => {
+
+        const name =
+          (coin.name || "").toLowerCase();
+
+        const symbol =
+          (coin.symbol || "").toLowerCase();
+
+        return (
+          name.includes(query) ||
+          symbol.includes(query)
+        );
+
+      });
+
+
+    /* TABLE */
+    if (filtered.length === 0) {
+
+      rows.innerHTML = `
+        <tr>
+          <td colspan="5">
+            <div class="empty">
+              ${
+                liveData.length === 0
+                  ? "No live data available."
+                  : "No matching assets."
+              }
+            </div>
+          </td>
+        </tr>
+      `;
+
+    } else {
+
+      rows.innerHTML =
+        filtered.map((coin, index) => {
+
+          const percentage =
+            Number(
+              coin.price_change_percentage_24h || 0
+            );
+
+          const changeClass =
+            percentage >= 0
+              ? "up"
+              : "down";
+
+          return `
+            <tr>
+
+              <td class="rank">
+                ${index + 1}
+              </td>
+
+              <td>
+                <span class="asset">
+                  ${escapeHTML(coin.name || "Unknown")}
+                </span>
+
+                <span class="symbol">
+                  ${escapeHTML(
+                    (coin.symbol || "").toUpperCase()
+                  )}
+                </span>
+              </td>
+
+              <td>
+                Crypto
+              </td>
+
+              <td>
+                ${money(coin.total_volume)}
+              </td>
+
+              <td class="${changeClass}">
+                ${change(percentage)}
+              </td>
+
+            </tr>
+          `;
+
+        }).join("");
+
+    }
+
+
+    /* COUNTS */
+    document.getElementById(
+      "cryptoCount"
+    ).textContent =
+      liveData.length
+        ? "Top " + liveData.length
+        : "Loading...";
+
+
+    document.getElementById(
+      "overviewCount"
+    ).textContent =
+      liveData.length
+        ? liveData.length
+        : "—";
+
+
+    /* TOP GAINERS */
+    const topGainers =
+      [...liveData]
+        .sort(
+          (a, b) =>
+            Number(
+              b.price_change_percentage_24h || 0
+            ) -
+            Number(
+              a.price_change_percentage_24h || 0
+            )
+        )
+        .slice(0, 5);
+
+
+    if (topGainers.length === 0) {
+
+      gainers.innerHTML = `
+        <div class="empty">
+          No data available.
+        </div>
+      `;
+
+    } else {
+
+      gainers.innerHTML =
+        topGainers.map(coin => {
+
+          const percentage =
+            Number(
+              coin.price_change_percentage_24h || 0
+            );
+
+          return `
+            <div class="row">
+
+              <span>
+                ${escapeHTML(coin.name || "Unknown")}
+
+                <span class="symbol">
+                  ${escapeHTML(
+                    (coin.symbol || "").toUpperCase()
+                  )}
+                </span>
+              </span>
+
+              <span class="${
+                percentage >= 0
+                  ? "up"
+                  : "down"
+              }">
+                ${change(percentage)}
+              </span>
+
+            </div>
+          `;
+
+        }).join("");
+
+    }
+
+  }
+
+
+  /* BASIC HTML ESCAPE */
+  function escapeHTML(value) {
+
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+
+  /* LOAD LIVE CRYPTO */
+  async function loadCrypto() {
+
+    const status =
+      document.getElementById("status");
+
+    try {
+
+      status.textContent =
+        "Connecting...";
+
+      status.className =
+        "status";
+
+
+      const response =
+        await fetch(
+          "/api/crypto",
+          {
+            method: "GET",
+            cache: "no-store"
+          }
+        );
+
+
+      if (!response.ok) {
+
+        let errorMessage =
+          "API request failed";
+
+        try {
+
+          const errorData =
+            await response.json();
+
+          if (errorData.error) {
+            errorMessage =
+              errorData.error;
+          }
+
+        } catch (_) {}
+
+        throw new Error(errorMessage);
+      }
+
+
+      const data =
+        await response.json();
+
+
+      if (!Array.isArray(data)) {
+
+        throw new Error(
+          data.error ||
+          "Invalid API response"
+        );
+      }
+
+
+      liveData = data;
+
+
+      render();
+
+
+    } catch (error) {
+
+      console.error(
+        "FlowRank API error:",
+        error
+      );
+
+
+      status.textContent =
+        "API Error";
+
+      status.className =
+        "status error";
+
+
+      document.getElementById(
+        "rows"
+      ).innerHTML = `
+        <tr>
+          <td colspan="5">
+            <div class="empty">
+              Live data could not be loaded.
+            </div>
+          </td>
+        </tr>
+      `;
+
+
+      document.getElementById(
+        "gainers"
+      ).innerHTML = `
+        <div class="empty">
+          Live data unavailable.
+        </div>
+      `;
+
+    }
+
+  }
+
+
+  /* SEARCH */
+  document
+    .getElementById("search")
+    .addEventListener(
+      "input",
+      render
+    );
+
+
+  /* START */
   render();
- }catch(e){
-  document.getElementById("status").textContent="API not connected";
- }
-}
-document.getElementById("search").addEventListener("input",render);
-render(); loadCrypto();
+  loadCrypto();
+
 </script>
+
 </body>
 </html>
