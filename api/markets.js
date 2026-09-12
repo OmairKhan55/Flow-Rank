@@ -34,9 +34,7 @@ export default async function handler(req, res) {
 
             return {
               network,
-
               pool: pool.id,
-
               name: a.name || "Unknown",
 
               price: Number(
@@ -93,23 +91,17 @@ export default async function handler(req, res) {
     );
 
     const markets = results
-  .flat()
-  .filter((market) =>
-    market.liquidity >= 100000 &&
-    market.volume24h >= 10000 &&
-    market.name &&
-    !market.name.toUpperCase().includes("USDC / USDC") &&
-    !market.name.toUpperCase().includes("USDT / USDT")
-  )
-  .sort(
-    (a, b) =>
-      b.volume24h - a.volume24h
-  )
-  .slice(0, 500)
-  .map((market, index) => ({
-    rank: index + 1,
-    ...market
-  }));
+      .flat()
+      .filter((market) =>
+        market.liquidity >= 100000 &&
+        market.volume24h >= 10000 &&
+        market.name &&
+        !market.name
+          .toUpperCase()
+          .includes("USDC / USDC") &&
+        !market.name
+          .toUpperCase()
+          .includes("USDT / USDT")
       )
       .sort(
         (a, b) =>
