@@ -1,42 +1,109 @@
 export default async function handler(req, res) {
   try {
-    const networks = ["eth", "solana", "base", "bsc", "arbitrum"];
+    const networks = [
+      "eth",
+      "solana",
+      "base",
+      "bsc",
+      "arbitrum",
+      "polygon_pos",
+      "avalanche"
+    ];
 
     const results = await Promise.all(
       networks.map(async (network) => {
-        const url =
-          `https://api.geckoterminal.com/api/v2/networks/${network}/pools` +
-          `?include=base_token,quote_token` +
-          `&sort=h24_volume_usd_desc&page=1`;
+        try {
+          const url =
+            `https://api.geckoterminal.com/api/v2/networks/${network}/pools` +
+            `?include=base_token,quote_token` +
+            `&sort=h24_volume_usd_desc&page=1`;
 
-        const response = await fetch(url, {
-          headers: {
-            accept: "application/json"
-          }
-        });
+          const response = await fetch(url, {
+            headers: {
+              accept: "application/json"
+            }
+          });
 
-        if (!response.ok) return [];
+          if (!response.ok) return [];
 
-        const json = await response.json();
+          const json = await response.json();
 
-        return (json.data || []).map((pool) => ({
-          network,
-          pool: pool.id,
-          name: pool.attributes?.name || "Unknown",
-          price: Number(pool.attributes?.base_token_price_usd || 0),
-          volume24h: Number(pool.attributes?.volume_usd?.h24 || 0),
-          liquidity: Number(pool.attributes?.reserve_in_usd || 0),
-          change24h: Number(
-            pool.attributes?.price_change_percentage?.h24 || 0
-          )
-        }));
+          return (json.data || []).map((pool) => {
+            const a = pool.attributes || {};
+            const tx = a.transactions?.h24 || {};
+
+            return {
+              network,
+
+              pool: pool.id,
+
+              name: a.name || "Unknown",
+
+              price: Number(
+                a.base_token_price_usd || 0
+              ),
+
+              volume24h: Number(
+                a.volume_usd?.h24 || 0
+              ),
+
+              liquidity: Number(
+                a.reserve_in_usd || 0
+              ),
+
+              marketCap: Number(
+                a.market_cap_usd || 0
+              ),
+
+              fdv: Number(
+                a.fdv_usd || 0
+              ),
+
+              change24h: Number(
+                a.price_change_percentage?.h24 || 0
+              ),
+
+              buys24h: Number(
+                tx.buys || 0
+              ),
+
+              sells24h: Number(
+                tx.sells || 0
+              ),
+
+              transactions24h:
+                Number(tx.buys || 0) +
+                Number(tx.sells || 0),
+
+              createdAt:
+                a.pool_created_at || null
+            };
+          });
+
+        } catch (error) {
+          console.error(
+            "Network error:",
+            network,
+            error
+          );
+
+          return [];
+        }
       })
     );
 
     const markets = results
       .flat()
-      .sort((a, b) => b.volume24h - a.volume24h)
-      .slice(0, 100)
+      .filter(
+        (market) =>
+          market.liquidity >= 100000 &&
+          market.volume24h > 0
+      )
+      .sort(
+        (a, b) =>
+          b.volume24h - a.volume24h
+      )
+      .slice(0, 500)
       .map((market, index) => ({
         rank: index + 1,
         ...market
@@ -50,10 +117,13 @@ export default async function handler(req, res) {
     return res.status(200).json(markets);
 
   } catch (error) {
-    console.error("DEX market error:", error);
+    console.error(
+      "On-chain market error:",
+      error
+    );
 
     return res.status(500).json({
-      error: "DEX market data failed"
+      error: "On-Chain market data failed"
     });
   }
 }
