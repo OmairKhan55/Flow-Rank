@@ -1,3 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FlowRank — Market Dashboard</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#07111f;
+  color:#f5f7fa;
+  min-height:100vh;
+}
+
+header{
+  border-bottom:1px solid #1d2b3d;
+  background:#0a1626;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+.header-inner{
+  max-width:1200px;
+  margin:auto;
+  padding:18px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+
+.logo{
+  font-size:22px;
+  font-weight:800;
+}
+
+.logo span{
+  color:#42d392;
+}
+
+nav{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+nav button,
+.tabs button{
+  background:transparent;
+  border:1px solid transparent;
+  color:#91a0b4;
+  padding:9px 14px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+nav button:hover,
+.tabs button:hover,
+.tabs button.active{
+  background:#132237;
+  color:#fff;
+}
+
+main{
+  max-width:1200px;
+  margin:auto;
+  padding:35px 20px 60px;
+}
+
+.hero{
+  margin-bottom:25px;
+}
+
+.hero h1{
+  font-size:38px;
+  margin-bottom:10px;
+}
+
+.hero p{
+  color:#91a0b4;
+  line-height:1.6;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+  margin:25px 0;
+}
+
+.card{
+  background:#0c192a;
+  border:1px solid #1d2b3d;
+  border-radius:14px;
+  padding:20px;
+}
+
+.card-label{
+  color:#91a0b4;
+  font-size:13px;
+  margin-bottom:8px;
+}
+
+.card-value{
+  font-size:25px;
+  font-weight:700;
+}
+
+.controls{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  margin-bottom:15px;
+  flex-wrap:wrap;
+}
+
+.search{
+  flex:1;
+  min-width:220px;
+  background:#0c192a;
+  border:1px solid #1d2b3d;
+  color:#fff;
+  padding:13px 15px;
+  border-radius:9px;
+  outline:none;
+}
+
+.search:focus{
+  border-color:#42d392;
+}
+
+.tabs{
+  display:flex;
+  gap:6px;
+  background:#0c192a;
+  border:1px solid #1d2b3d;
+  padding:5px;
+  border-radius:10px;
+}
+
+.status{
+  color:#42d392;
+  font-size:13px;
+  padding:10px 0;
+}
+
+.status.error{
+  color:#ff6464;
+}
+
+.table-wrap{
+  width:100%;
+  overflow-x:auto;
+  background:#0c192a;
+  border:1px solid #1d2b3d;
+  border-radius:14px;
+}
+
+table{
+  width:100%;
+  min-width:850px;
+  border-collapse:collapse;
+}
+
+th{
+  text-align:left;
+  color:#7f8da2;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  padding:15px;
+  border-bottom:1px solid #1d2b3d;
+}
+
+td{
+  padding:15px;
+  border-bottom:1px solid #172638;
+  font-size:14px;
+}
+
+tr:last-child td{
+  border-bottom:0;
+}
+
+.rank{
+  color:#6f7f93;
+}
+
+.asset{
+  font-weight:700;
+}
+
+.network{
+  color:#9aa8b9;
+}
+
+.up{
+  color:#42d392;
+}
+
+.down{
+  color:#ff6868;
+}
+
+.loading,
+.empty{
+  padding:35px;
+  text-align:center;
+  color:#8290a4;
+}
+
+.section{
+  margin-top:25px;
+}
+
+.section-title{
+  font-size:18px;
+  margin-bottom:12px;
+}
+
+.rows{
+  background:#0c192a;
+  border:1px solid #1d2b3d;
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  padding:15px 18px;
+  border-bottom:1px solid #172638;
+}
+
+.row:last-child{
+  border-bottom:0;
+}
+
+footer{
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
+  color:#65758b;
+  font-size:12px;
+  text-align:center;
+}
+
+@media(max-width:700px){
+
+.header-inner{
+  align-items:flex-start;
+  flex-direction:column;
+}
+
+.hero h1{
+  font-size:30px;
+}
+
+.stats{
+  grid-template-columns:1fr;
+}
+
+.controls{
+  flex-direction:column;
+}
+
+.tabs{
+  overflow-x:auto;
+}
+
+.tabs button{
+  white-space:nowrap;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-inner">
+
+    <div class="logo">
+      Flow<span>Rank</span>
+    </div>
+
+    <nav>
+      <button onclick="setTab('Crypto',this)">Home</button>
+      <button onclick="setTab('Crypto',this)">Crypto</button>
+      <button onclick="setTab('Stocks',this)">Stocks</button>
+      <button onclick="setTab('Forex',this)">Forex</button>
+      <button onclick="setTab('On-Chain',this)">On-Chain</button>
+    </nav>
+
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <h1>See Where The Volume Flows.</h1>
+    <p>
+      FlowRank tracks market activity across crypto and on-chain markets.
+    </p>
+  </section>
+
+  <section class="stats">
+
+    <div class="card">
+      <div class="card-label">Crypto Markets</div>
+      <div class="card-value" id="cryptoCount">Loading...</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Chains</div>
+      <div class="card-value" id="chainCount">Loading...</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Current View</div>
+      <div class="card-value" id="overviewCount">—</div>
+    </div>
+
+  </section>
+
+  <section class="controls">
+
+    <input
+      id="search"
+      class="search"
+      type="text"
+      placeholder="Search assets or pairs..."
+    >
+
+    <div class="tabs">
+
+      <button
+        class="active"
+        onclick="setTab('Crypto',this)"
+      >
+        Crypto
+      </button>
+
+      <button
+        onclick="setTab('Stocks',this)"
+      >
+        Stocks
+      </button>
+
+      <button
+        onclick="setTab('Forex',this)"
+      >
+        Forex
+      </button>
+
+      <button
+        onclick="setTab('On-Chain',this)"
+      >
+        On-Chain
+      </button>
+
+    </div>
+
+  </section>
+
+  <div class="card" style="margin-bottom:15px;padding:15px 18px;">
+
+    <div style="display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;">
+
+      <div>
+        <strong id="tableTitle">
+          Top Crypto Pairs by 24h Volume
+        </strong>
+      </div>
+
+      <div class="status" id="status">
+        Connecting...
+      </div>
+
+    </div>
+
+    <div style="display:flex;gap:25px;margin-top:10px;color:#7f8da2;font-size:12px;flex-wrap:wrap;">
+      <span>
+        Source:
+        <strong id="source">Binance</strong>
+      </span>
+
+      <span>
+        Ranking:
+        <strong id="ranking">24h pair volume</strong>
+      </span>
+    </div>
+
+  </div>
+
+  <div class="table-wrap">
+
+    <table>
+
+      <thead>
+        <tr id="tableHead">
+
+          <th>#</th>
+          <th>Pair</th>
+          <th>Exchange</th>
+          <th>Price</th>
+          <th>24h Volume</th>
+          <th>24h Change</th>
+
+        </tr>
+      </thead>
+
+      <tbody id="rows">
+
+        <tr>
+          <td colspan="6">
+            <div class="loading">
+              Loading market data...
+            </div>
+          </td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+  <section class="section">
+
+    <div class="section-title" id="lowerTitle">
+      Top Gainers (24h)
+    </div>
+
+    <div class="rows" id="gainers">
+
+      <div class="loading">
+        Loading...
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<footer>
+  FlowRank — Market data dashboard. Data may be delayed or incomplete.
+</footer>
+
 <script>
 
 let currentTab="Crypto";
@@ -8,576 +469,589 @@ let marketData=[];
 
 function money(value){
 
-if(value===null||value===undefined||isNaN(Number(value)))return"—";
+  if(
+    value===null ||
+    value===undefined ||
+    isNaN(Number(value))
+  ){
+    return "—";
+  }
 
-const n=Number(value);
+  const n=Number(value);
 
-if(n>=1e12)return"$"+(n/1e12).toFixed(2)+"T";
-if(n>=1e9)return"$"+(n/1e9).toFixed(2)+"B";
-if(n>=1e6)return"$"+(n/1e6).toFixed(2)+"M";
-if(n>=1e3)return"$"+(n/1e3).toFixed(2)+"K";
+  if(n>=1e12)
+    return "$"+(n/1e12).toFixed(2)+"T";
 
-return"$"+n.toFixed(2);
+  if(n>=1e9)
+    return "$"+(n/1e9).toFixed(2)+"B";
 
+  if(n>=1e6)
+    return "$"+(n/1e6).toFixed(2)+"M";
+
+  if(n>=1e3)
+    return "$"+(n/1e3).toFixed(2)+"K";
+
+  return "$"+n.toFixed(2);
 }
 
 function change(value){
 
-if(value===null||value===undefined||isNaN(Number(value)))return"—";
+  if(
+    value===null ||
+    value===undefined ||
+    isNaN(Number(value))
+  ){
+    return "—";
+  }
 
-const n=Number(value);
+  const n=Number(value);
 
-return(n>=0?"+":"")+n.toFixed(2)+"%";
-
+  return (n>=0?"+":"")+n.toFixed(2)+"%";
 }
 
 function price(value){
 
-if(value===null||value===undefined||isNaN(Number(value)))return"—";
+  if(
+    value===null ||
+    value===undefined ||
+    isNaN(Number(value))
+  ){
+    return "—";
+  }
 
-return"$"+Number(value).toLocaleString("en-US",{
-maximumFractionDigits:8
-});
-
-}
-
-function setTab(tab,element){
-
-currentTab=tab;
-
-document.querySelectorAll(".tab")
-.forEach(b=>b.classList.remove("active"));
-
-if(element)element.classList.add("active");
-
-render();
-
-}
-
-function comingSoon(name){
-
-alert(name+" is coming next.");
-
+  return "$"+Number(value).toLocaleString(
+    "en-US",
+    {
+      maximumFractionDigits:8
+    }
+  );
 }
 
 function escapeHTML(value){
 
-return String(value)
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
+  return String(value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
 
+function setTab(tab,element){
+
+  currentTab=tab;
+
+  document
+    .querySelectorAll(".tabs button")
+    .forEach(button=>{
+      button.classList.remove("active");
+    });
+
+  if(element){
+    element.classList.add("active");
+  }
+
+  render();
 }
 
 function render(){
 
-const query=
-document.getElementById("search")
-.value
-.trim()
-.toLowerCase();
+  const search=
+    document
+      .getElementById("search")
+      .value
+      .trim()
+      .toLowerCase();
 
-const rows=document.getElementById("rows");
-const title=document.getElementById("tableTitle");
-const status=document.getElementById("status");
-const gainers=document.getElementById("gainers");
-const lowerTitle=document.getElementById("lowerTitle");
-const source=document.getElementById("source");
-const ranking=document.getElementById("ranking");
-const overview=document.getElementById("overviewCount");
+  const rows=document.getElementById("rows");
+  const title=document.getElementById("tableTitle");
+  const status=document.getElementById("status");
+  const gainers=document.getElementById("gainers");
+  const lowerTitle=document.getElementById("lowerTitle");
+  const source=document.getElementById("source");
+  const ranking=document.getElementById("ranking");
+  const overview=document.getElementById("overviewCount");
+  const head=document.getElementById("tableHead");
 
-if(currentTab==="On-Chain"){
+  if(currentTab==="On-Chain"){
 
-title.textContent="Top DEX Pairs by 24h Volume";
+    title.textContent="Top DEX Pairs by 24h Volume";
 
-status.textContent=
-marketData.length
-?"Live DEX Market Data"
-:"Connecting...";
+    status.textContent=
+      marketData.length
+      ?"Live DEX Market Data"
+      :"Connecting...";
+
+    status.className="status";
 
-status.className="status";
+    source.textContent="GeckoTerminal";
+    ranking.textContent="24h DEX volume";
 
-source.textContent="GeckoTerminal";
-ranking.textContent="24h DEX volume";
+    overview.textContent=
+      marketData.length
+      ?marketData.length
+      :"—";
 
-overview.textContent=
-marketData.length
-?marketData.length
-:"—";
+    lowerTitle.textContent="Top Chains by TVL";
 
-lowerTitle.textContent="Top Chains by TVL";
+    head.innerHTML=`
+      <th>#</th>
+      <th>Pair</th>
+      <th>Network</th>
+      <th>24h Volume</th>
+      <th>Liquidity</th>
+    `;
 
-document.getElementById("tableHead").innerHTML=`
-<th>#</th>
-<th>Pair</th>
-<th>Network</th>
-<th>24h Volume</th>
-<th>Liquidity</th>
-`;
+    if(!marketData.length){
 
-if(!marketData.length){
+      rows.innerHTML=`
+        <tr>
+          <td colspan="5">
+            <div class="loading">
+              Loading DEX market data...
+            </div>
+          </td>
+        </tr>
+      `;
 
-rows.innerHTML=`
-<tr>
-<td colspan="5">
-<div class="loading">
-Loading DEX market data...
-</div>
-</td>
-</tr>`;
+      gainers.innerHTML=
+        `<div class="loading">Loading...</div>`;
 
-gainers.innerHTML=
-`<div class="loading">Loading...</div>`;
+      return;
+    }
 
-return;
+    const filtered=
+      marketData.filter(market=>
 
-}
+        (market.name||"")
+          .toLowerCase()
+          .includes(search)
 
-const filtered=marketData.filter(m=>
+        ||
 
-(m.name||"")
-.toLowerCase()
-.includes(query)
+        (market.network||"")
+          .toLowerCase()
+          .includes(search)
 
-||
+      );
 
-(m.network||"")
-.toLowerCase()
-.includes(query)
+    rows.innerHTML=
+      filtered.length
 
-);
+      ?
 
-rows.innerHTML=filtered.length?
+      filtered.map((market,index)=>`
 
-filtered.map((market,index)=>`
+        <tr>
 
-<tr>
+          <td class="rank">
+            ${index+1}
+          </td>
 
-<td class="rank">${index+1}</td>
+          <td>
+            <span class="asset">
+              ${escapeHTML(market.name||"Unknown")}
+            </span>
+          </td>
 
-<td>
-<span class="asset">
-${escapeHTML(market.name||"Unknown")}
-</span>
-</td>
+          <td class="network">
+            ${escapeHTML(market.network||"—")}
+          </td>
 
-<td class="network">
-${escapeHTML(market.network||"—")}
-</td>
+          <td>
+            ${money(market.volume24h)}
+          </td>
 
-<td>
-${money(market.volume24h)}
-</td>
+          <td>
+            ${money(market.liquidity)}
+          </td>
 
-<td>
-${money(market.liquidity)}
-</td>
+        </tr>
 
-</tr>
+      `).join("")
 
-`).join("")
+      :
 
-:
+      `
+        <tr>
+          <td colspan="5">
+            <div class="empty">
+              No matching DEX pairs.
+            </div>
+          </td>
+        </tr>
+      `;
 
-`<tr>
-<td colspan="5">
-<div class="empty">
-No matching DEX pairs.
-</div>
-</td>
-</tr>`;
+    if(chainData.length){
 
-if(chainData.length){
+      gainers.innerHTML=
+        chainData
+          .slice(0,5)
+          .map(chain=>`
 
-gainers.innerHTML=
-chainData.slice(0,5).map(chain=>`
+            <div class="row">
 
-<div class="row">
+              <span>
+                ${escapeHTML(chain.name||"Unknown")}
+              </span>
 
-<span>
-${escapeHTML(chain.name||"Unknown")}
-</span>
+              <span>
+                ${money(chain.tvl)}
+              </span>
 
-<span>
-${money(chain.tvl)}
-</span>
+            </div>
 
-</div>
+          `)
+          .join("");
 
-`).join("");
+    }else{
 
-}else{
+      gainers.innerHTML=
+        `<div class="loading">Loading...</div>`;
 
-gainers.innerHTML=
-`<div class="loading">Loading...</div>`;
+    }
 
-}
+    return;
+  }
 
-return;
+  if(currentTab!=="Crypto"){
 
-}
+    title.textContent=currentTab+" market data";
 
-if(currentTab!=="Crypto"){
+    status.textContent="Coming next";
+    status.className="status";
 
-title.textContent=currentTab+" market data";
+    source.textContent="—";
+    ranking.textContent="—";
+    overview.textContent="—";
 
-status.textContent="Coming next";
-status.className="status";
+    lowerTitle.textContent="Coming soon";
 
-source.textContent="—";
-ranking.textContent="—";
-overview.textContent="—";
+    head.innerHTML=`
+      <th>#</th>
+      <th>Asset</th>
+      <th>Market</th>
+      <th>Volume</th>
+      <th>Change</th>
+    `;
 
-lowerTitle.textContent="Coming soon";
+    rows.innerHTML=`
+      <tr>
+        <td colspan="5">
+          <div class="empty">
+            The ${escapeHTML(currentTab)}
+            data feed will be connected next.
+          </div>
+        </td>
+      </tr>
+    `;
 
-document.getElementById("tableHead").innerHTML=`
+    gainers.innerHTML=
+      `<div class="empty">Coming soon</div>`;
 
-<th>#</th>
-<th>Asset</th>
-<th>Market</th>
-<th>Volume</th>
-<th>Change</th>
+    return;
+  }
 
-`;
+  title.textContent="Top Crypto Pairs by 24h Volume";
 
-rows.innerHTML=`
+  status.textContent=
+    liveData.length
+    ?"Live Crypto Pair Data"
+    :"Connecting...";
 
-<tr>
-<td colspan="5">
+  status.className="status";
 
-<div class="empty">
-The ${escapeHTML(currentTab)}
-data feed will be connected next.
-</div>
+  source.textContent="Binance";
+  ranking.textContent="24h pair volume";
 
-</td>
-</tr>
+  overview.textContent=
+    liveData.length
+    ?liveData.length
+    :"—";
 
-`;
+  lowerTitle.textContent="Top Gainers (24h)";
 
-gainers.innerHTML=
-`<div class="empty">Coming soon</div>`;
+  head.innerHTML=`
+    <th>#</th>
+    <th>Pair</th>
+    <th>Exchange</th>
+    <th>Price</th>
+    <th>24h Volume</th>
+    <th>24h Change</th>
+  `;
 
-return;
+  const filtered=
+    liveData.filter(market=>
 
-}
+      (market.pair||"")
+        .toLowerCase()
+        .includes(search)
 
-/* =========================
-   CRYPTO PAIRS
-========================= */
+      ||
 
-title.textContent="Top Crypto Pairs by 24h Volume";
+      (market.exchange||"")
+        .toLowerCase()
+        .includes(search)
 
-status.textContent=
-liveData.length
-?"Live Crypto Pair Data"
-:"Connecting...";
+    );
 
-status.className="status";
+  rows.innerHTML=
+    filtered.length
 
-source.textContent="Binance";
-ranking.textContent="24h pair volume";
+    ?
 
-overview.textContent=
-liveData.length
-?liveData.length
-:"—";
+    filtered.map((market,index)=>{
 
-lowerTitle.textContent="Top Gainers (24h)";
+      const p=
+        Number(market.change24h||0);
 
-document.getElementById("tableHead").innerHTML=`
+      return`
 
-<th>#</th>
-<th>Pair</th>
-<th>Exchange</th>
-<th>Price</th>
-<th>24h Volume</th>
-<th>24h Change</th>
+        <tr>
 
-`;
+          <td class="rank">
+            ${index+1}
+          </td>
 
-const filtered=liveData.filter(market=>
+          <td>
+            <span class="asset">
+              ${escapeHTML(market.pair||"Unknown")}
+            </span>
+          </td>
 
-(market.pair||"")
-.toLowerCase()
-.includes(query)
+          <td class="network">
+            ${escapeHTML(market.exchange||"—")}
+          </td>
 
-||
+          <td>
+            ${price(market.price)}
+          </td>
 
-(market.exchange||"")
-.toLowerCase()
-.includes(query)
+          <td>
+            ${money(market.volume24h)}
+          </td>
 
-);
+          <td class="${p>=0?"up":"down"}">
+            ${change(p)}
+          </td>
 
-rows.innerHTML=filtered.length?
+        </tr>
 
-filtered.map((market,index)=>{
+      `;
 
-const p=Number(market.change24h||0);
+    }).join("")
 
-return`
+    :
 
-<tr>
+    `
+      <tr>
+        <td colspan="6">
+          <div class="empty">
+            No matching pairs.
+          </div>
+        </td>
+      </tr>
+    `;
 
-<td class="rank">
-${index+1}
-</td>
+  const top=
+    [...liveData]
+      .sort(
+        (a,b)=>
+          Number(b.change24h||0)-
+          Number(a.change24h||0)
+      )
+      .slice(0,5);
 
-<td>
-<span class="asset">
-${escapeHTML(market.pair||"Unknown")}
-</span>
-</td>
+  gainers.innerHTML=
+    top.length
 
-<td class="network">
-${escapeHTML(market.exchange||"—")}
-</td>
+    ?
 
-<td>
-${price(market.price)}
-</td>
+    top.map(market=>{
 
-<td>
-${money(market.volume24h)}
-</td>
+      const p=
+        Number(market.change24h||0);
 
-<td class="${p>=0?"up":"down"}">
-${change(p)}
-</td>
+      return`
 
-</tr>
+        <div class="row">
 
-`;
+          <span>
+            ${escapeHTML(market.pair||"Unknown")}
+          </span>
 
-}).join("")
+          <span class="${p>=0?"up":"down"}">
+            ${change(p)}
+          </span>
 
-:
+        </div>
 
-`
+      `;
 
-<tr>
-<td colspan="6">
+    }).join("")
 
-<div class="empty">
-No matching pairs.
-</div>
+    :
 
-</td>
-</tr>
+    `<div class="loading">Loading...</div>`;
 
-`;
-
-const top=[...liveData]
-
-.sort((a,b)=>
-Number(b.change24h||0)-
-Number(a.change24h||0)
-)
-
-.slice(0,5);
-
-gainers.innerHTML=top.length?
-
-top.map(market=>{
-
-const p=Number(market.change24h||0);
-
-return`
-
-<div class="row">
-
-<span>
-${escapeHTML(market.pair||"Unknown")}
-</span>
-
-<span class="${p>=0?"up":"down"}">
-${change(p)}
-</span>
-
-</div>
-
-`;
-
-}).join("")
-
-:
-
-`<div class="loading">Loading...</div>`;
-
-document.getElementById("cryptoCount")
-.textContent=
-liveData.length
-?"Top "+liveData.length+" Pairs"
-:"Loading...";
-
+  document
+    .getElementById("cryptoCount")
+    .textContent=
+      liveData.length
+      ?"Top "+liveData.length+" Pairs"
+      :"Loading...";
 }
 
 async function loadCrypto(){
 
-try{
+  try{
 
-const response=
-await fetch(
-"/api/crypto",
-{cache:"no-store"}
-);
+    const response=
+      await fetch(
+        "/api/crypto",
+        {cache:"no-store"}
+      );
 
-if(!response.ok)
-throw new Error("Crypto API failed");
+    if(!response.ok)
+      throw new Error("Crypto API failed");
 
-const data=
-await response.json();
+    const data=
+      await response.json();
 
-if(!Array.isArray(data))
-throw new Error("Invalid crypto data");
+    if(!Array.isArray(data))
+      throw new Error("Invalid crypto data");
 
-liveData=data
+    liveData=
+      data
+        .filter(m=>
+          m.pair &&
+          m.exchange &&
+          Number(m.volume24h||0)>0
+        )
+        .sort(
+          (a,b)=>
+            Number(b.volume24h||0)-
+            Number(a.volume24h||0)
+        )
+        .slice(0,100);
 
-.filter(m=>
-m.pair &&
-m.exchange &&
-Number(m.volume24h||0)>0
-)
+    render();
 
-.sort((a,b)=>
-Number(b.volume24h||0)-
-Number(a.volume24h||0)
-)
+  }catch(error){
 
-.slice(0,100);
+    console.error(error);
 
-render();
+    const status=
+      document.getElementById("status");
 
-}catch(error){
-
-console.error(error);
-
-document.getElementById("status")
-.textContent="API Error";
-
-document.getElementById("status")
-.className="status error";
-
-}
-
+    status.textContent="Crypto API Error";
+    status.className="status error";
+  }
 }
 
 async function loadOnChain(){
 
-try{
+  try{
 
-const response=
-await fetch(
-"/api/onchain",
-{cache:"no-store"}
-);
+    const response=
+      await fetch(
+        "/api/onchain",
+        {cache:"no-store"}
+      );
 
-if(!response.ok)
-throw new Error("On-Chain API failed");
+    if(!response.ok)
+      throw new Error("On-Chain API failed");
 
-const data=
-await response.json();
+    const data=
+      await response.json();
 
-if(!Array.isArray(data))
-throw new Error("Invalid On-Chain data");
+    if(!Array.isArray(data))
+      throw new Error("Invalid On-Chain data");
 
-chainData=data
+    chainData=
+      data
+        .filter(c=>
+          c.tvl!==null &&
+          c.tvl!==undefined
+        )
+        .sort(
+          (a,b)=>
+            Number(b.tvl||0)-
+            Number(a.tvl||0)
+        );
 
-.filter(c=>
-c.tvl!==null &&
-c.tvl!==undefined
-)
+    document
+      .getElementById("chainCount")
+      .textContent=
+        chainData.length+" Chains";
 
-.sort((a,b)=>
-Number(b.tvl||0)-
-Number(a.tvl||0)
-);
+    render();
 
-document.getElementById("chainCount")
-.textContent=
-chainData.length+" Chains";
+  }catch(error){
 
-render();
+    console.error(error);
 
-}catch(error){
-
-console.error(error);
-
-document.getElementById("chainCount")
-.textContent="API Error";
-
-}
-
+    document
+      .getElementById("chainCount")
+      .textContent="API Error";
+  }
 }
 
 async function loadMarkets(){
 
-try{
+  try{
 
-const response=
-await fetch(
-"/api/markets",
-{cache:"no-store"}
-);
+    const response=
+      await fetch(
+        "/api/markets",
+        {cache:"no-store"}
+      );
 
-if(!response.ok)
-throw new Error("DEX Market API failed");
+    if(!response.ok)
+      throw new Error("DEX Market API failed");
 
-const data=
-await response.json();
+    const data=
+      await response.json();
 
-if(!Array.isArray(data))
-throw new Error("Invalid DEX market data");
+    if(!Array.isArray(data))
+      throw new Error("Invalid DEX market data");
 
-/*
-Minimum liquidity filter.
-Removes abnormal pools
-with huge volume and very low liquidity.
-*/
+    marketData=
+      data
+        .filter(m=>
+          Number(m.liquidity||0)>=100000 &&
+          Number(m.volume24h||0)>0
+        )
+        .sort(
+          (a,b)=>
+            Number(b.volume24h||0)-
+            Number(a.volume24h||0)
+        )
+        .slice(0,100);
 
-marketData=data
+    render();
 
-.filter(m=>
-Number(m.liquidity||0)>=100000 &&
-Number(m.volume24h||0)>0
-)
+  }catch(error){
 
-.sort((a,b)=>
-Number(b.volume24h||0)-
-Number(a.volume24h||0)
-)
+    console.error(error);
 
-.slice(0,100);
+    if(currentTab==="On-Chain"){
 
-render();
+      const status=
+        document.getElementById("status");
 
-}catch(error){
-
-console.error(error);
-
-if(currentTab==="On-Chain"){
-
-document.getElementById("status")
-.textContent="DEX API Error";
-
-document.getElementById("status")
-.className="status error";
-
-}
-
-}
-
+      status.textContent="DEX API Error";
+      status.className="status error";
+    }
+  }
 }
 
 document
-.getElementById("search")
-.addEventListener(
-"input",
-render
-);
+  .getElementById("search")
+  .addEventListener(
+    "input",
+    render
+  );
 
 render();
 
@@ -586,3 +1060,6 @@ loadOnChain();
 loadMarkets();
 
 </script>
+
+</body>
+</html>
