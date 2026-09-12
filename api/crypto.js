@@ -1,63 +1,46 @@
 export default async function handler(req, res) {
-  const apiKey = process.env.CG_API_KEY;
-
-  if (!apiKey) {
-    return res.status(500).json({
-      error: "CG_API_KEY missing"
-    });
-  }
-
-  const url =
-    "https://api.coingecko.com/api/v3/coins/markets" +
-    "?vs_currency=usd" +
-    "&order=volume_desc" +
-    "&per_page=100" +
-    "&page=1" +
-    "&sparkline=false" +
-    "&price_change_percentage=24h";
-
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "accept": "application/json",
-        "x-cg-demo-api-key": apiKey
-      }
-    });
-
-    const text = await response.text();
-
-    let data;
-
-    try {
-      data = JSON.parse(text);
-    } catch {
-      return res.status(500).json({
-        error: "Invalid response from CoinGecko"
-      });
-    }
+    const response = await fetch(
+      "https://data-api.binance.vision/api/v3/ticker/24hr"
+    );
 
     if (!response.ok) {
       return res.status(response.status).json({
-        error:
-          data?.status?.error_message ||
-          data?.error ||
-          "CoinGecko API request failed"
+        error: "Market data failed"
       });
     }
+
+    const data = await response.json();
+
+    const markets = data
+      .filter(item => item.symbol.endsWith("USDT"))
+      .map((item, index) => ({
+        rank: index + 1,
+        pair: item.symbol.replace("USDT", "/USDT"),
+        exchange: "Binance",
+        price: Number(item.lastPrice),
+        volume24h: Number(item.quoteVolume),
+        change24h: Number(item.priceChangePercent)
+      }))
+      .sort((a, b) => b.volume24h - a.volume24h)
+      .slice(0, 100)
+      .map((item, index) => ({
+        ...item,
+        rank: index + 1
+      }));
 
     res.setHeader(
       "Cache-Control",
       "s-maxage=60, stale-while-revalidate=300"
     );
 
-    return res.status(200).json(data);
+    return res.status(200).json(markets);
 
   } catch (error) {
-    console.error("CoinGecko error:", error);
+    console.error("Crypto market error:", error);
 
     return res.status(500).json({
-      error: "CoinGecko request failed"
+      error: "Crypto market data failed"
     });
   }
 }
