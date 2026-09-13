@@ -400,7 +400,6 @@ On-Chain
 
 </header>
 
-
 <main>
 
 <section class="hero">
@@ -414,7 +413,6 @@ FlowRank tracks market activity across crypto and on-chain markets.
 </p>
 
 </section>
-
 
 <section class="stats">
 
@@ -430,7 +428,6 @@ Loading...
 
 </div>
 
-
 <div class="card">
 
 <div class="card-label">
@@ -442,7 +439,6 @@ Loading...
 </div>
 
 </div>
-
 
 <div class="card">
 
@@ -458,7 +454,6 @@ Current View
 
 </section>
 
-
 <section class="controls">
 
 <input
@@ -467,7 +462,6 @@ class="search"
 type="text"
 placeholder="Search assets, pairs or networks..."
 >
-
 
 <div class="tabs">
 
@@ -504,7 +498,6 @@ On-Chain
 
 </section>
 
-
 <div
 class="chain-panel"
 id="chainPanel"
@@ -518,6 +511,7 @@ Select Blockchain
 
 <button
 class="chain-btn active"
+data-chain="all"
 onclick="selectChain('all')"
 >
 All Chains
@@ -525,6 +519,7 @@ All Chains
 
 <button
 class="chain-btn"
+data-chain="solana"
 onclick="selectChain('solana')"
 >
 Solana
@@ -532,6 +527,7 @@ Solana
 
 <button
 class="chain-btn"
+data-chain="eth"
 onclick="selectChain('eth')"
 >
 Ethereum
@@ -539,6 +535,7 @@ Ethereum
 
 <button
 class="chain-btn"
+data-chain="base"
 onclick="selectChain('base')"
 >
 Base
@@ -546,6 +543,7 @@ Base
 
 <button
 class="chain-btn"
+data-chain="bsc"
 onclick="selectChain('bsc')"
 >
 BNB
@@ -553,6 +551,7 @@ BNB
 
 <button
 class="chain-btn"
+data-chain="arbitrum"
 onclick="selectChain('arbitrum')"
 >
 Arbitrum
@@ -560,6 +559,7 @@ Arbitrum
 
 <button
 class="chain-btn"
+data-chain="polygon_pos"
 onclick="selectChain('polygon_pos')"
 >
 Polygon
@@ -567,6 +567,7 @@ Polygon
 
 <button
 class="chain-btn"
+data-chain="avalanche"
 onclick="selectChain('avalanche')"
 >
 Avalanche
@@ -575,7 +576,6 @@ Avalanche
 </div>
 
 </div>
-
 
 <div
 class="card"
@@ -608,7 +608,6 @@ Connecting...
 
 </div>
 
-
 <div
 style="
 display:flex;
@@ -621,29 +620,22 @@ flex-wrap:wrap;
 >
 
 <span>
-
 Source:
-
 <strong id="source">
 Binance
 </strong>
-
 </span>
 
 <span>
-
 Ranking:
-
 <strong id="ranking">
 24h pair volume
 </strong>
-
 </span>
 
 </div>
 
 </div>
-
 
 <div class="table-wrap">
 
@@ -684,7 +676,6 @@ Loading market data...
 
 </div>
 
-
 <section class="section">
 
 <div
@@ -693,7 +684,6 @@ id="lowerTitle"
 >
 Top Gainers (24h)
 </div>
-
 
 <div
 class="rows"
@@ -710,7 +700,6 @@ Loading...
 
 </main>
 
-
 <footer>
 
 FlowRank — Market data dashboard.
@@ -718,65 +707,45 @@ Data may be delayed or incomplete.
 
 </footer>
 
-
 <script>
 
 let currentTab = "Crypto";
-
 let selectedChain = "all";
 
 let liveData = [];
-
 let chainData = [];
-
 let marketData = [];
 
+
+/* =========================
+   HELPERS
+========================= */
 
 function money(value){
 
 const n = Number(value);
 
 if(!Number.isFinite(n) || n === 0){
-
 return "—";
-
 }
 
 if(n >= 1e12){
-
-return "$" +
-(n / 1e12).toFixed(2) +
-"T";
-
+return "$" + (n / 1e12).toFixed(2) + "T";
 }
 
 if(n >= 1e9){
-
-return "$" +
-(n / 1e9).toFixed(2) +
-"B";
-
+return "$" + (n / 1e9).toFixed(2) + "B";
 }
 
 if(n >= 1e6){
-
-return "$" +
-(n / 1e6).toFixed(2) +
-"M";
-
+return "$" + (n / 1e6).toFixed(2) + "M";
 }
 
 if(n >= 1e3){
-
-return "$" +
-(n / 1e3).toFixed(2) +
-"K";
-
+return "$" + (n / 1e3).toFixed(2) + "K";
 }
 
-return "$" +
-n.toFixed(2);
-
+return "$" + n.toFixed(2);
 }
 
 
@@ -785,13 +754,10 @@ function formatNumber(value){
 const n = Number(value);
 
 if(!Number.isFinite(n)){
-
 return "—";
-
 }
 
 return n.toLocaleString("en-US");
-
 }
 
 
@@ -800,19 +766,15 @@ function price(value){
 const n = Number(value);
 
 if(!Number.isFinite(n) || n === 0){
-
 return "—";
-
 }
 
-return "$" +
-n.toLocaleString(
+return "$" + n.toLocaleString(
 "en-US",
 {
 maximumFractionDigits:8
 }
 );
-
 }
 
 
@@ -821,15 +783,10 @@ function change(value){
 const n = Number(value);
 
 if(!Number.isFinite(n)){
-
 return "—";
-
 }
 
-return (n >= 0 ? "+" : "") +
-n.toFixed(2) +
-"%";
-
+return (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
 }
 
 
@@ -841,7 +798,6 @@ return String(value ?? "")
 .replace(/>/g,"&gt;")
 .replace(/"/g,"&quot;")
 .replace(/'/g,"&#039;");
-
 }
 
 
@@ -850,135 +806,156 @@ function chainLabel(network){
 const labels = {
 
 eth:"Ethereum",
-
 solana:"Solana",
-
 base:"Base",
-
 bsc:"BNB",
-
 arbitrum:"Arbitrum",
-
 polygon_pos:"Polygon",
-
 avalanche:"Avalanche"
 
 };
 
-return labels[network] ||
-network ||
-"Unknown";
-
+return labels[network] || network || "Unknown";
 }
 
 
 function age(createdAt){
 
 if(!createdAt){
-
 return "—";
-
 }
 
-const time =
-new Date(createdAt).getTime();
+const time = new Date(createdAt).getTime();
 
 if(!Number.isFinite(time)){
-
 return "—";
-
 }
 
-const diff =
-Math.max(
-0,
-Date.now() - time
-);
+const diff = Math.max(0,Date.now() - time);
 
-const minutes =
-Math.floor(
-diff / 60000
-);
+const minutes = Math.floor(diff / 60000);
 
 if(minutes < 60){
-
 return minutes + "m";
-
 }
 
-const hours =
-Math.floor(
-minutes / 60
-);
+const hours = Math.floor(minutes / 60);
 
 if(hours < 24){
-
 return hours + "h";
-
 }
 
-const days =
-Math.floor(
-hours / 24
-);
+const days = Math.floor(hours / 24);
 
 if(days < 30){
-
 return days + "d";
-
 }
 
-const months =
-Math.floor(
-days / 30
-);
+const months = Math.floor(days / 30);
 
 if(months < 12){
-
 return months + "mo";
-
 }
 
-return Math.floor(
-months / 12
-) + "y";
-
+return Math.floor(months / 12) + "y";
 }
 
 
 function isNew(createdAt){
 
 if(!createdAt){
-
 return false;
-
 }
 
-const time =
-new Date(createdAt).getTime();
+const time = new Date(createdAt).getTime();
 
 if(!Number.isFinite(time)){
-
 return false;
-
 }
 
-const diff =
-Date.now() - time;
+const diff = Date.now() - time;
 
-return (
-diff >= 0 &&
-diff <=
-7 * 24 * 60 * 60 * 1000
+return diff >= 0 &&
+diff <= 7 * 24 * 60 * 60 * 1000;
+}
+
+
+/* =========================
+   API FETCH HELPER
+========================= */
+
+async function fetchJSON(path){
+
+const controller = new AbortController();
+
+const timeout = setTimeout(
+() => controller.abort(),
+15000
+);
+
+try{
+
+const url =
+window.location.origin +
+path +
+(path.includes("?") ? "&" : "?") +
+"_=" +
+Date.now();
+
+const response = await fetch(
+url,
+{
+cache:"no-store",
+signal:controller.signal,
+headers:{
+"Accept":"application/json"
+}
+}
+);
+
+if(!response.ok){
+
+throw new Error(
+path +
+" returned HTTP " +
+response.status
 );
 
 }
 
+const data = await response.json();
+
+return data;
+
+}catch(error){
+
+if(error.name === "AbortError"){
+
+throw new Error(
+path +
+" request timed out"
+);
+
+}
+
+throw error;
+
+}finally{
+
+clearTimeout(timeout);
+
+}
+
+}
+
+
+/* =========================
+   TABS
+========================= */
 
 function setTab(tab){
 
 currentTab = tab;
-
 selectedChain = "all";
 
 document
@@ -992,11 +969,8 @@ button.dataset.tab === tab
 
 });
 
-
 const panel =
-document.getElementById(
-"chainPanel"
-);
+document.getElementById("chainPanel");
 
 if(tab === "On-Chain"){
 
@@ -1013,25 +987,21 @@ render();
 }
 
 
+/* =========================
+   CHAIN SELECT
+========================= */
+
 function selectChain(chain){
 
 selectedChain = chain;
 
-const buttons =
-document.querySelectorAll(
-".chain-btn"
-);
-
-buttons.forEach(button => {
-
-const value =
-button.getAttribute(
-"data-chain"
-);
+document
+.querySelectorAll(".chain-btn")
+.forEach(button => {
 
 button.classList.toggle(
 "active",
-value === chain
+button.dataset.chain === chain
 );
 
 });
@@ -1041,6 +1011,10 @@ render();
 }
 
 
+/* =========================
+   RENDER
+========================= */
+
 function render(){
 
 const search =
@@ -1049,7 +1023,6 @@ document
 .value
 .trim()
 .toLowerCase();
-
 
 const rows =
 document.getElementById("rows");
@@ -1079,12 +1052,15 @@ const head =
 document.getElementById("tableHead");
 
 
-if(currentTab === "Stocks" ||
-currentTab === "Forex"){
+/* STOCKS / FOREX */
+
+if(
+currentTab === "Stocks" ||
+currentTab === "Forex"
+){
 
 title.textContent =
-currentTab +
-" market data";
+currentTab + " market data";
 
 status.textContent =
 "Coming next";
@@ -1122,9 +1098,7 @@ rows.innerHTML = `
 
 <div class="empty">
 
-The ${
-escapeHTML(currentTab)
-}
+The ${escapeHTML(currentTab)}
 data feed will be connected next.
 
 </div>
@@ -1136,14 +1110,14 @@ data feed will be connected next.
 `;
 
 gainers.innerHTML =
-`<div class="empty">
-Coming soon
-</div>`;
+`<div class="empty">Coming soon</div>`;
 
 return;
 
 }
 
+
+/* CRYPTO */
 
 if(currentTab === "Crypto"){
 
@@ -1193,23 +1167,16 @@ liveData.filter(item => {
 
 const pair =
 String(
-item.pair ||
-item.symbol ||
-""
-)
-.toLowerCase();
+item.pair || ""
+).toLowerCase();
 
 const exchange =
 String(
-item.exchange ||
-""
-)
-.toLowerCase();
+item.exchange || ""
+).toLowerCase();
 
-return (
-pair.includes(search) ||
-exchange.includes(search)
-);
+return pair.includes(search) ||
+exchange.includes(search);
 
 });
 
@@ -1261,11 +1228,7 @@ filtered.map(
 (item,index) => {
 
 const p =
-Number(
-item.change24h ||
-item.priceChangePercent ||
-0
-);
+Number(item.change24h || 0);
 
 return `
 
@@ -1280,9 +1243,7 @@ ${index + 1}
 <span class="asset">
 
 ${escapeHTML(
-item.pair ||
-item.symbol ||
-"Unknown"
+item.pair || "Unknown"
 )}
 
 </span>
@@ -1292,35 +1253,21 @@ item.symbol ||
 <td class="network">
 
 ${escapeHTML(
-item.exchange ||
-"Binance"
+item.exchange || "Binance"
 )}
 
 </td>
 
 <td>
-
-${price(
-item.price ||
-item.lastPrice
-)}
-
+${price(item.price)}
 </td>
 
 <td>
-
-${money(
-item.volume24h ||
-item.volume ||
-item.quoteVolume
-)}
-
+${money(item.volume24h)}
 </td>
 
 <td class="${
-p >= 0
-? "up"
-: "down"
+p >= 0 ? "up" : "down"
 }">
 
 ${change(p)}
@@ -1332,39 +1279,24 @@ ${change(p)}
 `;
 
 }
-)
-.join("");
+).join("");
 
 }
 
 
+/* TOP GAINERS */
+
 const top =
 liveData
-
 .filter(item =>
-
-Number(
-item.change24h ||
-item.priceChangePercent ||
-0
-) > 0
-
+Number(item.change24h || 0) > 0
 )
-
+.slice()
 .sort(
 (a,b) =>
-Number(
-b.change24h ||
-b.priceChangePercent ||
-0
-) -
-Number(
-a.change24h ||
-a.priceChangePercent ||
-0
+Number(b.change24h || 0) -
+Number(a.change24h || 0)
 )
-)
-
 .slice(0,7);
 
 
@@ -1381,11 +1313,7 @@ gainers.innerHTML =
 top.map(item => {
 
 const p =
-Number(
-item.change24h ||
-item.priceChangePercent ||
-0
-);
+Number(item.change24h || 0);
 
 return `
 
@@ -1396,39 +1324,23 @@ return `
 <span>
 
 ${escapeHTML(
-item.pair ||
-item.symbol ||
-"Unknown"
+item.pair || "Unknown"
 )}
 
 </span>
 
 <span class="row-sub">
 
-${price(
-item.price ||
-item.lastPrice
-)}
-
+${price(item.price)}
 ·
-
-${money(
-item.volume24h ||
-item.volume ||
-item.quoteVolume
-)}
-
+${money(item.volume24h)}
 volume
 
 </span>
 
 </div>
 
-<span class="${
-p >= 0
-? "up"
-: "down"
-}">
+<span class="up">
 
 ${change(p)}
 
@@ -1438,8 +1350,7 @@ ${change(p)}
 
 `;
 
-})
-.join("");
+}).join("");
 
 }
 
@@ -1448,6 +1359,8 @@ return;
 }
 
 
+/* ON-CHAIN */
+
 const chainFiltered =
 selectedChain === "all"
 ?
@@ -1455,8 +1368,7 @@ marketData
 :
 marketData.filter(
 item =>
-item.network ===
-selectedChain
+item.network === selectedChain
 );
 
 
@@ -1465,22 +1377,16 @@ chainFiltered.filter(item => {
 
 const name =
 String(
-item.name ||
-""
-)
-.toLowerCase();
+item.name || ""
+).toLowerCase();
 
 const network =
 String(
-item.network ||
-""
-)
-.toLowerCase();
+item.network || ""
+).toLowerCase();
 
-return (
-name.includes(search) ||
-network.includes(search)
-);
+return name.includes(search) ||
+network.includes(search);
 
 });
 
@@ -1556,9 +1462,7 @@ Loading DEX market data...
 `;
 
 gainers.innerHTML =
-`<div class="loading">
-Loading...
-</div>`;
+`<div class="loading">Loading...</div>`;
 
 return;
 
@@ -1592,14 +1496,10 @@ filtered.map(
 (item,index) => {
 
 const marketCap =
-Number(
-item.marketCap || 0
-);
+Number(item.marketCap || 0);
 
 const fdv =
-Number(
-item.fdv || 0
-);
+Number(item.fdv || 0);
 
 const displayValue =
 marketCap > 0
@@ -1620,9 +1520,7 @@ fdv > 0
 "N/A";
 
 const p =
-Number(
-item.change24h || 0
-);
+Number(item.change24h || 0);
 
 const badge =
 isNew(item.createdAt)
@@ -1636,9 +1534,7 @@ return `
 <tr>
 
 <td class="rank">
-
 ${index + 1}
-
 </td>
 
 <td>
@@ -1646,8 +1542,7 @@ ${index + 1}
 <span class="asset">
 
 ${escapeHTML(
-item.name ||
-"Unknown"
+item.name || "Unknown"
 )}
 
 </span>
@@ -1659,19 +1554,13 @@ ${badge}
 <td class="network">
 
 ${escapeHTML(
-chainLabel(
-item.network
-)
+chainLabel(item.network)
 )}
 
 </td>
 
 <td>
-
-${price(
-item.price
-)}
-
+${price(item.price)}
 </td>
 
 <td>
@@ -1693,25 +1582,15 @@ ${valueType}
 </td>
 
 <td>
-
-${money(
-item.liquidity
-)}
-
+${money(item.liquidity)}
 </td>
 
 <td>
-
-${money(
-item.volume24h
-)}
-
+${money(item.volume24h)}
 </td>
 
 <td class="${
-p >= 0
-? "up"
-: "down"
+p >= 0 ? "up" : "down"
 }">
 
 ${change(p)}
@@ -1719,35 +1598,19 @@ ${change(p)}
 </td>
 
 <td>
-
-${formatNumber(
-item.transactions24h
-)}
-
+${formatNumber(item.transactions24h)}
 </td>
 
 <td>
-
-${formatNumber(
-item.buys24h
-)}
-
+${formatNumber(item.buys24h)}
 </td>
 
 <td>
-
-${formatNumber(
-item.sells24h
-)}
-
+${formatNumber(item.sells24h)}
 </td>
 
 <td>
-
-${age(
-item.createdAt
-)}
-
+${age(item.createdAt)}
 </td>
 
 </tr>
@@ -1755,8 +1618,7 @@ item.createdAt
 `;
 
 }
-)
-.join("");
+).join("");
 
 }
 
@@ -1788,28 +1650,19 @@ return `
 <div class="row-main">
 
 <span>
-
 ${escapeHTML(
-chain.name ||
-"Unknown"
+chain.name || "Unknown"
 )}
-
 </span>
 
 <span class="row-sub">
-
 Chain TVL
-
 </span>
 
 </div>
 
 <span>
-
-${money(
-chain.tvl
-)}
-
+${money(chain.tvl)}
 </span>
 
 </div>
@@ -1826,12 +1679,8 @@ chainFiltered
 .slice()
 .sort(
 (a,b) =>
-Number(
-b.volume24h || 0
-) -
-Number(
-a.volume24h || 0
-)
+Number(b.volume24h || 0) -
+Number(a.volume24h || 0)
 )
 .slice(0,7);
 
@@ -1855,12 +1704,9 @@ return `
 <div class="row-main">
 
 <span>
-
 ${escapeHTML(
-item.name ||
-"Unknown"
+item.name || "Unknown"
 )}
-
 </span>
 
 <span class="row-sub">
@@ -1868,13 +1714,11 @@ item.name ||
 ${formatNumber(
 item.transactions24h
 )}
-
 transactions ·
 
 ${money(
 item.liquidity
 )}
-
 liquidity
 
 </span>
@@ -1882,19 +1726,14 @@ liquidity
 </div>
 
 <span>
-
-${money(
-item.volume24h
-)}
-
+${money(item.volume24h)}
 </span>
 
 </div>
 
 `;
 
-})
-.join("");
+}).join("");
 
 }
 
@@ -1902,33 +1741,17 @@ item.volume24h
 
 }
 
+
+/* =========================
+   CRYPTO API
+========================= */
 
 async function loadCrypto(){
 
 try{
 
-const response =
-await fetch(
-"/api/crypto",
-{
-cache:"no-store"
-}
-);
-
-
-if(!response.ok){
-
-throw new Error(
-"Crypto API " +
-response.status
-);
-
-}
-
-
 const data =
-await response.json();
-
+await fetchJSON("/api/crypto");
 
 if(!Array.isArray(data)){
 
@@ -1937,7 +1760,6 @@ throw new Error(
 );
 
 }
-
 
 liveData =
 data.map(item => {
@@ -1979,14 +1801,12 @@ item.priceChangePercent ||
 
 });
 
-
 document.getElementById(
 "cryptoCount"
 ).textContent =
 liveData.length;
 
 render();
-
 
 }catch(error){
 
@@ -2002,136 +1822,50 @@ document.getElementById(
 
 if(currentTab === "Crypto"){
 
-document.getElementById(
-"status"
-).textContent =
+const status =
+document.getElementById("status");
+
+status.textContent =
+error.message ||
 "Crypto data failed";
 
-document.getElementById(
-"status"
-).className =
+status.className =
 "status error";
 
-}
-
-}
-
-}
-
-
-async function loadChains(){
-
-try{
-
-const response =
-await fetch(
-"/api/onchain",
-{
-cache:"no-store"
-}
-);
-
-
-if(!response.ok){
-
-throw new Error(
-"Chain API " +
-response.status
-);
-
-}
-
-
-const data =
-await response.json();
-
-
-if(!Array.isArray(data)){
-
-throw new Error(
-"Invalid chain data"
-);
-
-}
-
-
-chainData =
-data
-.map(item => {
-
-return {
-
-name:
-item.name ||
-item.slug ||
-"Unknown",
-
-tvl:
-Number(
-item.tvl || 0
-)
-
-};
-
-})
-.sort(
-(a,b) =>
-Number(b.tvl || 0) -
-Number(a.tvl || 0)
-);
-
-
 document.getElementById(
-"chainCount"
-).textContent =
-chainData.length;
+"rows"
+).innerHTML = `
 
+<tr>
 
-render();
+<td colspan="6">
 
+<div class="empty">
 
-}catch(error){
+Crypto API error:<br>
 
-console.error(
-"Chain error:",
-error
-);
+${escapeHTML(
+error.message ||
+"Unknown error"
+)}
 
-document.getElementById(
-"chainCount"
-).textContent =
-"Error";
+</div>
+
+</td>
+
+</tr>
+
+`;
+
+}
 
 }
 
 }
 
 
-async function loadMarkets(){
+/* =========================
+   CHAIN API
+========================= */
 
-try{
-
-const response =
-await fetch(
-"/api/markets",
-{
-cache:"no-store"
-}
-);
-
-
-if(!response.ok){
-
-throw new Error(
-"Markets API " +
-response.status
-);
-
-}
-
-
-const data =
-await response.json();
-
-
-if(!Array.
+async function loadCh
