@@ -1,2093 +1,1199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
 
-<title>FlowRank — Market Dashboard</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-<style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+  <title>FlowRank — See Where The Volume Flows</title>
 
-body{
-  font-family:Arial,Helvetica,sans-serif;
-  background:#07111f;
-  color:#f5f7fa;
-  min-height:100vh;
-}
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-header{
-  border-bottom:1px solid #1d2b3d;
-  background:#0a1626;
-  position:sticky;
-  top:0;
-  z-index:10;
-}
+    body {
+      margin: 0;
+      background: #05070b;
+      color: #f5f7fa;
+      font-family:
+        Inter,
+        Arial,
+        Helvetica,
+        sans-serif;
+    }
 
-.header-inner{
-  max-width:1200px;
-  margin:auto;
-  padding:18px 20px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:20px;
-}
+    button,
+    input {
+      font: inherit;
+    }
 
-.logo{
-  font-size:22px;
-  font-weight:800;
-}
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(5, 7, 11, 0.96);
+      border-bottom: 1px solid #1b2029;
+      backdrop-filter: blur(12px);
+    }
 
-.logo span{
-  color:#42d392;
-}
+    .topbar-inner {
+      max-width: 1500px;
+      margin: auto;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
 
-nav{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 220px;
+    }
 
-button{
-  font-family:inherit;
-}
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(
+        135deg,
+        #ffffff,
+        #7d8797
+      );
+      color: #05070b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 20px;
+    }
 
-nav button,
-.tabs button,
-.chain-btn{
-  background:transparent;
-  border:1px solid transparent;
-  color:#91a0b4;
-  padding:9px 14px;
-  border-radius:8px;
-  cursor:pointer;
-}
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
 
-nav button:hover,
-.tabs button:hover,
-.tabs button.active,
-.chain-btn:hover,
-.chain-btn.active{
-  background:#132237;
-  color:#fff;
-}
+    .brand-subtitle {
+      color: #7d8797;
+      font-size: 11px;
+      margin-top: 3px;
+    }
 
-main{
-  max-width:1200px;
-  margin:auto;
-  padding:35px 20px 60px;
-}
+    .search {
+      width: min(430px, 100%);
+      position: relative;
+    }
 
-.hero{
-  margin-bottom:25px;
-}
+    .search input {
+      width: 100%;
+      padding: 11px 14px 11px 40px;
+      border-radius: 10px;
+      border: 1px solid #252c37;
+      background: #0b0f15;
+      color: white;
+      outline: none;
+    }
 
-.hero h1{
-  font-size:38px;
-  margin-bottom:10px;
-}
+    .search input:focus {
+      border-color: #4a5565;
+    }
 
-.hero p{
-  color:#91a0b4;
-  line-height:1.6;
-}
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #778191;
+    }
 
-.stats{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:15px;
-  margin:25px 0;
-}
+    .container {
+      max-width: 1500px;
+      margin: auto;
+      padding: 24px 22px 60px;
+    }
 
-.card{
-  background:#0c192a;
-  border:1px solid #1d2b3d;
-  border-radius:14px;
-  padding:20px;
-}
+    .hero {
+      padding: 18px 0 22px;
+    }
 
-.card-label{
-  color:#91a0b4;
-  font-size:13px;
-  margin-bottom:8px;
-}
+    .hero h1 {
+      margin: 0;
+      font-size: 32px;
+      letter-spacing: -1px;
+    }
 
-.card-value{
-  font-size:25px;
-  font-weight:700;
-}
+    .hero p {
+      margin: 8px 0 0;
+      color: #8c96a5;
+      font-size: 14px;
+    }
 
-.controls{
-  display:flex;
-  justify-content:space-between;
-  gap:15px;
-  margin-bottom:15px;
-  flex-wrap:wrap;
-}
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 18px;
+    }
 
-.search{
-  flex:1;
-  min-width:220px;
-  background:#0c192a;
-  border:1px solid #1d2b3d;
-  color:#fff;
-  padding:13px 15px;
-  border-radius:9px;
-  outline:none;
-}
+    .tab {
+      border: 1px solid #242b36;
+      background: #0b0f15;
+      color: #8993a2;
+      padding: 9px 16px;
+      border-radius: 9px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
 
-.search:focus{
-  border-color:#42d392;
-}
+    .tab:hover {
+      color: white;
+    }
 
-.tabs{
-  display:flex;
-  gap:6px;
-  background:#0c192a;
-  border:1px solid #1d2b3d;
-  padding:5px;
-  border-radius:10px;
-}
+    .tab.active {
+      background: #f4f6f8;
+      color: #05070b;
+      border-color: #f4f6f8;
+      font-weight: 700;
+    }
 
-.tabs button{
-  white-space:nowrap;
-}
+    .chains {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
 
-.status{
-  color:#42d392;
-  font-size:13px;
-  padding:10px 0;
-}
+    .chain {
+      border: 1px solid #222934;
+      background: #090d13;
+      color: #8e98a7;
+      padding: 7px 11px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
 
-.status.error{
-  color:#ff6868;
-}
+    .chain.active {
+      color: white;
+      border-color: #667080;
+      background: #111720;
+    }
 
-.chain-panel{
-  display:none;
-  margin-bottom:15px;
-}
+    .stats {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
 
-.chain-panel.show{
-  display:block;
-}
+    .stat {
+      background: #090d13;
+      border: 1px solid #1c232d;
+      border-radius: 12px;
+      padding: 16px;
+    }
 
-.chain-title{
-  color:#91a0b4;
-  font-size:12px;
-  text-transform:uppercase;
-  margin-bottom:10px;
-}
+    .stat-label {
+      color: #7e8999;
+      font-size: 12px;
+    }
 
-.chain-buttons{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
+    .stat-value {
+      font-size: 22px;
+      font-weight: 800;
+      margin-top: 7px;
+    }
 
-.chain-btn{
-  background:#0c192a;
-  border:1px solid #1d2b3d;
-}
+    .panel {
+      border: 1px solid #1c232d;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #080c11;
+    }
 
-.table-wrap{
-  width:100%;
-  overflow-x:auto;
-  background:#0c192a;
-  border:1px solid #1d2b3d;
-  border-radius:14px;
-}
+    .panel-head {
+      padding: 18px;
+      border-bottom: 1px solid #1c232d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
 
-table{
-  width:100%;
-  min-width:1100px;
-  border-collapse:collapse;
-}
+    .panel-title {
+      font-size: 17px;
+      font-weight: 800;
+    }
 
-th{
-  text-align:left;
-  color:#7f8da2;
-  font-size:12px;
-  text-transform:uppercase;
-  letter-spacing:.5px;
-  padding:15px;
-  border-bottom:1px solid #1d2b3d;
-  white-space:nowrap;
-}
+    .panel-subtitle {
+      color: #778292;
+      font-size: 12px;
+      margin-top: 4px;
+    }
 
-td{
-  padding:15px;
-  border-bottom:1px solid #172638;
-  font-size:14px;
-  white-space:nowrap;
-}
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #8f9aaa;
+      font-size: 12px;
+    }
 
-tr:last-child td{
-  border-bottom:0;
-}
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #63d391;
+      box-shadow:
+        0 0 8px rgba(99, 211, 145, 0.6);
+    }
 
-.rank{
-  color:#6f7f93;
-}
+    .table-wrap {
+      overflow-x: auto;
+    }
 
-.asset{
-  font-weight:700;
-}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1050px;
+    }
 
-.network{
-  color:#9aa8b9;
-}
+    th {
+      text-align: left;
+      padding: 12px 14px;
+      color: #6f7988;
+      font-size: 11px;
+      font-weight: 700;
+      border-bottom: 1px solid #1b222c;
+      white-space: nowrap;
+    }
 
-.up{
-  color:#42d392;
-}
+    td {
+      padding: 13px 14px;
+      border-bottom: 1px solid #121820;
+      font-size: 12px;
+      white-space: nowrap;
+    }
 
-.down{
-  color:#ff6868;
-}
+    tr:hover td {
+      background: #0c1118;
+    }
 
-.new-badge{
-  display:inline-block;
-  margin-left:7px;
-  padding:3px 6px;
-  border-radius:5px;
-  background:#173d32;
-  color:#42d392;
-  font-size:10px;
-  font-weight:700;
-}
+    .rank {
+      color: #6e7887;
+      width: 45px;
+    }
 
-.loading,
-.empty{
-  padding:35px;
-  text-align:center;
-  color:#8290a4;
-}
+    .pair {
+      font-weight: 750;
+      color: #f5f7fa;
+    }
 
-.section{
-  margin-top:25px;
-}
+    .network {
+      color: #9aa4b3;
+    }
 
-.section-title{
-  font-size:18px;
-  margin-bottom:12px;
-}
+    .positive {
+      color: #65d391;
+    }
 
-.rows{
-  background:#0c192a;
-  border:1px solid #1d2b3d;
-  border-radius:14px;
-  overflow:hidden;
-}
+    .negative {
+      color: #ff7474;
+    }
 
-.row{
-  display:flex;
-  justify-content:space-between;
-  gap:20px;
-  padding:15px 18px;
-  border-bottom:1px solid #172638;
-}
+    .muted {
+      color: #737e8d;
+    }
 
-.row:last-child{
-  border-bottom:0;
-}
+    .new-badge {
+      display: inline-block;
+      margin-left: 7px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #202833;
+      color: #c9d1dc;
+      font-size: 9px;
+      font-weight: 800;
+    }
 
-.row-main{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
+    .value-type {
+      display: block;
+      color: #687382;
+      font-size: 9px;
+      margin-top: 3px;
+      text-transform: uppercase;
+    }
 
-.row-sub{
-  color:#718198;
-  font-size:12px;
-}
+    .section {
+      margin-top: 22px;
+    }
 
-footer{
-  max-width:1200px;
-  margin:auto;
-  padding:20px;
-  color:#65758b;
-  font-size:12px;
-  text-align:center;
-}
+    .section-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
 
-@media(max-width:700px){
+    .chain-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
 
-  .header-inner{
-    align-items:flex-start;
-    flex-direction:column;
-  }
+    .chain-card {
+      border: 1px solid #1c232d;
+      background: #090d13;
+      border-radius: 11px;
+      padding: 14px;
+    }
 
-  .hero h1{
-    font-size:30px;
-  }
+    .chain-card-name {
+      font-weight: 750;
+    }
 
-  .stats{
-    grid-template-columns:1fr;
-  }
+    .chain-card-value {
+      font-size: 18px;
+      font-weight: 800;
+      margin-top: 8px;
+    }
 
-  .controls{
-    flex-direction:column;
-  }
+    .chain-card-label {
+      color: #6f7988;
+      font-size: 11px;
+      margin-top: 3px;
+    }
 
-  .tabs{
-    overflow-x:auto;
-  }
+    .empty {
+      padding: 50px 20px;
+      text-align: center;
+      color: #737e8d;
+    }
 
-  .chain-buttons{
-    overflow-x:auto;
-    flex-wrap:nowrap;
-    padding-bottom:5px;
-  }
+    .loading {
+      padding: 50px 20px;
+      text-align: center;
+      color: #7c8796;
+    }
 
-  .chain-btn{
-    white-space:nowrap;
-  }
-}
-</style>
+    .error {
+      padding: 25px;
+      color: #ff7d7d;
+      text-align: center;
+    }
+
+    .footer {
+      padding: 35px 0 0;
+      text-align: center;
+      color: #56606f;
+      font-size: 11px;
+    }
+
+    @media (max-width: 900px) {
+      .topbar-inner {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search {
+        width: 100%;
+      }
+
+      .stats {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+
+      .chain-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding-left: 13px;
+        padding-right: 13px;
+      }
+
+      .hero h1 {
+        font-size: 25px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .stat {
+        padding: 12px;
+      }
+
+      .stat-value {
+        font-size: 18px;
+      }
+
+      .chain-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<header>
+  <header class="topbar">
+    <div class="topbar-inner">
 
-<div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">F</div>
+
+        <div>
+          <div class="brand-title">
+            FlowRank
+          </div>
+
+          <div class="brand-subtitle">
+            See Where The Volume Flows
+          </div>
+        </div>
+      </div>
+
+      <div class="search">
+        <span class="search-icon">⌕</span>
 
-<div class="logo">
-Flow<span>Rank</span>
-</div>
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Search pair, token or network..."
+        >
+      </div>
+
+    </div>
+  </header>
+
 
-<nav>
+  <main class="container">
 
-<button onclick="setTab('Crypto',this)">
-Home
-</button>
+    <section class="hero">
+      <h1>
+        Market Activity Dashboard
+      </h1>
 
-<button onclick="setTab('Crypto',this)">
-Crypto
-</button>
+      <p>
+        Track crypto, on-chain activity,
+        liquidity and market volume in one place.
+      </p>
+    </section>
 
-<button onclick="setTab('Stocks',this)">
-Stocks
-</button>
 
-<button onclick="setTab('Forex',this)">
-Forex
-</button>
+    <div class="tabs">
 
-<button onclick="setTab('On-Chain',this)">
-On-Chain
-</button>
+      <button
+        class="tab active"
+        data-tab="Crypto"
+      >
+        Crypto
+      </button>
 
-</nav>
+      <button
+        class="tab"
+        data-tab="On-Chain"
+      >
+        On-Chain
+      </button>
 
-</div>
+      <button
+        class="tab"
+        data-tab="Stocks"
+      >
+        Stocks
+      </button>
 
-</header>
+      <button
+        class="tab"
+        data-tab="Forex"
+      >
+        Forex
+      </button>
 
+    </div>
 
-<main>
 
-<section class="hero">
+    <div
+      id="chainButtons"
+      class="chains"
+    ></div>
 
-<h1>
-See Where The Volume Flows.
-</h1>
 
-<p>
-FlowRank tracks market activity across crypto and on-chain markets.
-</p>
+    <div
+      id="stats"
+      class="stats"
+    ></div>
 
-</section>
 
+    <section class="panel">
 
-<section class="stats">
+      <div class="panel-head">
 
-<div class="card">
+        <div>
+          <div
+            id="panelTitle"
+            class="panel-title"
+          >
+            Loading...
+          </div>
 
-<div class="card-label">
-Crypto Markets
-</div>
+          <div
+            id="panelSubtitle"
+            class="panel-subtitle"
+          >
+            Loading market data...
+          </div>
+        </div>
 
-<div class="card-value" id="cryptoCount">
-Loading...
-</div>
+        <div class="live">
+          <span class="live-dot"></span>
+          Live Data
+        </div>
 
-</div>
+      </div>
 
 
-<div class="card">
+      <div
+        id="content"
+        class="table-wrap"
+      >
+        <div class="loading">
+          Loading...
+        </div>
+      </div>
 
-<div class="card-label">
-Chains
-</div>
+    </section>
 
-<div class="card-value" id="chainCount">
-Loading...
-</div>
 
-</div>
+    <section
+      id="extraSection"
+      class="section"
+    ></section>
 
 
-<div class="card">
+    <div class="footer">
+      FlowRank • Market data dashboard
+    </div>
 
-<div class="card-label">
-Current View
-</div>
+  </main>
 
-<div class="card-value" id="overviewCount">
-—
-</div>
 
-</div>
+  <script>
 
-</section>
+    let currentTab = "Crypto";
 
+    let selectedChain = "all";
 
-<section class="controls">
+    let liveData = [];
 
-<input
-id="search"
-class="search"
-type="text"
-placeholder="Search assets, pairs or networks..."
->
-
-
-<div class="tabs">
-
-<button
-class="active"
-onclick="setTab('Crypto',this)">
-Crypto
-</button>
-
-<button
-onclick="setTab('Stocks',this)">
-Stocks
-</button>
-
-<button
-onclick="setTab('Forex',this)">
-Forex
-</button>
+    let chainData = [];
 
-<button
-onclick="setTab('On-Chain',this)">
-On-Chain
-</button>
+    let marketData = [];
 
-</div>
+    let searchTerm = "";
 
-</section>
 
+    function money(value) {
 
-<div
-class="chain-panel"
-id="chainPanel">
+      const n = Number(value || 0);
 
-<div class="chain-title">
-Select Blockchain
-</div>
+      if (!n) {
+        return "—";
+      }
 
-<div class="chain-buttons">
+      if (n >= 1e12) {
+        return "$" +
+          (n / 1e12).toFixed(2) +
+          "T";
+      }
 
-<button
-class="chain-btn active"
-onclick="selectChain('all',this)">
-All Chains
-</button>
+      if (n >= 1e9) {
+        return "$" +
+          (n / 1e9).toFixed(2) +
+          "B";
+      }
 
-<button
-class="chain-btn"
-onclick="selectChain('solana',this)">
-Solana
-</button>
+      if (n >= 1e6) {
+        return "$" +
+          (n / 1e6).toFixed(2) +
+          "M";
+      }
 
-<button
-class="chain-btn"
-onclick="selectChain('eth',this)">
-Ethereum
-</button>
+      if (n >= 1e3) {
+        return "$" +
+          (n / 1e3).toFixed(2) +
+          "K";
+      }
 
-<button
-class="chain-btn"
-onclick="selectChain('base',this)">
-Base
-</button>
+      return "$" +
+        n.toFixed(2);
+    }
 
-<button
-class="chain-btn"
-onclick="selectChain('bsc',this)">
-BNB
-</button>
 
-<button
-class="chain-btn"
-onclick="selectChain('arbitrum',this)">
-Arbitrum
-</button>
+    function number(value) {
 
-<button
-class="chain-btn"
-onclick="selectChain('polygon_pos',this)">
-Polygon
-</button>
+      const n = Number(value || 0);
 
-<button
-class="chain-btn"
-onclick="selectChain('avalanche',this)">
-Avalanche
-</button>
+      return n.toLocaleString(
+        "en-US",
+        {
+          maximumFractionDigits: 0
+        }
+      );
+    }
 
-</div>
 
-</div>
+    function price(value) {
 
+      const n = Number(value || 0);
 
-<div
-class="card"
-style="margin-bottom:15px;padding:15px 18px;">
+      if (!n) {
+        return "—";
+      }
 
-<div style="
-display:flex;
-justify-content:space-between;
-gap:15px;
-flex-wrap:wrap;
-">
+      if (n >= 1) {
+        return "$" +
+          n.toLocaleString(
+            "en-US",
+            {
+              maximumFractionDigits: 4
+            }
+          );
+      }
 
-<div>
+      return "$" +
+        n.toLocaleString(
+          "en-US",
+          {
+            maximumFractionDigits: 8
+          }
+        );
+    }
 
-<strong id="tableTitle">
-Top Crypto Pairs by 24h Volume
-</strong>
 
-</div>
+    function change(value) {
 
-<div
-class="status"
-id="status">
+      const n = Number(value || 0);
 
-Connecting...
+      const cls =
+        n >= 0
+          ? "positive"
+          : "negative";
 
-</div>
+      const sign =
+        n > 0
+          ? "+"
+          : "";
 
-</div>
+      return `
+        <span class="${cls}">
+          ${sign}${n.toFixed(2)}%
+        </span>
+      `;
+    }
 
 
-<div style="
-display:flex;
-gap:25px;
-margin-top:10px;
-color:#7f8da2;
-font-size:12px;
-flex-wrap:wrap;
-">
+    function escapeHTML(value) {
 
-<span>
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
 
-Source:
 
-<strong id="source">
-Binance
-</strong>
+    function chainLabel(value) {
 
-</span>
+      const map = {
+        eth: "Ethereum",
+        solana: "Solana",
+        base: "Base",
+        bsc: "BNB",
+        arbitrum: "Arbitrum",
+        polygon_pos: "Polygon",
+        avalanche: "Avalanche"
+      };
 
+      return map[value] || value;
+    }
 
-<span>
 
-Ranking:
+    function age(date) {
 
-<strong id="ranking">
-24h pair volume
-</strong>
+      if (!date) {
+        return "—";
+      }
 
-</span>
+      const created =
+        new Date(date).getTime();
 
-</div>
+      if (!created) {
+        return "—";
+      }
 
-</div>
+      const diff =
+        Date.now() - created;
 
+      const days =
+        Math.floor(
+          diff /
+          (1000 * 60 * 60 * 24)
+        );
 
-<div class="table-wrap">
+      if (days < 1) {
+        return "Today";
+      }
 
-<table>
+      if (days === 1) {
+        return "1 day";
+      }
 
-<thead>
+      return days + " days";
+    }
 
-<tr id="tableHead">
 
-<th>#</th>
+    function isNew(date) {
 
-<th>Pair</th>
+      if (!date) {
+        return false;
+      }
 
-<th>Exchange</th>
+      const created =
+        new Date(date).getTime();
 
-<th>Price</th>
+      if (!created) {
+        return false;
+      }
 
-<th>24h Volume</th>
+      return (
+        Date.now() - created
+      ) <=
+        7 *
+        24 *
+        60 *
+        60 *
+        1000;
+    }
 
-<th>24h Change</th>
 
-</tr>
+    function filteredMarkets() {
 
-</thead>
+      let data = [...marketData];
 
+      if (
+        selectedChain !== "all"
+      ) {
+        data =
+          data.filter(
+            item =>
+              item.network ===
+              selectedChain
+          );
+      }
 
-<tbody id="rows">
+      if (searchTerm) {
 
-<tr>
+        const term =
+          searchTerm.toLowerCase();
 
-<td colspan="6">
+        data =
+          data.filter(item =>
+            String(
+              item.name || ""
+            )
+              .toLowerCase()
+              .includes(term) ||
 
-<div class="loading">
-Loading market data...
-</div>
+            String(
+              item.network || ""
+            )
+              .toLowerCase()
+              .includes(term)
+          );
+      }
 
-</td>
+      return data;
+    }
 
-</tr>
 
-</tbody>
+    function renderStats() {
 
-</table>
+      const stats =
+        document.getElementById(
+          "stats"
+        );
 
-</div>
+      if (
+        currentTab === "On-Chain"
+      ) {
 
+        const data =
+          filteredMarkets();
 
-<section class="section">
+        const volume =
+          data.reduce(
+            (sum, item) =>
+              sum +
+              Number(
+                item.volume24h || 0
+              ),
+            0
+          );
 
-<div
-class="section-title"
-id="lowerTitle">
+        const liquidity =
+          data.reduce(
+            (sum, item) =>
+              sum +
+              Number(
+                item.liquidity || 0
+              ),
+            0
+          );
 
-Top Gainers (24h)
+        const transactions =
+          data.reduce(
+            (sum, item) =>
+              sum +
+              Number(
+                item.transactions24h || 0
+              ),
+            0
+          );
 
-</div>
+        stats.innerHTML = `
 
+          <div class="stat">
+            <div class="stat-label">
+              DEX Markets
+            </div>
+
+            <div class="stat-value">
+              ${number(data.length)}
+            </div>
+          </div>
 
-<div
-class="rows"
-id="gainers">
+          <div class="stat">
+            <div class="stat-label">
+              24H Volume
+            </div>
 
-<div class="loading">
-Loading...
-</div>
+            <div class="stat-value">
+              ${money(volume)}
+            </div>
+          </div>
 
-</div>
+          <div class="stat">
+            <div class="stat-label">
+              Liquidity
+            </div>
+
+            <div class="stat-value">
+              ${money(liquidity)}
+            </div>
+          </div>
 
-</section>
+          <div class="stat">
+            <div class="stat-label">
+              24H Transactions
+            </div>
 
-</main>
+            <div class="stat-value">
+              ${number(transactions)}
+            </div>
+          </div>
 
+        `;
 
-<footer>
+        return;
+      }
+
+
+      if (
+        currentTab === "Crypto"
+      ) {
+
+        const data =
+          liveData;
+
+        const volume =
+          data.reduce(
+            (sum, item) =>
+              sum +
+              Number(
+                item.volume24h ||
+                item.volume ||
+                0
+              ),
+            0
+          );
+
+        stats.innerHTML = `
+
+          <div class="stat">
+            <div class="stat-label">
+              Crypto Pairs
+            </div>
+
+            <div class="stat-value">
+              ${number(data.length)}
+            </div>
+          </div>
+
+          <div class="stat">
+            <div class="stat-label">
+              24H Volume
+            </div>
+
+            <div class="stat-value">
+              ${money(volume)}
+            </div>
+          </div>
+
+          <div class="stat">
+            <div class="stat-label">
+              Exchange
+            </div>
+
+            <div class="stat-value">
+              Binance
+            </div>
+          </div>
+
+          <div class="stat">
+            <div class="stat-label">
+              Data Status
+            </div>
+
+            <div class="stat-value">
+              Live
+            </div>
+          </div>
+
+        `;
+
+        return;
+      }
+
+
+      stats.innerHTML = `
+        <div class="stat">
+          <div class="stat-label">
+            Status
+          </div>
+
+          <div class="stat-value">
+            Coming Next
+          </div>
+        </div>
+      `;
+    }
+
+
+    function renderChainButtons() {
+
+      const box =
+        document.getElementById(
+          "chainButtons"
+        );
+
+      if (
+        currentTab !== "On-Chain"
+      ) {
+        box.innerHTML = "";
+        return;
+      }
+
+      const networks = [
+        {
+          id: "all",
+          name: "All Networks"
+        },
+        {
+          id: "eth",
+          name: "Ethereum"
+        },
+        {
+          id: "solana",
+          name: "Solana"
+        },
+        {
+          id: "base",
+          name: "Base"
+        },
+        {
+          id: "bsc",
+          name: "BNB"
+        },
+        {
+          id: "arbitrum",
+          name: "Arbitrum"
+        },
+        {
+          id: "polygon_pos",
+          name: "Polygon"
+        },
+        {
+          id: "avalanche",
+          name: "Avalanche"
+        }
+      ];
 
-FlowRank — Market data dashboard.
-Data may be delayed or incomplete.
+      box.innerHTML =
+        networks.map(
+          network => `
 
-</footer>
+            <button
+              class="chain ${
+                selectedChain === network.id
+                  ? "active"
+                  : ""
+              }"
+              onclick="selectChain('${network.id}')"
+            >
+              ${network.name}
+            </button>
 
+          `
+        ).join("");
+    }
 
-<script>
 
-let currentTab = "Crypto";
+    function renderMarkets() {
 
-let selectedChain = "all";
+      const content =
+        document.getElementById(
+          "content"
+        );
 
-let liveData = [];
+      const title =
+        document.getElementById(
+          "panelTitle"
+        );
 
-let chainData = [];
+      const subtitle =
+        document.getElementById(
+          "panelSubtitle"
+        );
 
-let marketData = [];
 
+      if (
+        currentTab !== "On-Chain"
+      ) {
 
-/* FORMAT MONEY */
+        renderCrypto();
 
-function money(value){
+        return;
+      }
 
-const n = Number(value);
 
-if(!isFinite(n)){
-return "—";
-}
+      title.textContent =
+        selectedChain === "all"
+          ? "Top DEX Pairs by 24h Volume"
+          : "Top DEX Pairs — " +
+            chainLabel(
+              selectedChain
+            );
 
-if(n >= 1000000000000){
-return "$" + (n / 1000000000000).toFixed(2) + "T";
-}
+      subtitle.textContent =
+        "GeckoTerminal • Ranked by 24h DEX volume";
 
-if(n >= 1000000000){
-return "$" + (n / 1000000000).toFixed(2) + "B";
-}
 
-if(n >= 1000000){
-return "$" + (n / 1000000).toFixed(2) + "M";
-}
+      const data =
+        filteredMarkets();
 
-if(n >= 1000){
-return "$" + (n / 1000).toFixed(2) + "K";
-}
 
-return "$" + n.toFixed(2);
+      if (!data.length) {
 
-}
+        content.innerHTML = `
+          <div class="empty">
+            No markets found.
+          </div>
+        `;
 
+        return;
+      }
 
-/* FORMAT NUMBER */
 
-function formatNumber(value){
+      content.innerHTML = `
 
-const n = Number(value);
+        <table>
 
-if(!isFinite(n)){
-return "—";
-}
+          <thead>
 
-return n.toLocaleString("en-US");
+            <tr>
 
-}
+              <th>#</th>
 
+              <th>Pair</th>
 
-/* FORMAT CHANGE */
+              <th>Network</th>
 
-function change(value){
+              <th>Price</th>
 
-const n = Number(value);
+              <th>Market Cap / FDV</th>
 
-if(!isFinite(n)){
-return "—";
-}
+              <th>Liquidity</th>
 
-return (n >= 0 ? "+" : "") +
-n.toFixed(2) +
-"%";
+              <th>24H Volume</th>
 
-}
+              <th>24H Change</th>
 
+              <th>Transactions</th>
 
-/* FORMAT PRICE */
+              <th>Buys</th>
 
-function price(value){
+              <th>Sells</th>
 
-const n = Number(value);
+              <th>Age</th>
 
-if(!isFinite(n)){
-return "—";
-}
+            </tr>
 
-return "$" +
-n.toLocaleString(
-"en-US",
-{
-maximumFractionDigits:8
-}
-);
+          </thead>
 
-}
+          <tbody>
 
+            ${data.map(
+              (market, index) => {
 
-/* ESCAPE HTML */
+                const type =
+                  market.valueType ||
+                  "N/A";
 
-function escapeHTML(value){
+                const displayValue =
+                  Number(
+                    market.displayValue ||
+                    0
+                  );
 
-return String(value)
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
+                return `
 
-}
+                  <tr>
 
+                    <td class="rank">
+                      ${index + 1}
+                    </td>
 
-/* CHAIN NAME */
+                    <td class="pair">
 
-function chainLabel(network){
+                      ${escapeHTML(
+                        market.name
+                      )}
 
-const labels = {
-
-eth:"Ethereum",
-
-solana:"Solana",
-
-base:"Base",
-
-bsc:"BNB",
-
-arbitrum:"Arbitrum",
-
-polygon_pos:"Polygon",
-
-avalanche:"Avalanche"
-
-};
-
-return labels[network] ||
-network ||
-"Unknown";
-
-}
-
-
-/* AGE */
-
-function age(createdAt){
-
-if(!createdAt){
-return "—";
-}
-
-const date =
-new Date(createdAt);
-
-if(isNaN(date.getTime())){
-return "—";
-}
-
-const diff =
-Date.now() -
-date.getTime();
-
-if(diff < 0){
-return "New";
-}
-
-const minutes =
-Math.floor(diff / 60000);
-
-if(minutes < 60){
-return minutes + "m";
-}
-
-const hours =
-Math.floor(minutes / 60);
-
-if(hours < 24){
-return hours + "h";
-}
-
-const days =
-Math.floor(hours / 24);
-
-if(days < 30){
-return days + "d";
-}
-
-const months =
-Math.floor(days / 30);
-
-if(months < 12){
-return months + "mo";
-}
-
-return Math.floor(months / 12) + "y";
-
-}
-
-
-/* NEW POOL */
-
-function isNew(createdAt){
-
-if(!createdAt){
-return false;
-}
-
-const date =
-new Date(createdAt);
-
-if(isNaN(date.getTime())){
-return false;
-}
-
-const ageMs =
-Date.now() -
-date.getTime();
-
-return (
-ageMs >= 0 &&
-ageMs <=
-7 * 24 * 60 * 60 * 1000
-);
-
-}
-
-
-/* TABS */
-
-function setTab(tab,element){
-
-currentTab = tab;
-
-document
-.querySelectorAll(".tabs button")
-.forEach(button=>{
-button.classList.remove("active");
-});
-
-if(element){
-element.classList.add("active");
-}
-
-const panel =
-document.getElementById(
-"chainPanel"
-);
-
-if(tab === "On-Chain"){
-
-panel.classList.add("show");
-
-}else{
-
-panel.classList.remove("show");
-
-}
-
-render();
-
-}
-
-
-/* CHAIN */
-
-function selectChain(chain,element){
-
-selectedChain = chain;
-
-document
-.querySelectorAll(".chain-btn")
-.forEach(button=>{
-button.classList.remove("active");
-});
-
-if(element){
-element.classList.add("active");
-}
-
-render();
-
-}
-
-
-/* MAIN RENDER */
-
-function render(){
-
-const search =
-document
-.getElementById("search")
-.value
-.trim()
-.toLowerCase();
-
-
-const rows =
-document.getElementById("rows");
-
-const title =
-document.getElementById("tableTitle");
-
-const status =
-document.getElementById("status");
-
-const gainers =
-document.getElementById("gainers");
-
-const lowerTitle =
-document.getElementById("lowerTitle");
-
-const source =
-document.getElementById("source");
-
-const ranking =
-document.getElementById("ranking");
-
-const overview =
-document.getElementById("overviewCount");
-
-const head =
-document.getElementById("tableHead");
-
-
-/* ON CHAIN */
-
-if(currentTab === "On-Chain"){
-
-title.textContent =
-selectedChain === "all"
-?
-"Top DEX Pairs by 24h Volume"
-:
-"Top " +
-chainLabel(selectedChain) +
-" DEX Pairs";
-
-
-status.textContent =
-marketData.length
-?
-"Live DEX Market Data"
-:
-"Connecting...";
-
-
-source.textContent =
-"GeckoTerminal";
-
-ranking.textContent =
-"24h DEX volume";
-
-
-const chainFiltered =
-selectedChain === "all"
-?
-marketData
-:
-marketData.filter(
-market =>
-market.network === selectedChain
-);
-
-
-const filtered =
-chainFiltered.filter(market =>
-
-String(
-market.name || ""
-)
-.toLowerCase()
-.includes(search)
-
-||
-
-String(
-market.network || ""
-)
-.toLowerCase()
-.includes(search)
-
-);
-
-
-overview.textContent =
-chainFiltered.length
-?
-chainFiltered.length
-:
-"—";
-
-
-head.innerHTML = `
-
-<th>#</th>
-
-<th>Pair</th>
-
-<th>Network</th>
-
-<th>Price</th>
-
-<th>Market Cap</th>
-
-<th>Liquidity</th>
-
-<th>24h Volume</th>
-
-<th>24h Change</th>
-
-<th>Transactions</th>
-
-<th>Buys</th>
-
-<th>Sells</th>
-
-<th>Age</th>
-
-`;
-
-
-if(!marketData.length){
-
-rows.innerHTML = `
-
-<tr>
-
-<td colspan="12">
-
-<div class="loading">
-
-Loading DEX market data...
-
-</div>
-
-</td>
-
-</tr>
-
-`;
-
-gainers.innerHTML =
-`<div class="loading">
-Loading...
-</div>`;
-
-return;
-
-}
-
-
-if(!filtered.length){
-
-rows.innerHTML = `
-
-<tr>
-
-<td colspan="12">
-
-<div class="empty">
-
-No matching DEX pairs.
-
-</div>
-
-</td>
-
-</tr>
-
-`;
-
-}else{
-
-rows.innerHTML =
-filtered
-.map((market,index)=>{
-
-const p =
-Number(
-market.change24h || 0
-);
-
-const fresh =
-isNew(
-market.createdAt
-);
-
-return `
-
-<tr>
-
-<td class="rank">
-${index + 1}
-</td>
-
-
-<td>
-
-<span class="asset">
-
-${escapeHTML(
-market.name ||
-"Unknown"
-)}
-
-</span>
-
-${
-fresh
-?
-'<span class="new-badge">NEW</span>'
-:
-""
-}
-
-</td>
-
-
-<td class="network">
-
-${escapeHTML(
-chainLabel(
-market.network
-)
-)}
-
-</td>
-
-
-<td>
-${price(
-market.price
-)}
-</td>
-
-
-<td>
-${money(
-market.marketCap
-)}
-</td>
-
-
-<td>
-${money(
-market.liquidity
-)}
-</td>
-
-
-<td>
-${money(
-market.volume24h
-)}
-</td>
-
-
-<td class="${
-p >= 0
-?
-"up"
-:
-"down"
-}">
-
-${change(p)}
-
-</td>
-
-
-<td>
-${formatNumber(
-market.transactions24h
-)}
-</td>
-
-
-<td>
-${formatNumber(
-market.buys24h
-)}
-</td>
-
-
-<td>
-${formatNumber(
-market.sells24h
-)}
-</td>
-
-
-<td>
-${age(
-market.createdAt
-)}
-</td>
-
-</tr>
-
-`;
-
-})
-.join("");
-
-}
-
-
-/* LOWER SECTION */
-
-if(
-selectedChain === "all" &&
-chainData.length
-){
-
-lowerTitle.textContent =
-"Top Chains by TVL";
-
-
-gainers.innerHTML =
-chainData
-.slice(0,7)
-.map(chain=>`
-
-<div class="row">
-
-<div class="row-main">
-
-<span>
-
-${escapeHTML(
-chain.name ||
-"Unknown"
-)}
-
-</span>
-
-<span class="row-sub">
-
-Chain TVL
-
-</span>
-
-</div>
-
-<span>
-
-${money(
-chain.tvl
-)}
-
-</span>
-
-</div>
-
-`)
-.join("");
-
-}else{
-
-lowerTitle.textContent =
-"Top " +
-chainLabel(selectedChain) +
-" Activity";
-
-
-const top =
-[...chainFiltered]
-.sort(
-(a,b)=>
-Number(b.volume24h || 0) -
-Number(a.volume24h || 0)
-)
-.slice(0,7);
-
-
-if(!top.length){
-
-gainers.innerHTML =
-`<div class="empty">
-No chain activity available.
-</div>`;
-
-}else{
-
-gainers.innerHTML =
-top
-.map(market=>`
-
-<div class="row">
-
-<div class="row-main">
-
-<span>
-
-${escapeHTML(
-market.name ||
-"Unknown"
-)}
-
-</span>
-
-<span class="row-sub">
-
-${formatNumber(
-market.transactions24h
-)}
-
-transactions ·
-
-${money(
-market.liquidity
-)}
-
-liquidity
-
-</span>
-
-</div>
-
-<span>
-
-${money(
-market.volume24h
-)}
-
-</span>
-
-</div>
-
-`)
-.join("");
-
-}
-
-}
-
-return;
-
-}
-
-
-/* STOCKS / FOREX */
-
-if(currentTab !== "Crypto"){
-
-title.textContent =
-currentTab +
-" market data";
-
-status.textContent =
-"Coming next";
-
-source.textContent =
-"—";
-
-ranking.textContent =
-"—";
-
-overview.textContent =
-"—";
-
-lowerTitle.textContent =
-"Coming soon";
-
-
-head.innerHTML = `
-
-<th>#</th>
-
-<th>Asset</th>
-
-<th>Market</th>
-
-<th>Volume</th>
-
-<th>Change</th>
-
-`;
-
-
-rows.innerHTML = `
-
-<tr>
-
-<td colspan="5">
-
-<div class="empty">
-
-The ${escapeHTML(
-currentTab
-)}
-data feed will be connected next.
-
-</div>
-
-</td>
-
-</tr>
-
-`;
-
-
-gainers.innerHTML =
-`<div class="empty">
-Coming soon
-</div>`;
-
-return;
-
-}
-
-
-/* CRYPTO */
-
-title.textContent =
-"Top Crypto Pairs by 24h Volume";
-
-status.textContent =
-liveData.length
-?
-"Live Crypto Pair Data"
-:
-"Connecting...";
-
-source.textContent =
-"Binance";
-
-ranking.textContent =
-"24h pair volume";
-
-overview.textContent =
-liveData.length
-?
-liveData.length
-:
-"—";
-
-lowerTitle.textContent =
-"Top Gainers (24h)";
-
-
-head.innerHTML = `
-
-<th>#</th>
-
-<th>Pair</th>
-
-<th>Exchange</th>
-
-<th>Price</th>
-
-<th>24h Volume</th>
-
-<th>24h Change</th>
-
-`;
-
-
-const filtered =
-liveData.filter(market =>
-
-String(
-market.pair || ""
-)
-.toLowerCase()
-.includes(search)
-
-||
-
-String(
-market.exchange || ""
-)
-.toLowerCase()
-.includes(search)
-
-);
-
-
-if(!liveData.length){
-
-rows.innerHTML = `
-
-<tr>
-
-<td colspan="6">
-
-<div class="loading">
-
-Loading market data...
-
-</div>
-
-</td>
-
-</tr>
-
-`;
-
-}else if(!filtered.length){
-
-rows.innerHTML = `
-
-<tr>
-
-<td colspan="6">
-
-<div class="empty">
-
-No matching crypto pairs.
-
-</div>
-
-</td>
-
-</tr>
-
-`;
-
-}else{
-
-rows.innerHTML =
-filtered
-.map((market,index)=>{
-
-const p =
-Number(
-market.change24h || 0
-);
-
-return `
-
-<tr>
-
-<td class="rank">
-
-${index + 1}
-
-</td>
-
-
-<td>
-
-<span class="asset">
-
-${escapeHTML(
-market.pair ||
-"Unknown"
-)}
-
-</span>
-
-</td>
-
-
-<td class="network">
-
-${escapeHTML(
-market.exchange ||
-"Binance"
-)}
-
-</td>
-
-
-<td>
-
-${price(
-market.price
-)}
-
-</td>
-
-
-<td>
-
-${money(
-market.volume24h
-)}
-
-</td>
-
-
-<td class="${
-p >= 0
-?
-"up"
-:
-"down"
-}">
-
-${change(p)}
-
-</td>
-
-</tr>
-
-`;
-
-})
-.join("");
-
-}
-
-
-/* GAINERS */
-
-const topGainers =
-[...liveData]
-.filter(
-market =>
-Number(
-market.change24h || 0
-) > 0
-)
-.sort(
-(a,b)=>
-Number(b.change24h || 0) -
-Number(a.change24h || 0)
-)
-.slice(0,7);
-
-
-if(!topGainers.length){
-
-gainers.innerHTML =
-`<div class="empty">
-No gainers available.
-</div>`;
-
-}else{
-
-gainers.innerHTML =
-topGainers
-.map(market=>`
-
-<div class="row">
-
-<div class="row-main">
-
-<span>
-
-${escapeHTML(
-market.pair ||
-"Unknown"
-)}
-
-</span>
-
-<span class="row-sub">
-
-${price(
-market.price
-)}
-
-·
-
-${money(
-market.volume24h
-)}
-volume
-
-</span>
-
-</div>
-
-<span class="up">
-
-${change(
-market.change24h
-)}
-
-</span>
-
-</div>
-
-`)
-.join("");
-
-}
-
-}
-
-
-/* LOAD CRYPTO */
-
-async function loadCrypto(){
-
-try{
-
-const response =
-await fetch(
-"/api/crypto",
-{
-cache:"no-store"
-}
-);
-
-
-if(!response.ok){
-
-throw new Error(
-"Crypto API error: " +
-response.status
-);
-
-}
-
-
-const data =
-await response.json();
-
-
-if(!Array.isArray(data)){
-
-throw new Error(
-"Invalid crypto data"
-);
-
-}
-
-
-liveData =
-data.map(item=>({
-
-pair:
-item.pair ||
-item.symbol ||
-"Unknown",
-
-exchange:
-item.exchange ||
-"Binance",
-
-price:
-Number(
-item.price ||
-item.lastPrice ||
-0
-),
-
-volume24h:
-Number(
-item.volume24h ||
-item.volume ||
-0
-),
-
-change24h:
-Number(
-item.change24h ||
-item.priceChangePercent ||
-0
-)
-
-}));
-
-
-document.getElementById(
-"cryptoCount"
-).textContent =
-liveData.length;
-
-
-render();
-
-
-}catch(error){
-
-console.error(
-"Crypto:",
-error
-);
-
-
-document.getElementById(
-"cryptoCount"
-).textContent =
-"Error";
-
-
-const status =
-document.getElementById(
-"status"
-);
-
-status.textContent =
-"Crypto data failed";
-
-status.className =
-"status error";
-
-}
-
-}
-
-
-/* LOAD CHAINS */
-
-async function loadChains(){
-
-try{
-
-const response =
-await fetch(
-"/api/onchain",
-{
-cache:"no-store"
-}
-);
-
-
-if(!response.ok){
-
-throw new Error(
-"Chain API error: " +
-response.status
-);
-
-}
-
-
-const data =
-await response.json();
-
-
-if(!Array.isArray(data)){
-
-throw new Error(
-"Invalid chain data"
-);
-
-}
-
-
-chainData =
-data
-.map(chain=>({
-
-name:
-chain.name ||
-chain.slug ||
-"Unknown",
-
-tvl:
-Number(
-chain.tvl || 0
-)
-
-}))
-.sort(
-(a,b)=>
-Number(b.tvl || 0) -
-Number(a.tvl || 0)
-);
-
-
-document.getElementById(
-"chainCount"
-).textContent =
-chainData.length;
-
-
-render();
-
-
-}catch(error){
-
-console.error(
-"Chains:",
-error
-);
-
-
-document.getElementById(
-"chainCount"
-).textContent =
-"Error";
-
-}
-
-}
-
-
-/* LOAD DEX MARKETS */
-
-async function loadMarkets(){
-
-try{
-
-const response =
-await fetch(
-"/api/markets",
-{
-cache:"no-store"
-}
-);
-
-
-if(!response.ok){
-
-throw new Error(
-"Markets API error: " +
-response.status
-);
-
-}
-
-
-const data =
-await response.json();
-
-
-if(!Array.isArray(data)){
-
-throw new Error(
-"Invalid market data"
-);
-
-}
-
-
-marketData =
-data
-.filter(market =>
-
-Number(
-market.liquidity || 0
-) >= 100000
-
-&&
-
-Number(
-market.volume24h || 0
-) > 0
-
-)
-.sort(
-(a,b)=>
-Number(b.volume24h || 0) -
-Number(a.volume24h || 0)
-)
-.slice(0,500);
-
-
-render();
-
-
-}catch(error){
-
-console.error(
-"Markets:",
-error
-);
-
-
-const status =
-document.getElementById(
-"status"
-);
-
-if(currentTab === "On-Chain"){
-
-status.textContent =
-"DEX market data failed";
-
-status.className =
-"status error";
-
-}
-
-}
-
-}
-
-
-/* SEARCH */
-
-document
-.getElementById("search")
-.addEventListener(
-"input",
-render
-);
-
-
-/* START */
-
-render();
-
-loadCrypto();
-
-loadChains();
-
-loadMarkets();
-
-</script>
-</body>
-</html>
+               
