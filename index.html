@@ -1,1487 +1,1634 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FlowRank — Market Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
+  <title>FlowRank — See Where The Volume Flows</title>
 
-body{
-font-family:Arial,Helvetica,sans-serif;
-background:#07111f;
-color:#f5f7fa;
-min-height:100vh
-}
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-header{
-border-bottom:1px solid #1d2b3d;
-background:#0a1626;
-position:sticky;
-top:0;
-z-index:10
-}
+    body {
+      background: #06101f;
+      color: #e8eef7;
+      font-family: Arial, Helvetica, sans-serif;
+      min-height: 100vh;
+    }
 
-.header-inner{
-max-width:1200px;
-margin:auto;
-padding:18px 20px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:20px
-}
+    header {
+      height: 64px;
+      background: #071525;
+      border-bottom: 1px solid #14253a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
 
-.logo{font-size:22px;font-weight:800}
-.logo span{color:#42d392}
+    .logo {
+      font-size: 20px;
+      font-weight: 800;
+      color: #f3f6fb;
+    }
 
-nav{display:flex;gap:8px;flex-wrap:wrap}
+    .logo span {
+      color: #42d6a4;
+    }
 
-button{font-family:inherit}
+    nav {
+      display: flex;
+      gap: 24px;
+    }
 
-nav button,.tabs button,.chain-btn{
-background:transparent;
-border:1px solid transparent;
-color:#91a0b4;
-padding:9px 14px;
-border-radius:8px;
-cursor:pointer
-}
+    nav a {
+      color: #8b9bb0;
+      text-decoration: none;
+      font-size: 13px;
+    }
 
-nav button:hover,
-.tabs button:hover,
-.tabs button.active,
-.chain-btn:hover,
-.chain-btn.active{
-background:#132237;
-color:#fff
-}
+    nav a:hover {
+      color: #ffffff;
+    }
 
-main{
-max-width:1200px;
-margin:auto;
-padding:35px 20px 60px
-}
+    .container {
+      width: min(1180px, calc(100% - 30px));
+      margin: auto;
+    }
 
-.hero{margin-bottom:25px}
+    .hero {
+      padding: 38px 0 24px;
+    }
 
-.hero h1{
-font-size:38px;
-margin-bottom:10px
-}
+    .hero h1 {
+      font-size: 32px;
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
 
-.hero p{
-color:#91a0b4;
-line-height:1.6
-}
+    .hero p {
+      color: #8798ad;
+      font-size: 14px;
+    }
 
-.stats{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:15px;
-margin:25px 0
-}
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
 
-.card{
-background:#0c192a;
-border:1px solid #1d2b3d;
-border-radius:14px;
-padding:20px
-}
+    .stat {
+      background: #0b1a2c;
+      border: 1px solid #172a40;
+      border-radius: 11px;
+      padding: 18px;
+      min-height: 76px;
+    }
 
-.card-label{
-color:#91a0b4;
-font-size:13px;
-margin-bottom:8px
-}
+    .stat-label {
+      color: #8999ad;
+      font-size: 11px;
+      margin-bottom: 7px;
+    }
 
-.card-value{
-font-size:25px;
-font-weight:700
-}
+    .stat-value {
+      font-size: 19px;
+      font-weight: 700;
+    }
 
-.controls{
-display:flex;
-justify-content:space-between;
-gap:15px;
-margin-bottom:15px;
-flex-wrap:wrap
-}
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
 
-.search{
-flex:1;
-min-width:220px;
-background:#0c192a;
-border:1px solid #1d2b3d;
-color:#fff;
-padding:13px 15px;
-border-radius:9px;
-outline:none
-}
+    .search {
+      width: 100%;
+      background: #0b1a2c;
+      border: 1px solid #172a40;
+      border-radius: 9px;
+      color: #ffffff;
+      padding: 12px;
+      outline: none;
+      font-size: 12px;
+    }
 
-.search:focus{border-color:#42d392}
+    .search:focus {
+      border-color: #2d8e75;
+    }
 
-.tabs{
-display:flex;
-gap:6px;
-background:#0c192a;
-border:1px solid #1d2b3d;
-padding:5px;
-border-radius:10px
-}
+    .tabs {
+      display: flex;
+      background: #0b1a2c;
+      border: 1px solid #172a40;
+      border-radius: 9px;
+      overflow: hidden;
+    }
 
-.tabs button{white-space:nowrap}
+    .tab {
+      border: 0;
+      background: transparent;
+      color: #8d9db0;
+      padding: 0 15px;
+      font-size: 12px;
+      cursor: pointer;
+    }
 
-.status{
-color:#42d392;
-font-size:13px;
-padding:10px 0
-}
+    .tab.active {
+      background: #11263d;
+      color: #ffffff;
+    }
 
-.status.error{color:#ff6868}
+    .panel-title {
+      background: #0b1a2c;
+      border: 1px solid #172a40;
+      border-bottom: 0;
+      border-radius: 11px 11px 0 0;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-.chain-panel{
-display:none;
-margin-bottom:15px
-}
+    .panel-title strong {
+      font-size: 13px;
+    }
 
-.chain-panel.show{display:block}
+    .status {
+      color: #42d6a4;
+      font-size: 11px;
+    }
 
-.chain-title{
-color:#91a0b4;
-font-size:12px;
-text-transform:uppercase;
-margin-bottom:10px
-}
+    .source {
+      color: #718399;
+      font-size: 10px;
+      margin-top: 12px;
+    }
 
-.chain-buttons{
-display:flex;
-gap:8px;
-flex-wrap:wrap
-}
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      background: #0b1a2c;
+      border: 1px solid #172a40;
+      border-radius: 0 0 11px 11px;
+    }
 
-.chain-btn{
-background:#0c192a;
-border:1px solid #1d2b3d
-}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
 
-.table-wrap{
-width:100%;
-overflow-x:auto;
-background:#0c192a;
-border:1px solid #1d2b3d;
-border-radius:14px
-}
+    th {
+      text-align: left;
+      color: #718399;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 13px 12px;
+      border-bottom: 1px solid #172a40;
+      white-space: nowrap;
+    }
 
-table{
-width:100%;
-min-width:1200px;
-border-collapse:collapse
-}
+    td {
+      padding: 13px 12px;
+      font-size: 12px;
+      border-bottom: 1px solid #112237;
+      white-space: nowrap;
+    }
 
-th{
-text-align:left;
-color:#7f8da2;
-font-size:12px;
-text-transform:uppercase;
-letter-spacing:.5px;
-padding:15px;
-border-bottom:1px solid #1d2b3d;
-white-space:nowrap
-}
+    tr:last-child td {
+      border-bottom: 0;
+    }
 
-td{
-padding:15px;
-border-bottom:1px solid #172638;
-font-size:14px;
-white-space:nowrap
-}
+    .pair {
+      font-weight: 700;
+      color: #ffffff;
+    }
 
-tr:last-child td{border-bottom:0}
+    .positive {
+      color: #42d6a4;
+    }
 
-.rank{color:#6f7f93}
-.asset{font-weight:700}
-.network{color:#9aa8b9}
-.up{color:#42d392}
-.down{color:#ff6868}
+    .negative {
+      color: #ff6d78;
+    }
 
-.new-badge{
-display:inline-block;
-margin-left:7px;
-padding:3px 6px;
-border-radius:5px;
-background:#173d32;
-color:#42d392;
-font-size:10px;
-font-weight:700
-}
+    .muted {
+      color: #8090a4;
+    }
 
-.loading,.empty{
-padding:35px;
-text-align:center;
-color:#8290a4
-}
+    .loading {
+      text-align: center;
+      color: #8798ad;
+      padding: 42px 20px;
+    }
 
-.section{margin-top:25px}
+    .error {
+      text-align: center;
+      color: #ff7a83;
+      padding: 25px 20px;
+      font-size: 12px;
+    }
 
-.section-title{
-font-size:18px;
-margin-bottom:12px
-}
+    .section {
+      margin-top: 22px;
+    }
 
-.rows{
-background:#0c192a;
-border:1px solid #1d2b3d;
-border-radius:14px;
-overflow:hidden
-}
+    .section h2 {
+      font-size: 15px;
+      margin-bottom: 10px;
+    }
 
-.row{
-display:flex;
-justify-content:space-between;
-gap:20px;
-padding:15px 18px;
-border-bottom:1px solid #172638
-}
+    .gainers-box {
+      background: #0b1a2c;
+      border: 1px solid #172a40;
+      border-radius: 11px;
+      min-height: 70px;
+      padding: 18px;
+    }
 
-.row:last-child{border-bottom:0}
+    .chain-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding: 12px;
+      background: #0b1a2c;
+      border: 1px solid #172a40;
+      border-bottom: 0;
+    }
 
-.row-main{
-display:flex;
-flex-direction:column;
-gap:4px
-}
+    .chain-btn {
+      border: 1px solid #1c334c;
+      background: #0d2035;
+      color: #8999ad;
+      padding: 7px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 10px;
+    }
 
-.row-sub{
-color:#718198;
-font-size:12px
-}
+    .chain-btn.active {
+      color: #ffffff;
+      border-color: #2d8e75;
+      background: #12352f;
+    }
 
-.value-type{
-display:block;
-color:#718198;
-font-size:10px;
-text-transform:uppercase;
-margin-top:3px
-}
+    .new-badge {
+      display: inline-block;
+      font-size: 9px;
+      color: #06101f;
+      background: #42d6a4;
+      padding: 3px 5px;
+      border-radius: 4px;
+      margin-left: 5px;
+      font-weight: 700;
+    }
 
-footer{
-max-width:1200px;
-margin:auto;
-padding:20px;
-color:#65758b;
-font-size:12px;
-text-align:center
-}
+    .coming {
+      background: #0b1a2c;
+      border: 1px solid #172a40;
+      border-radius: 11px;
+      padding: 45px 20px;
+      text-align: center;
+      color: #8292a6;
+      font-size: 13px;
+    }
 
-@media(max-width:700px){
+    footer {
+      text-align: center;
+      color: #617187;
+      font-size: 10px;
+      padding: 60px 0 35px;
+    }
 
-.header-inner{
-align-items:flex-start;
-flex-direction:column
-}
+    @media (max-width: 760px) {
+      header {
+        padding: 0 16px;
+      }
 
-.hero h1{font-size:30px}
+      nav {
+        gap: 13px;
+      }
 
-.stats{grid-template-columns:1fr}
+      nav a {
+        font-size: 9px;
+      }
 
-.controls{flex-direction:column}
+      .hero {
+        padding-top: 30px;
+      }
 
-.tabs{overflow-x:auto}
+      .hero h1 {
+        font-size: 28px;
+      }
 
-.chain-buttons{
-overflow-x:auto;
-flex-wrap:nowrap;
-padding-bottom:5px
-}
+      .stats {
+        grid-template-columns: 1fr;
+      }
 
-.chain-btn{white-space:nowrap}
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
 
-}
-</style>
+      .tabs {
+        height: 38px;
+      }
+
+      .tab {
+        flex: 1;
+        padding: 0 7px;
+        font-size: 10px;
+      }
+
+      .container {
+        width: calc(100% - 20px);
+      }
+    }
+  </style>
 </head>
 
 <body>
 
 <header>
-<div class="header-inner">
+  <div class="logo">Flow<span>Rank</span></div>
 
-<div class="logo">
-Flow<span>Rank</span>
-</div>
-
-<nav>
-<button onclick="setTab('Crypto')">Home</button>
-<button onclick="setTab('Crypto')">Crypto</button>
-<button onclick="setTab('Stocks')">Stocks</button>
-<button onclick="setTab('Forex')">Forex</button>
-<button onclick="setTab('On-Chain')">On-Chain</button>
-</nav>
-
-</div>
+  <nav>
+    <a href="#" onclick="switchTab('home'); return false;">Home</a>
+    <a href="#" onclick="switchTab('crypto'); return false;">Crypto</a>
+    <a href="#" onclick="switchTab('stocks'); return false;">Stocks</a>
+    <a href="#" onclick="switchTab('forex'); return false;">Forex</a>
+    <a href="#" onclick="switchTab('onchain'); return false;">On-Chain</a>
+  </nav>
 </header>
 
-<main>
+<main class="container">
 
-<section class="hero">
-<h1>See Where The Volume Flows.</h1>
-<p>FlowRank tracks market activity across crypto and on-chain markets.</p>
-</section>
+  <section class="hero">
+    <h1>See Where The Volume Flows.</h1>
+    <p>FlowRank tracks market activity across crypto and on-chain markets.</p>
+  </section>
 
-<section class="stats">
+  <section class="stats">
 
-<div class="card">
-<div class="card-label">Crypto Markets</div>
-<div class="card-value" id="cryptoCount">Loading...</div>
-</div>
+    <div class="stat">
+      <div class="stat-label">Crypto Markets</div>
+      <div class="stat-value" id="cryptoStat">Loading...</div>
+    </div>
 
-<div class="card">
-<div class="card-label">Chains</div>
-<div class="card-value" id="chainCount">Loading...</div>
-</div>
+    <div class="stat">
+      <div class="stat-label">Chains</div>
+      <div class="stat-value" id="chainStat">Loading...</div>
+    </div>
 
-<div class="card">
-<div class="card-label">Current View</div>
-<div class="card-value" id="overviewCount">—</div>
-</div>
+    <div class="stat">
+      <div class="stat-label">Current View</div>
+      <div class="stat-value" id="viewStat">Crypto</div>
+    </div>
 
-</section>
+  </section>
 
-<section class="controls">
+  <section class="toolbar">
 
-<input
-id="search"
-class="search"
-type="text"
-placeholder="Search assets, pairs or networks..."
->
+    <input
+      id="search"
+      class="search"
+      type="text"
+      placeholder="Search assets, pairs or networks..."
+      autocomplete="off"
+    >
 
-<div class="tabs">
+    <div class="tabs">
 
-<button data-tab="Crypto" class="active" onclick="setTab('Crypto')">Crypto</button>
-<button data-tab="Stocks" onclick="setTab('Stocks')">Stocks</button>
-<button data-tab="Forex" onclick="setTab('Forex')">Forex</button>
-<button data-tab="On-Chain" onclick="setTab('On-Chain')">On-Chain</button>
+      <button
+        id="tabCrypto"
+        class="tab active"
+        onclick="switchTab('crypto')">
+        Crypto
+      </button>
 
-</div>
+      <button
+        id="tabStocks"
+        class="tab"
+        onclick="switchTab('stocks')">
+        Stocks
+      </button>
 
-</section>
+      <button
+        id="tabForex"
+        class="tab"
+        onclick="switchTab('forex')">
+        Forex
+      </button>
 
-<div class="chain-panel" id="chainPanel">
+      <button
+        id="tabOnchain"
+        class="tab"
+        onclick="switchTab('onchain')">
+        On-Chain
+      </button>
 
-<div class="chain-title">Select Blockchain</div>
+    </div>
 
-<div class="chain-buttons">
+  </section>
 
-<button class="chain-btn active" data-chain="all" onclick="selectChain('all')">All Chains</button>
-<button class="chain-btn" data-chain="solana" onclick="selectChain('solana')">Solana</button>
-<button class="chain-btn" data-chain="eth" onclick="selectChain('eth')">Ethereum</button>
-<button class="chain-btn" data-chain="base" onclick="selectChain('base')">Base</button>
-<button class="chain-btn" data-chain="bsc" onclick="selectChain('bsc')">BNB</button>
-<button class="chain-btn" data-chain="arbitrum" onclick="selectChain('arbitrum')">Arbitrum</button>
-<button class="chain-btn" data-chain="polygon_pos" onclick="selectChain('polygon_pos')">Polygon</button>
-<button class="chain-btn" data-chain="avalanche" onclick="selectChain('avalanche')">Avalanche</button>
+  <!-- CRYPTO -->
 
-</div>
-</div>
+  <section id="cryptoView">
 
-<div class="card" style="margin-bottom:15px;padding:15px 18px">
+    <div class="panel-title">
 
-<div style="display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap">
+      <div>
+        <strong>Top Crypto Pairs by 24h Volume</strong>
 
-<div>
-<strong id="tableTitle">Top Crypto Pairs by 24h Volume</strong>
-</div>
+        <div class="source">
+          Source: <b>Binance</b>
+          &nbsp;&nbsp; Ranking: 24h pair volume
+        </div>
+      </div>
 
-<div class="status" id="status">Loading Crypto...</div>
+      <div id="cryptoStatus" class="status">
+        Loading Crypto...
+      </div>
 
-</div>
+    </div>
 
-<div style="display:flex;gap:25px;margin-top:10px;color:#7f8da2;font-size:12px;flex-wrap:wrap">
+    <div class="table-wrap">
 
-<span>
-Source:
-<strong id="source">Binance</strong>
-</span>
+      <table>
 
-<span>
-Ranking:
-<strong id="ranking">24h pair volume</strong>
-</span>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>PAIR</th>
+            <th>EXCHANGE</th>
+            <th>PRICE</th>
+            <th>24H VOLUME</th>
+            <th>24H CHANGE</th>
+          </tr>
+        </thead>
 
-</div>
-</div>
+        <tbody id="cryptoBody">
+          <tr>
+            <td colspan="6" class="loading">
+              Loading market data...
+            </td>
+          </tr>
+        </tbody>
 
-<div class="table-wrap">
+      </table>
 
-<table>
+    </div>
 
-<thead>
-<tr id="tableHead">
+    <div class="section">
 
-<th>#</th>
-<th>Pair</th>
-<th>Exchange</th>
-<th>Price</th>
-<th>24h Volume</th>
-<th>24h Change</th>
+      <h2>Top Gainers (24h)</h2>
 
-</tr>
-</thead>
+      <div id="gainers" class="gainers-box">
+        <div class="loading">Loading...</div>
+      </div>
 
-<tbody id="rows">
+    </div>
 
-<tr>
-<td colspan="6">
-<div class="loading">Loading market data...</div>
-</td>
-</tr>
+  </section>
 
-</tbody>
+  <!-- ON CHAIN -->
 
-</table>
+  <section id="onchainView" style="display:none;">
 
-</div>
+    <div class="panel-title">
 
-<section class="section">
+      <div>
+        <strong>Top On-Chain DEX Markets</strong>
 
-<div class="section-title" id="lowerTitle">
-Top Gainers (24h)
-</div>
+        <div class="source">
+          Source: <b>GeckoTerminal</b>
+          &nbsp;&nbsp; Ranking: 24h DEX volume
+        </div>
+      </div>
 
-<div class="rows" id="gainers">
+      <div id="marketStatus" class="status">
+        Loading...
+      </div>
 
-<div class="loading">
-Loading...
-</div>
+    </div>
 
-</div>
+    <div class="chain-filter">
 
-</section>
+      <button
+        class="chain-btn active"
+        data-chain="all"
+        onclick="setChain('all')">
+        All Chains
+      </button>
+
+      <button
+        class="chain-btn"
+        data-chain="solana"
+        onclick="setChain('solana')">
+        Solana
+      </button>
+
+      <button
+        class="chain-btn"
+        data-chain="eth"
+        onclick="setChain('eth')">
+        Ethereum
+      </button>
+
+      <button
+        class="chain-btn"
+        data-chain="base"
+        onclick="setChain('base')">
+        Base
+      </button>
+
+      <button
+        class="chain-btn"
+        data-chain="bsc"
+        onclick="setChain('bsc')">
+        BNB
+      </button>
+
+      <button
+        class="chain-btn"
+        data-chain="arbitrum"
+        onclick="setChain('arbitrum')">
+        Arbitrum
+      </button>
+
+      <button
+        class="chain-btn"
+        data-chain="polygon_pos"
+        onclick="setChain('polygon_pos')">
+        Polygon
+      </button>
+
+      <button
+        class="chain-btn"
+        data-chain="avalanche"
+        onclick="setChain('avalanche')">
+        Avalanche
+      </button>
+
+    </div>
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>PAIR</th>
+            <th>NETWORK</th>
+            <th>PRICE</th>
+            <th>MARKET CAP / FDV</th>
+            <th>LIQUIDITY</th>
+            <th>24H VOLUME</th>
+            <th>24H CHANGE</th>
+            <th>TXNS</th>
+            <th>BUYS</th>
+            <th>SELLS</th>
+            <th>AGE</th>
+          </tr>
+        </thead>
+
+        <tbody id="marketBody">
+
+          <tr>
+            <td colspan="12" class="loading">
+              Loading on-chain markets...
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+  <!-- STOCKS -->
+
+  <section id="stocksView" style="display:none;">
+
+    <div class="coming">
+      Stock market data is coming next.
+    </div>
+
+  </section>
+
+  <!-- FOREX -->
+
+  <section id="forexView" style="display:none;">
+
+    <div class="coming">
+      Forex market data is coming next.
+    </div>
+
+  </section>
 
 </main>
 
 <footer>
-FlowRank — Market data dashboard.<br>
-Data may be delayed or incomplete.
+  FlowRank — Market data dashboard.<br>
+  Data may be delayed or incomplete.
 </footer>
 
 
 <script>
 
-"use strict";
+  /* =========================
+     GLOBAL DATA
+  ========================= */
 
-let currentTab = "Crypto";
-let selectedChain = "all";
+  let cryptoData = [];
+  let chainData = [];
+  let marketData = [];
 
-let liveData = [];
-let chainData = [];
-let marketData = [];
+  let currentTab = "crypto";
+  let currentChain = "all";
 
 
-/* =========================
-   HELPERS
-========================= */
+  /* =========================
+     HELPERS
+  ========================= */
 
-function money(value){
+  function formatNumber(value) {
 
-const n = Number(value);
+    const number = Number(value || 0);
 
-if(!Number.isFinite(n) || n === 0) return "—";
+    if (!Number.isFinite(number)) {
+      return "—";
+    }
 
-if(n >= 1e12) return "$" + (n / 1e12).toFixed(2) + "T";
-if(n >= 1e9) return "$" + (n / 1e9).toFixed(2) + "B";
-if(n >= 1e6) return "$" + (n / 1e6).toFixed(2) + "M";
-if(n >= 1e3) return "$" + (n / 1e3).toFixed(2) + "K";
+    if (number >= 1000000000) {
+      return "$" + (number / 1000000000).toFixed(2) + "B";
+    }
 
-return "$" + n.toFixed(2);
-}
+    if (number >= 1000000) {
+      return "$" + (number / 1000000).toFixed(2) + "M";
+    }
 
+    if (number >= 1000) {
+      return "$" + (number / 1000).toFixed(2) + "K";
+    }
 
-function formatNumber(value){
+    return "$" + number.toFixed(2);
+  }
 
-const n = Number(value);
 
-if(!Number.isFinite(n)) return "—";
+  function formatPrice(value) {
 
-return n.toLocaleString("en-US");
-}
+    const number = Number(value || 0);
 
+    if (!Number.isFinite(number)) {
+      return "—";
+    }
 
-function price(value){
+    if (number >= 1000) {
+      return "$" + number.toLocaleString(
+        "en-US",
+        {
+          maximumFractionDigits: 2
+        }
+      );
+    }
 
-const n = Number(value);
+    if (number >= 1) {
+      return "$" + number.toFixed(2);
+    }
 
-if(!Number.isFinite(n) || n === 0) return "—";
+    if (number >= 0.01) {
+      return "$" + number.toFixed(4);
+    }
 
-return "$" + n.toLocaleString(
-"en-US",
-{
-maximumFractionDigits:8
-}
-);
-}
+    return "$" + number.toFixed(8);
+  }
 
 
-function change(value){
+  function formatPercent(value) {
 
-const n = Number(value);
+    const number = Number(value || 0);
 
-if(!Number.isFinite(n)) return "—";
+    if (!Number.isFinite(number)) {
+      return "—";
+    }
 
-return (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
-}
+    const sign = number > 0 ? "+" : "";
 
+    const cls =
+      number > 0
+        ? "positive"
+        : number < 0
+          ? "negative"
+          : "muted";
 
-function escapeHTML(value){
+    return `<span class="${cls}">
+      ${sign}${number.toFixed(2)}%
+    </span>`;
+  }
 
-return String(value ?? "")
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
-}
 
+  function escapeHTML(value) {
 
-function chainLabel(network){
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
 
-const labels = {
-eth:"Ethereum",
-solana:"Solana",
-base:"Base",
-bsc:"BNB",
-arbitrum:"Arbitrum",
-polygon_pos:"Polygon",
-avalanche:"Avalanche"
-};
+  function networkName(network) {
 
-return labels[network] || network || "Unknown";
-}
+    const names = {
+      eth: "Ethereum",
+      ethereum: "Ethereum",
+      solana: "Solana",
+      base: "Base",
+      bsc: "BNB Chain",
+      arbitrum: "Arbitrum",
+      polygon_pos: "Polygon",
+      avalanche: "Avalanche"
+    };
 
+    return names[network] || network || "Unknown";
+  }
 
-function age(createdAt){
 
-if(!createdAt) return "—";
+  function ageText(createdAt) {
 
-const time = new Date(createdAt).getTime();
+    if (!createdAt) {
+      return "—";
+    }
 
-if(!Number.isFinite(time)) return "—";
+    const created = new Date(createdAt);
 
-const diff = Math.max(0,Date.now() - time);
+    if (Number.isNaN(created.getTime())) {
+      return "—";
+    }
 
-const minutes = Math.floor(diff / 60000);
+    const diff =
+      Date.now() - created.getTime();
 
-if(minutes < 60) return minutes + "m";
+    const days =
+      Math.floor(
+        diff / 86400000
+      );
 
-const hours = Math.floor(minutes / 60);
+    if (days <= 0) {
+      return "New";
+    }
 
-if(hours < 24) return hours + "h";
+    if (days === 1) {
+      return "1d";
+    }
 
-const days = Math.floor(hours / 24);
+    if (days < 30) {
+      return days + "d";
+    }
 
-if(days < 30) return days + "d";
+    if (days < 365) {
+      return Math.floor(days / 30) + "mo";
+    }
 
-const months = Math.floor(days / 30);
+    return Math.floor(days / 365) + "y";
+  }
 
-if(months < 12) return months + "mo";
 
-return Math.floor(months / 12) + "y";
-}
+  /* =========================
+     API FETCH
+  ========================= */
 
+  async function fetchAPI(path, timeout = 15000) {
 
-function isNew(createdAt){
+    const controller =
+      new AbortController();
 
-if(!createdAt) return false;
+    const timer =
+      setTimeout(
+        () => controller.abort(),
+        timeout
+      );
 
-const time = new Date(createdAt).getTime();
+    try {
 
-if(!Number.isFinite(time)) return false;
+      const separator =
+        path.includes("?")
+          ? "&"
+          : "?";
 
-const diff = Date.now() - time;
+      const url =
+        path +
+        separator +
+        "_=" +
+        Date.now();
 
-return diff >= 0 &&
-diff <= 7 * 24 * 60 * 60 * 1000;
-}
+      const response =
+        await fetch(
+          url,
+          {
+            method: "GET",
+            cache: "no-store",
+            credentials: "same-origin",
+            headers: {
+              "Accept": "application/json"
+            },
+            signal: controller.signal
+          }
+        );
 
+      const text =
+        await response.text();
 
-/* =========================
-   API FETCH
-========================= */
+      if (!response.ok) {
 
-async function fetchJSON(path,timeoutMs){
+        throw new Error(
+          "HTTP " +
+          response.status +
+          ": " +
+          text.slice(0, 180)
+        );
+      }
 
-const controller = new AbortController();
+      let data;
 
-const timeout = setTimeout(
-function(){
-controller.abort();
-},
-timeoutMs || 12000
-);
+      try {
 
-try{
+        data =
+          JSON.parse(text);
 
-const response = await fetch(
-path + "?_=" + Date.now(),
-{
-method:"GET",
-cache:"no-store",
-credentials:"same-origin",
-signal:controller.signal,
-headers:{
-"Accept":"application/json"
-}
-}
-);
+      } catch (error) {
 
-if(!response.ok){
+        throw new Error(
+          "API returned invalid JSON"
+        );
+      }
 
-throw new Error(
-"HTTP " + response.status
-);
+      return data;
 
-}
+    } finally {
 
-const text = await response.text();
+      clearTimeout(timer);
+    }
+  }
 
-if(!text){
 
-throw new Error(
-"Empty response"
-);
+  /* =========================
+     CRYPTO
+  ========================= */
 
-}
+  async function loadCrypto() {
 
-try{
+    const status =
+      document.getElementById(
+        "cryptoStatus"
+      );
 
-return JSON.parse(text);
+    const body =
+      document.getElementById(
+        "cryptoBody"
+      );
 
-}catch(error){
+    status.textContent =
+      "Connecting...";
 
-throw new Error(
-"Invalid JSON response"
-);
+    body.innerHTML = `
+      <tr>
+        <td colspan="6" class="loading">
+          Connecting to Binance data...
+        </td>
+      </tr>
+    `;
 
-}
+    try {
 
-}catch(error){
+      const data =
+        await fetchAPI(
+          "/api/crypto",
+          15000
+        );
 
-if(error && error.name === "AbortError"){
+      if (!Array.isArray(data)) {
 
-throw new Error(
-"Request timed out"
-);
+        throw new Error(
+          "Crypto API did not return an array"
+        );
+      }
 
-}
+      cryptoData = data;
 
-throw error;
+      renderCrypto();
 
-}finally{
+      document.getElementById(
+        "cryptoStat"
+      ).textContent =
+        cryptoData.length +
+        " Pairs";
 
-clearTimeout(timeout);
+      status.textContent =
+        "Live";
 
-}
+    } catch (error) {
 
-}
+      console.error(
+        "Crypto API error:",
+        error
+      );
 
+      body.innerHTML = `
+        <tr>
+          <td colspan="6" class="error">
+            Crypto data failed to load.<br>
+            ${escapeHTML(error.message)}
+          </td>
+        </tr>
+      `;
 
-/* =========================
-   TABS
-========================= */
+      status.textContent =
+        "API Error";
 
-function setTab(tab){
+      document.getElementById(
+        "cryptoStat"
+      ).textContent =
+        "Error";
+    }
+  }
 
-currentTab = tab;
-selectedChain = "all";
 
-document
-.querySelectorAll(".tabs button")
-.forEach(function(button){
+  function renderCrypto() {
 
-button.classList.toggle(
-"active",
-button.dataset.tab === tab
-);
+    const body =
+      document.getElementById(
+        "cryptoBody"
+      );
 
-});
+    const query =
+      document.getElementById(
+        "search"
+      ).value
+        .trim()
+        .toLowerCase();
 
-document
-.querySelectorAll(".chain-btn")
-.forEach(function(button){
+    let rows =
+      cryptoData.filter(item => {
 
-button.classList.toggle(
-"active",
-button.dataset.chain === "all"
-);
+        if (!query) {
+          return true;
+        }
 
-});
+        return (
+          String(item.pair || "")
+            .toLowerCase()
+            .includes(query) ||
 
-const panel =
-document.getElementById("chainPanel");
+          String(item.exchange || "")
+            .toLowerCase()
+            .includes(query)
+        );
 
-if(tab === "On-Chain"){
-panel.classList.add("show");
-}else{
-panel.classList.remove("show");
-}
+      });
 
-render();
 
-}
+    if (!rows.length) {
 
+      body.innerHTML = `
+        <tr>
+          <td colspan="6" class="loading">
+            No matching markets found.
+          </td>
+        </tr>
+      `;
 
-/* =========================
-   CHAIN SELECT
-========================= */
+      return;
+    }
 
-function selectChain(chain){
 
-selectedChain = chain;
+    body.innerHTML =
+      rows.map((item, index) => {
 
-document
-.querySelectorAll(".chain-btn")
-.forEach(function(button){
+        return `
+          <tr>
 
-button.classList.toggle(
-"active",
-button.dataset.chain === chain
-);
+            <td>
+              ${index + 1}
+            </td>
 
-});
+            <td class="pair">
+              ${escapeHTML(item.pair)}
+            </td>
 
-render();
+            <td class="muted">
+              ${escapeHTML(item.exchange)}
+            </td>
 
-}
+            <td>
+              ${formatPrice(item.price)}
+            </td>
 
+            <td>
+              ${formatNumber(item.volume24h)}
+            </td>
 
-/* =========================
-   RENDER CRYPTO
-========================= */
+            <td>
+              ${formatPercent(item.change24h)}
+            </td>
 
-function renderCrypto(){
+          </tr>
+        `;
 
-const search =
-document
-.getElementById("search")
-.value
-.trim()
-.toLowerCase();
+      }).join("");
 
-const rows =
-document.getElementById("rows");
+    renderGainers();
+  }
 
-const title =
-document.getElementById("tableTitle");
 
-const status =
-document.getElementById("status");
+  function renderGainers() {
 
-const gainers =
-document.getElementById("gainers");
+    const box =
+      document.getElementById(
+        "gainers"
+      );
 
-const lowerTitle =
-document.getElementById("lowerTitle");
+    if (!cryptoData.length) {
 
-const source =
-document.getElementById("source");
+      box.innerHTML =
+        `<div class="loading">No data.</div>`;
 
-const ranking =
-document.getElementById("ranking");
+      return;
+    }
 
-const overview =
-document.getElementById("overviewCount");
+    const gainers =
+      [...cryptoData]
+        .sort(
+          (a, b) =>
+            Number(b.change24h || 0) -
+            Number(a.change24h || 0)
+        )
+        .filter(
+          item =>
+            Number(item.change24h || 0) > 0
+        )
+        .slice(0, 5);
 
-const head =
-document.getElementById("tableHead");
 
+    if (!gainers.length) {
 
-title.textContent =
-"Top Crypto Pairs by 24h Volume";
+      box.innerHTML =
+        `<div class="loading">
+          No positive 24h movers found.
+        </div>`;
 
-source.textContent = "Binance";
-ranking.textContent = "24h pair volume";
+      return;
+    }
 
-status.textContent =
-liveData.length
-?
-"Live Crypto Pair Data"
-:
-"Loading Crypto...";
 
-status.className = "status";
+    box.innerHTML =
+      gainers.map(item => {
 
-overview.textContent =
-liveData.length
-?
-liveData.length
-:
-"—";
+        return `
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            padding:8px 0;
+            border-bottom:1px solid #112237;
+          ">
 
-lowerTitle.textContent =
-"Top Gainers (24h)";
+            <span class="pair">
+              ${escapeHTML(item.pair)}
+            </span>
 
-head.innerHTML = `
+            <span class="positive">
+              +${Number(
+                item.change24h
+              ).toFixed(2)}%
+            </span>
 
-<th>#</th>
-<th>Pair</th>
-<th>Exchange</th>
-<th>Price</th>
-<th>24h Volume</th>
-<th>24h Change</th>
+          </div>
+        `;
 
-`;
+      }).join("");
+  }
 
 
-const filtered =
-liveData.filter(function(item){
+  /* =========================
+     CHAINS
+  ========================= */
 
-const pair =
-String(item.pair || "").toLowerCase();
+  async function loadChains() {
 
-const exchange =
-String(item.exchange || "").toLowerCase();
+    try {
 
-return pair.includes(search) ||
-exchange.includes(search);
+      const data =
+        await fetchAPI(
+          "/api/onchain",
+          15000
+        );
 
-});
+      if (Array.isArray(data)) {
 
+        chainData = data;
 
-if(!liveData.length){
+        document.getElementById(
+          "chainStat"
+        ).textContent =
+          chainData.length +
+          " Chains";
 
-rows.innerHTML = `
+      } else {
 
-<tr>
-<td colspan="6">
+        document.getElementById(
+          "chainStat"
+        ).textContent =
+          "Available";
+      }
 
-<div class="loading">
-Loading market data...
-</div>
+    } catch (error) {
 
-</td>
-</tr>
+      console.error(
+        "Chain API error:",
+        error
+      );
 
-`;
+      document.getElementById(
+        "chainStat"
+      ).textContent =
+        "Error";
+    }
+  }
 
-}else if(!filtered.length){
 
-rows.innerHTML = `
+  /* =========================
+     ON-CHAIN MARKETS
+  ========================= */
 
-<tr>
-<td colspan="6">
+  async function loadMarkets() {
 
-<div class="empty">
-No matching crypto pairs.
-</div>
+    const status =
+      document.getElementById(
+        "marketStatus"
+      );
 
-</td>
-</tr>
+    status.textContent =
+      "Connecting...";
 
-`;
+    try {
 
-}else{
+      const data =
+        await fetchAPI(
+          "/api/markets",
+          25000
+        );
 
-rows.innerHTML =
-filtered.map(function(item,index){
+      if (!Array.isArray(data)) {
 
-const p =
-Number(item.change24h || 0);
+        throw new Error(
+          "Market API did not return an array"
+        );
+      }
 
-return `
+      marketData = data;
 
-<tr>
+      renderMarkets();
 
-<td class="rank">
-${index + 1}
-</td>
+      status.textContent =
+        marketData.length +
+        " Markets";
 
-<td>
-<span class="asset">
-${escapeHTML(item.pair || "Unknown")}
-</span>
-</td>
+    } catch (error) {
 
-<td class="network">
-${escapeHTML(item.exchange || "Binance")}
-</td>
+      console.error(
+        "Markets API error:",
+        error
+      );
 
-<td>
-${price(item.price)}
-</td>
+      document.getElementById(
+        "marketBody"
+      ).innerHTML = `
+        <tr>
+          <td colspan="12" class="error">
+            On-chain market data failed.<br>
+            ${escapeHTML(error.message)}
+          </td>
+        </tr>
+      `;
 
-<td>
-${money(item.volume24h)}
-</td>
+      status.textContent =
+        "API Error";
+    }
+  }
 
-<td class="${p >= 0 ? "up" : "down"}">
-${change(p)}
-</td>
 
-</tr>
+  function renderMarkets() {
 
-`;
+    const body =
+      document.getElementById(
+        "marketBody"
+      );
 
-}).join("");
+    const query =
+      document.getElementById(
+        "search"
+      ).value
+        .trim()
+        .toLowerCase();
 
-}
 
+    let rows =
+      marketData.filter(item => {
 
-const top =
-liveData
-.filter(function(item){
+        const network =
+          String(
+            item.network || ""
+          ).toLowerCase();
 
-return Number(item.change24h || 0) > 0;
+        const name =
+          String(
+            item.name || ""
+          ).toLowerCase();
 
-})
-.slice()
-.sort(function(a,b){
+        const pair =
+          String(
+            item.name || ""
+          ).toLowerCase();
 
-return Number(b.change24h || 0) -
-Number(a.change24h || 0);
+        const matchesChain =
+          currentChain === "all" ||
+          network === currentChain;
 
-})
-.slice(0,7);
+        const matchesSearch =
+          !query ||
+          name.includes(query) ||
+          pair.includes(query) ||
+          network.includes(query);
 
+        return (
+          matchesChain &&
+          matchesSearch
+        );
 
-if(!top.length){
+      });
 
-gainers.innerHTML =
-`<div class="empty">No gainers available.</div>`;
 
-}else{
+    rows =
+      rows
+        .sort(
+          (a, b) =>
+            Number(b.volume24h || 0) -
+            Number(a.volume24h || 0)
+        )
+        .slice(0, 100);
 
-gainers.innerHTML =
-top.map(function(item){
 
-const p =
-Number(item.change24h || 0);
+    if (!rows.length) {
 
-return `
+      body.innerHTML = `
+        <tr>
+          <td colspan="12" class="loading">
+            No on-chain markets found.
+          </td>
+        </tr>
+      `;
 
-<div class="row">
+      return;
+    }
 
-<div class="row-main">
 
-<span>
-${escapeHTML(item.pair || "Unknown")}
-</span>
+    body.innerHTML =
+      rows.map((item, index) => {
 
-<span class="row-sub">
-${price(item.price)}
-·
-${money(item.volume24h)}
-volume
-</span>
+        const created =
+          item.createdAt
+            ? new Date(item.createdAt)
+            : null;
 
-</div>
+        let isNew = false;
 
-<span class="up">
-${change(p)}
-</span>
+        if (created && !Number.isNaN(created.getTime())) {
 
-</div>
+          const age =
+            Date.now() -
+            created.getTime();
 
-`;
+          isNew =
+            age <=
+            7 * 86400000;
+        }
 
-}).join("");
 
-}
+        return `
+          <tr>
 
-}
+            <td>
+              ${index + 1}
+            </td>
 
+            <td class="pair">
+              ${escapeHTML(item.name)}
 
-/* =========================
-   RENDER ON-CHAIN
-========================= */
+              ${
+                isNew
+                  ? `<span class="new-badge">NEW</span>`
+                  : ""
+              }
+            </td>
 
-function renderOnChain(){
+            <td class="muted">
+              ${escapeHTML(
+                networkName(item.network)
+              )}
+            </td>
 
-const search =
-document
-.getElementById("search")
-.value
-.trim()
-.toLowerCase();
+            <td>
+              ${formatPrice(item.price)}
+            </td>
 
-const rows =
-document.getElementById("rows");
+            <td>
+              ${formatNumber(
+                item.displayValue
+              )}
 
-const title =
-document.getElementById("tableTitle");
+              <span class="muted" style="font-size:9px;">
+                ${escapeHTML(
+                  item.valueType || ""
+                )}
+              </span>
+            </td>
 
-const status =
-document.getElementById("status");
+            <td>
+              ${formatNumber(
+                item.liquidity
+              )}
+            </td>
 
-const gainers =
-document.getElementById("gainers");
+            <td>
+              ${formatNumber(
+                item.volume24h
+              )}
+            </td>
 
-const lowerTitle =
-document.getElementById("lowerTitle");
+            <td>
+              ${formatPercent(
+                item.change24h
+              )}
+            </td>
 
-const source =
-document.getElementById("source");
+            <td>
+              ${Number(
+                item.transactions24h || 0
+              ).toLocaleString()}
+            </td>
 
-const ranking =
-document.getElementById("ranking");
+            <td class="positive">
+              ${Number(
+                item.buys24h || 0
+              ).toLocaleString()}
+            </td>
 
-const overview =
-document.getElementById("overviewCount");
+            <td class="negative">
+              ${Number(
+                item.sells24h || 0
+              ).toLocaleString()}
+            </td>
 
-const head =
-document.getElementById("tableHead");
+            <td>
+              ${ageText(
+                item.createdAt
+              )}
+            </td>
 
+          </tr>
+        `;
 
-const chainFiltered =
-selectedChain === "all"
-?
-marketData
-:
-marketData.filter(function(item){
+      }).join("");
+  }
 
-return item.network === selectedChain;
 
-});
+  /* =========================
+     TABS
+  ========================= */
 
+  function hideAllViews() {
 
-const filtered =
-chainFiltered.filter(function(item){
+    document.getElementById(
+      "cryptoView"
+    ).style.display = "none";
 
-const name =
-String(item.name || "").toLowerCase();
+    document.getElementById(
+      "stocksView"
+    ).style.display = "none";
 
-const network =
-String(item.network || "").toLowerCase();
+    document.getElementById(
+      "forexView"
+    ).style.display = "none";
 
-return name.includes(search) ||
-network.includes(search);
+    document.getElementById(
+      "onchainView"
+    ).style.display = "none";
+  }
 
-});
 
+  function resetTabs() {
 
-title.textContent =
-selectedChain === "all"
-?
-"Top DEX Pairs by 24h Volume"
-:
-"Top " + chainLabel(selectedChain) + " DEX Pairs";
+    document.querySelectorAll(
+      ".tab"
+    ).forEach(button => {
 
-status.textContent =
-marketData.length
-?
-"Live DEX Market Data"
-:
-"Loading DEX Markets...";
+      button.classList.remove(
+        "active"
+      );
 
-status.className = "status";
+    });
+  }
 
-source.textContent = "GeckoTerminal";
-ranking.textContent = "24h DEX volume";
 
-overview.textContent =
-chainFiltered.length
-?
-chainFiltered.length
-:
-"—";
+  function switchTab(tab) {
 
-head.innerHTML = `
+    currentTab = tab;
 
-<th>#</th>
-<th>Pair</th>
-<th>Network</th>
-<th>Price</th>
-<th>Market Cap / FDV</th>
-<th>Liquidity</th>
-<th>24h Volume</th>
-<th>24h Change</th>
-<th>Transactions</th>
-<th>Buys</th>
-<th>Sells</th>
-<th>Age</th>
+    hideAllViews();
+    resetTabs();
 
-`;
+    document.getElementById(
+      "viewStat"
+    ).textContent =
+      tab === "onchain"
+        ? "On-Chain"
+        : tab === "stocks"
+          ? "Stocks"
+          : tab === "forex"
+            ? "Forex"
+            : "Crypto";
 
 
-if(!marketData.length){
+    if (tab === "crypto") {
 
-rows.innerHTML = `
+      document.getElementById(
+        "cryptoView"
+      ).style.display = "block";
 
-<tr>
-<td colspan="12">
+      document.getElementById(
+        "tabCrypto"
+      ).classList.add("active");
 
-<div class="loading">
-Loading DEX market data...
-</div>
+      renderCrypto();
 
-</td>
-</tr>
+    }
 
-`;
 
-gainers.innerHTML =
-`<div class="loading">Loading...</div>`;
+    if (tab === "onchain") {
 
-return;
+      document.getElementById(
+        "onchainView"
+      ).style.display = "block";
 
-}
+      document.getElementById(
+        "tabOnchain"
+      ).classList.add("active");
 
+      renderMarkets();
 
-if(!filtered.length){
+      if (!marketData.length) {
+        loadMarkets();
+      }
 
-rows.innerHTML = `
+    }
 
-<tr>
-<td colspan="12">
 
-<div class="empty">
-No matching DEX pairs.
-</div>
+    if (tab === "stocks") {
 
-</td>
-</tr>
+      document.getElementById(
+        "stocksView"
+      ).style.display = "block";
 
-`;
+      document.getElementById(
+        "tabStocks"
+      ).classList.add("active");
 
-}else{
+    }
 
-rows.innerHTML =
-filtered.map(function(item,index){
 
-const marketCap =
-Number(item.marketCap || 0);
+    if (tab === "forex") {
 
-const fdv =
-Number(item.fdv || 0);
+      document.getElementById(
+        "forexView"
+      ).style.display = "block";
 
-const displayValue =
-marketCap > 0
-?
-marketCap
-:
-fdv;
+      document.getElementById(
+        "tabForex"
+      ).classList.add("active");
 
-const valueType =
-marketCap > 0
-?
-"Market Cap"
-:
-fdv > 0
-?
-"FDV"
-:
-"N/A";
+    }
 
-const p =
-Number(item.change24h || 0);
+  }
 
-const badge =
-isNew(item.createdAt)
-?
-'<span class="new-badge">NEW</span>'
-:
-"";
 
-return `
+  /* =========================
+     CHAIN FILTER
+  ========================= */
 
-<tr>
+  function setChain(chain) {
 
-<td class="rank">
-${index + 1}
-</td>
+    currentChain = chain;
 
-<td>
+    document.querySelectorAll(
+      ".chain-btn"
+    ).forEach(button => {
 
-<span class="asset">
-${escapeHTML(item.name || "Unknown")}
-</span>
+      button.classList.remove(
+        "active"
+      );
 
-${badge}
+      if (
+        button.dataset.chain === chain
+      ) {
+        button.classList.add(
+          "active"
+        );
+      }
 
-</td>
+    });
 
-<td class="network">
-${escapeHTML(chainLabel(item.network))}
-</td>
+    renderMarkets();
+  }
 
-<td>
-${price(item.price)}
-</td>
 
-<td>
+  /* =========================
+     SEARCH
+  ========================= */
 
-${displayValue ? money(displayValue) : "—"}
+  document
+    .getElementById("search")
+    .addEventListener(
+      "input",
+      function() {
 
-<span class="value-type">
-${valueType}
-</span>
+        if (
+          currentTab === "crypto"
+        ) {
 
-</td>
+          renderCrypto();
 
-<td>
-${money(item.liquidity)}
-</td>
+        }
 
-<td>
-${money(item.volume24h)}
-</td>
+        if (
+          currentTab === "onchain"
+        ) {
 
-<td class="${p >= 0 ? "up" : "down"}">
-${change(p)}
-</td>
+          renderMarkets();
 
-<td>
-${formatNumber(item.transactions24h)}
-</td>
+        }
 
-<td>
-${formatNumber(item.buys24h)}
-</td>
+      }
+    );
 
-<td>
-${formatNumber(item.sells24h)}
-</td>
 
-<td>
-${age(item.createdAt)}
-</td>
+  /* =========================
+     START
+  ========================= */
 
-</tr>
+  async function startApp() {
 
-`;
+    /*
+      IMPORTANT:
+      Crypto loads first.
+      On-chain is NOT allowed to block Crypto.
+    */
 
-}).join("");
+    await loadCrypto();
 
-}
+    /*
+      Chains load separately.
+      If chains fail, Crypto still works.
+    */
 
+    loadChains();
 
-lowerTitle.textContent =
-selectedChain === "all"
-?
-"Top Chains by TVL"
-:
-"Top " + chainLabel(selectedChain) + " Activity";
+    /*
+      Markets load separately.
+      If markets are slow, Crypto still works.
+    */
 
+    loadMarkets();
 
-if(
-selectedChain === "all" &&
-chainData.length
-){
+  }
 
-gainers.innerHTML =
-chainData
-.slice(0,7)
-.map(function(chain){
 
-return `
+  startApp();
 
-<div class="row">
+</script>
 
-<div class="row-main">
-
-<span>
-${escapeHTML(chain.name || "Unknown")}
-</span>
-
-<span class="row-sub">
-Chain TVL
-</span>
-
-</div>
-
-<span>
-${money(chain.tvl)}
-</span>
-
-</div>
-
-`;
-
-})
-.join("");
-
-}else{
-
-const topChain =
-chainFiltered
-.slice()
-.sort(function(a,b){
-
-return Number(b.volume24h || 0) -
-Number(a.volume24h || 0);
-
-})
-.slice(0,7);
-
-
-if(!topChain.length){
-
-gainers.innerHTML =
-`<div class="empty">No chain activity available.</div>`;
-
-}else{
-
-gainers.innerHTML =
-topChain.map(function(item){
-
-return `
-
-<div class="row">
-
-<div class="row-main">
-
-<span>
-${escapeHTML(item.name || "Unknown")}
-</span>
-
-<span class="row-sub">
-
-${formatNumber(item.transactions24h)}
-transactions ·
-${money(item.liquidity)}
-liquidity
-
-</span>
-
-</div>
-
-<span>
-${money(item.volume24h)}
-</span>
-
-</div>
-
-`;
-
-}).join("");
-
-}
-
-}
-
-}
-
-
-/* =========================
-   MAIN RENDER
-========================= */
-
-function render(){
-
-if(
-currentTab === "Stocks" ||
-currentTab === "Forex"
-){
-
-const rows =
-document.getElementById("rows");
-
-const title =
-document.getElementById("tableTitle");
-
-const status =
-document.getElementById("status");
-
-const gainers =
-document.getElementById("gainers");
-
-const lowerTitle =
-document.getElementById("lowerTitle");
-
-const source =
-document.getElementById("source");
-
-const ranking =
-document.getElementById("ranking");
-
-const overview =
-document.getElementById("overviewCount");
-
-const head =
-document.getElementById("tableHead");
-
-
-title.textContent =
-currentTab + " market data";
-
-status.textContent = "Coming next";
-status.className = "status";
-
-source.textContent = "—";
-ranking.textContent = "—";
-overview.textContent = "—";
-lowerTitle.textContent = "Coming soon";
-
-head.innerHTML = `
-
-<th>#</th>
-<th>Asset</th>
-<th>Market</th>
-<th>Volume</th>
-<th>Change</th>
-
-`;
-
-rows.innerHTML = `
-
-<tr>
-<td colspan="5">
-
-<div class="empty">
-
-The ${escapeHTML(currentTab)}
-data feed will be connected next.
-
-</div>
-
-</td>
-</tr>
-
-`;
-
-gainers.innerHTML =
-`<div class="empty">Coming soon</div>`;
-
-return;
-
-}
-
-
-if(currentTab === "Crypto"){
-
-renderCrypto();
-return;
-
-}
-
-
-renderOnChain();
-
-}
-
-
-/* =========================
-   LOAD CRYPTO FIRST
-========================= */
-
-async function loadCrypto(){
-
-const count =
-document.getElementById("cryptoCount");
-
-const status =
-document.getElementById("status");
-
-try{
-
-status.textContent =
-"Loading Crypto...";
-
-const data =
-await fetchJSON(
-"/api/crypto",
-12000
-);
-
-if(!Array.isArray(data)){
+</body>
+</html>
