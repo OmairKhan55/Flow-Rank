@@ -31,23 +31,31 @@ export default async function handler(req, res) {
             network,
             response.status
           );
-
           continue;
         }
 
         const json = await response.json();
-
         const pools = json.data || [];
 
         for (const pool of pools) {
           const a = pool.attributes || {};
           const tx = a.transactions?.h24 || {};
 
+          const realMarketCap = Number(
+            a.market_cap_usd || 0
+          );
+
+          const fdv = Number(
+            a.fdv_usd || 0
+          );
+
           const market = {
             network,
             pool: pool.id,
 
-            name: a.name || "Unknown",
+            name:
+              a.name ||
+              "Unknown",
 
             price: Number(
               a.base_token_price_usd || 0
@@ -61,13 +69,27 @@ export default async function handler(req, res) {
               a.reserve_in_usd || 0
             ),
 
-            marketCap: Number(
-              a.market_cap_usd || 0
-            ),
+            marketCap: realMarketCap,
 
-            fdv: Number(
-              a.fdv_usd || 0
-            ),
+            fdv,
+
+            /*
+              displayValue:
+              Real Market Cap is used when available.
+              If Market Cap is unavailable, FDV is shown
+              separately so we never pretend FDV is Market Cap.
+            */
+            displayValue:
+              realMarketCap > 0
+                ? realMarketCap
+                : fdv,
+
+            valueType:
+              realMarketCap > 0
+                ? "Market Cap"
+                : fdv > 0
+                  ? "FDV"
+                  : "N/A",
 
             change24h: Number(
               a.price_change_percentage?.h24 || 0
@@ -89,29 +111,22 @@ export default async function handler(req, res) {
               a.pool_created_at || null
           };
 
-          /*
-           * Basic quality filter
-           */
+          if (!market.name) continue;
 
-          if (!market.name) {
+          if (
+            market.liquidity < 100000
+          ) {
             continue;
           }
 
-          if (market.liquidity < 100000) {
-            continue;
-          }
-
-          if (market.volume24h < 10000) {
+          if (
+            market.volume24h < 10000
+          ) {
             continue;
           }
 
           markets.push(market);
         }
-
-        /*
-         * Small delay between networks.
-         * Helps avoid hitting the public API limit.
-         */
 
         await new Promise(resolve =>
           setTimeout(resolve, 700)
@@ -126,12 +141,8 @@ export default async function handler(req, res) {
       }
     }
 
-    /*
-     * Remove obvious stablecoin-only pairs.
-     */
-
-    const filteredMarkets = markets.filter(
-      market => {
+    const filteredMarkets =
+      markets.filter(market => {
         const name =
           String(
             market.name || ""
@@ -148,22 +159,13 @@ export default async function handler(req, res) {
         }
 
         return true;
-      }
-    );
-
-    /*
-     * Sort by 24h volume.
-     */
+      });
 
     filteredMarkets.sort(
       (a, b) =>
         Number(b.volume24h || 0) -
         Number(a.volume24h || 0)
     );
-
-    /*
-     * Keep top 500.
-     */
 
     const finalMarkets =
       filteredMarkets
