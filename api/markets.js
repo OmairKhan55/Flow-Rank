@@ -10,128 +10,132 @@ export default async function handler(req, res) {
       "avalanche"
     ];
 
-    const results = await Promise.all(
-      networks.map(async (network) => {
-        try {
-          const url =
-            `https://api.geckoterminal.com/api/v2/networks/${network}/pools` +
-            `?include=base_token,quote_token` +
-            `&sort=h24_volume_usd_desc&page=1`;
+    const markets = [];
 
-          const response = await fetch(url, {
-            headers: {
-              accept: "application/json"
-            }
-          });
+    for (const network of networks) {
+      try {
+        const url =
+          `https://api.geckoterminal.com/api/v2/networks/${network}/pools` +
+          `?include=base_token,quote_token` +
+          `&sort=h24_volume_usd_desc&page=1`;
 
-          if (!response.ok) {
-            console.error(
-              "GeckoTerminal error:",
-              network,
-              response.status
-            );
+        const response = await fetch(url, {
+          headers: {
+            Accept: "application/json;version=20230203"
+          }
+        });
 
-            return [];
+        if (!response.ok) {
+          console.error(
+            "GeckoTerminal error:",
+            network,
+            response.status
+          );
+
+          continue;
+        }
+
+        const json = await response.json();
+
+        const pools = json.data || [];
+
+        for (const pool of pools) {
+          const a = pool.attributes || {};
+          const tx = a.transactions?.h24 || {};
+
+          const market = {
+            network,
+            pool: pool.id,
+
+            name: a.name || "Unknown",
+
+            price: Number(
+              a.base_token_price_usd || 0
+            ),
+
+            volume24h: Number(
+              a.volume_usd?.h24 || 0
+            ),
+
+            liquidity: Number(
+              a.reserve_in_usd || 0
+            ),
+
+            marketCap: Number(
+              a.market_cap_usd || 0
+            ),
+
+            fdv: Number(
+              a.fdv_usd || 0
+            ),
+
+            change24h: Number(
+              a.price_change_percentage?.h24 || 0
+            ),
+
+            buys24h: Number(
+              tx.buys || 0
+            ),
+
+            sells24h: Number(
+              tx.sells || 0
+            ),
+
+            transactions24h:
+              Number(tx.buys || 0) +
+              Number(tx.sells || 0),
+
+            createdAt:
+              a.pool_created_at || null
+          };
+
+          /*
+           * Basic quality filter
+           */
+
+          if (!market.name) {
+            continue;
           }
 
-          const json = await response.json();
+          if (market.liquidity < 100000) {
+            continue;
+          }
 
-          return (json.data || []).map((pool) => {
-            const a = pool.attributes || {};
-            const tx = a.transactions?.h24 || {};
+          if (market.volume24h < 10000) {
+            continue;
+          }
 
-            return {
-              network,
-              pool: pool.id,
-
-              name: a.name || "Unknown",
-
-              price: Number(
-                a.base_token_price_usd || 0
-              ),
-
-              volume24h: Number(
-                a.volume_usd?.h24 || 0
-              ),
-
-              liquidity: Number(
-                a.reserve_in_usd || 0
-              ),
-
-              marketCap: Number(
-                a.market_cap_usd || 0
-              ),
-
-              fdv: Number(
-                a.fdv_usd || 0
-              ),
-
-              change24h: Number(
-                a.price_change_percentage?.h24 || 0
-              ),
-
-              buys24h: Number(
-                tx.buys || 0
-              ),
-
-              sells24h: Number(
-                tx.sells || 0
-              ),
-
-              transactions24h:
-                Number(tx.buys || 0) +
-                Number(tx.sells || 0),
-
-              createdAt:
-                a.pool_created_at || null
-            };
-          });
-        } catch (error) {
-          console.error(
-            "Network error:",
-            network,
-            error
-          );
-
-          return [];
-        }
-      })
-    );
-
-    const markets = results
-      .flat()
-      .filter((market) => {
-        const name = String(
-          market.name || ""
-        ).toUpperCase();
-
-        const liquidity =
-          Number(market.liquidity || 0);
-
-        const volume =
-          Number(market.volume24h || 0);
-
-        const transactions =
-          Number(
-            market.transactions24h || 0
-          );
-
-        if (!market.name) {
-          return false;
-        }
-
-        if (liquidity < 100000) {
-          return false;
-        }
-
-        if (volume < 10000) {
-          return false;
+          markets.push(market);
         }
 
         /*
-         * Remove only obvious stablecoin-only
-         * pools.
+         * Small delay between networks.
+         * Helps avoid hitting the public API limit.
          */
+
+        await new Promise(resolve =>
+          setTimeout(resolve, 700)
+        );
+
+      } catch (error) {
+        console.error(
+          "Network failed:",
+          network,
+          error
+        );
+      }
+    }
+
+    /*
+     * Remove obvious stablecoin-only pairs.
+     */
+
+    const filteredMarkets = markets.filter(
+      market => {
+        const name =
+          String(
+            market.name || ""
+          ).toUpperCase();
 
         if (
           name.includes("USDC / USDC") ||
@@ -143,41 +147,40 @@ export default async function handler(req, res) {
           return false;
         }
 
-        /*
-         * Basic suspicious-volume filter.
-         */
-
-        const volumeToLiquidity =
-          liquidity > 0
-            ? volume / liquidity
-            : 0;
-
-        if (
-          volumeToLiquidity > 1000 &&
-          transactions < 100
-        ) {
-          return false;
-        }
-
         return true;
-      })
-      .sort(
-        (a, b) =>
-          Number(b.volume24h || 0) -
-          Number(a.volume24h || 0)
-      )
-      .slice(0, 500)
-      .map((market, index) => ({
-        rank: index + 1,
-        ...market
-      }));
+      }
+    );
+
+    /*
+     * Sort by 24h volume.
+     */
+
+    filteredMarkets.sort(
+      (a, b) =>
+        Number(b.volume24h || 0) -
+        Number(a.volume24h || 0)
+    );
+
+    /*
+     * Keep top 500.
+     */
+
+    const finalMarkets =
+      filteredMarkets
+        .slice(0, 500)
+        .map((market, index) => ({
+          rank: index + 1,
+          ...market
+        }));
 
     res.setHeader(
       "Cache-Control",
       "s-maxage=60, stale-while-revalidate=300"
     );
 
-    return res.status(200).json(markets);
+    return res.status(200).json(
+      finalMarkets
+    );
 
   } catch (error) {
     console.error(
@@ -186,7 +189,8 @@ export default async function handler(req, res) {
     );
 
     return res.status(500).json({
-      error: "On-chain market data failed"
+      error:
+        "On-chain market data failed"
     });
   }
 }
