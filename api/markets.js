@@ -24,7 +24,9 @@ export default async function handler(req, res) {
             }
           });
 
-          if (!response.ok) return [];
+          if (!response.ok) {
+            return [];
+          }
 
           const json = await response.json();
 
@@ -35,6 +37,7 @@ export default async function handler(req, res) {
             return {
               network,
               pool: pool.id,
+
               name: a.name || "Unknown",
 
               price: Number(
@@ -77,7 +80,6 @@ export default async function handler(req, res) {
                 a.pool_created_at || null
             };
           });
-
         } catch (error) {
           console.error(
             "Network error:",
@@ -92,17 +94,60 @@ export default async function handler(req, res) {
 
     const markets = results
       .flat()
-      .filter((market) =>
-        market.liquidity >= 100000 &&
-        market.volume24h >= 10000 &&
-        market.name &&
-        !market.name
-          .toUpperCase()
-          .includes("USDC / USDC") &&
-        !market.name
-          .toUpperCase()
-          .includes("USDT / USDT")
-      )
+      .filter((market) => {
+        const name = String(
+          market.name || ""
+        ).toUpperCase();
+
+        const liquidity =
+          Number(market.liquidity || 0);
+
+        const volume =
+          Number(market.volume24h || 0);
+
+        const transactions =
+          Number(
+            market.transactions24h || 0
+          );
+
+        const volumeToLiquidity =
+          liquidity > 0
+            ? volume / liquidity
+            : 0;
+
+        // Basic quality filters
+        if (!market.name) return false;
+
+        if (liquidity < 100000) {
+          return false;
+        }
+
+        if (volume < 10000) {
+          return false;
+        }
+
+        // Remove stablecoin-only pools
+        if (
+          name.includes("USDC / USDC") ||
+          name.includes("USDT / USDT") ||
+          name.includes("DAI / DAI") ||
+          name.includes("USDC / USDT") ||
+          name.includes("USDT / USDC")
+        ) {
+          return false;
+        }
+
+        // Remove pools with extreme
+        // volume compared with liquidity
+        if (
+          volumeToLiquidity > 1000 &&
+          transactions < 100
+        ) {
+          return false;
+        }
+
+        return true;
+      })
       .sort(
         (a, b) =>
           b.volume24h - a.volume24h
