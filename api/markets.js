@@ -10,6 +10,24 @@ export default async function handler(req, res) {
       "avalanche"
     ];
 
+    const STABLECOINS = [
+      "USDT",
+      "USDC",
+      "DAI",
+      "USDS",
+      "USDE",
+      "FDUSD",
+      "TUSD",
+      "USDP",
+      "PYUSD",
+      "FRAX",
+      "LUSD",
+      "GUSD",
+      "CRVUSD",
+      "USD0",
+      "USDD"
+    ];
+
     const results = await Promise.all(
       networks.map(async (network) => {
         try {
@@ -25,6 +43,12 @@ export default async function handler(req, res) {
           });
 
           if (!response.ok) {
+            console.error(
+              "GeckoTerminal error:",
+              network,
+              response.status
+            );
+
             return [];
           }
 
@@ -95,9 +119,11 @@ export default async function handler(req, res) {
     const markets = results
       .flat()
       .filter((market) => {
-        const name = String(
+        const rawName = String(
           market.name || ""
-        ).toUpperCase();
+        ).trim();
+
+        const name = rawName.toUpperCase();
 
         const liquidity =
           Number(market.liquidity || 0);
@@ -110,13 +136,20 @@ export default async function handler(req, res) {
             market.transactions24h || 0
           );
 
-        const volumeToLiquidity =
-          liquidity > 0
-            ? volume / liquidity
-            : 0;
+        /*
+         * Basic data validation
+         */
 
-        // Basic quality filters
-        if (!market.name) return false;
+        if (!rawName) {
+          return false;
+        }
+
+        if (
+          !Number.isFinite(liquidity) ||
+          !Number.isFinite(volume)
+        ) {
+          return false;
+        }
 
         if (liquidity < 100000) {
           return false;
@@ -126,22 +159,112 @@ export default async function handler(req, res) {
           return false;
         }
 
-        // Remove stablecoin-only pools
+        /*
+         * Split pair name
+         *
+         * Examples:
+         * BTC / USDT
+         * SOL / USDC
+         * ETH / USDT
+         */
+
+        const parts = rawName
+          .split("/")
+          .map(part =>
+            part
+              .trim()
+              .toUpperCase()
+          );
+
+        const baseToken =
+          parts[0] || "";
+
+        const quoteToken =
+          parts[1] || "";
+
+        /*
+         * Remove invalid/same-token pairs
+         */
+
         if (
-          name.includes("USDC / USDC") ||
-          name.includes("USDT / USDT") ||
-          name.includes("DAI / DAI") ||
-          name.includes("USDC / USDT") ||
-          name.includes("USDT / USDC")
+          baseToken &&
+          quoteToken &&
+          baseToken === quoteToken
         ) {
           return false;
         }
 
-        // Remove pools with extreme
-        // volume compared with liquidity
+        /*
+         * Remove pools where BOTH sides
+         * are stablecoins.
+         */
+
+        if (
+          STABLECOINS.includes(baseToken) &&
+          STABLECOINS.includes(quoteToken)
+        ) {
+          return false;
+        }
+
+        /*
+         * Remove common stablecoin-only
+         * naming patterns that may not split
+         * perfectly.
+         */
+
+        const stablecoinCount =
+          STABLECOINS.filter(
+            stable =>
+              name.includes(stable)
+          ).length;
+
+        if (
+          stablecoinCount >= 2
+        ) {
+          return false;
+        }
+
+        /*
+         * Volume / liquidity sanity check
+         */
+
+        const volumeToLiquidity =
+          liquidity > 0
+            ? volume / liquidity
+            : 0;
+
+        /*
+         * Extremely high volume with
+         * almost no transactions is suspicious.
+         */
+
         if (
           volumeToLiquidity > 1000 &&
           transactions < 100
+        ) {
+          return false;
+        }
+
+        /*
+         * Very high volume with almost
+         * zero transactions is also suspicious.
+         */
+
+        if (
+          volume > 10000000 &&
+          transactions < 20
+        ) {
+          return false;
+        }
+
+        /*
+         * If volume is huge compared with
+         * liquidity, require more activity.
+         */
+
+        if (
+          volumeToLiquidity > 100 &&
+          transactions < 50
         ) {
           return false;
         }
@@ -150,7 +273,8 @@ export default async function handler(req, res) {
       })
       .sort(
         (a, b) =>
-          b.volume24h - a.volume24h
+          Number(b.volume24h || 0) -
+          Number(a.volume24h || 0)
       )
       .slice(0, 500)
       .map((market, index) => ({
@@ -172,7 +296,7 @@ export default async function handler(req, res) {
     );
 
     return res.status(500).json({
-      error: "On-Chain market data failed"
+      error: "On-chain market data failed"
     });
   }
 }
