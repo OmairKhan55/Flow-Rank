@@ -1,7 +1,6 @@
 export default async function handler(req, res) {
   try {
-    const BASE =
-      "https://api.geckoterminal.com/api/v2";
+    const BASE = "https://api.geckoterminal.com/api/v2";
 
     const headers = {
       Accept: "application/json;version=20230203"
@@ -20,129 +19,79 @@ export default async function handler(req, res) {
     const markets = [];
     const seenPools = new Set();
 
-    async function wait(ms) {
-      return new Promise(resolve =>
-        setTimeout(resolve, ms)
-      );
-    }
-
-    async function getPools(url, source) {
+    async function getPools(url) {
       try {
-        const response = await fetch(url, {
-          headers
-        });
+        const response = await fetch(url, { headers });
 
         if (!response.ok) {
-          console.error(
-            "GeckoTerminal error:",
-            source,
-            response.status
-          );
-
+          console.error("GeckoTerminal:", response.status);
           return [];
         }
 
         const json = await response.json();
-
-        return Array.isArray(json.data)
-          ? json.data
-          : [];
-
+        return Array.isArray(json.data) ? json.data : [];
       } catch (error) {
-        console.error(
-          "Request failed:",
-          source,
-          error
-        );
-
+        console.error("Fetch error:", error);
         return [];
       }
     }
 
-    function addPool(pool, fallbackNetwork = null) {
-      if (!pool) return;
+    function addPool(pool, network) {
+      if (!pool || !pool.id) return;
 
-      const poolId = String(
-        pool.id || ""
-      );
+      const poolId = String(pool.id);
 
-      if (!poolId) return;
-
-      if (seenPools.has(poolId)) {
-        return;
-      }
-
+      if (seenPools.has(poolId)) return;
       seenPools.add(poolId);
 
       const a = pool.attributes || {};
+      const tx = a.transactions?.h24 || {};
 
-      const network =
-        fallbackNetwork ||
-        poolId.split("_")[0] ||
-        "unknown";
+      const volume24h = Number(a.volume_usd?.h24 || 0);
+      const liquidity = Number(a.reserve_in_usd || 0);
 
-      const tx =
-        a.transactions?.h24 || {};
+      if (volume24h < 5000) return;
+      if (liquidity < 50000) return;
 
-      const marketCap = Number(
-        a.market_cap_usd || 0
-      );
+      const marketCap = Number(a.market_cap_usd || 0);
+      const fdv = Number(a.fdv_usd || 0);
 
-      const fdv = Number(
-        a.fdv_usd || 0
-      );
+      const buys24h = Number(tx.buys || 0);
+      const sells24h = Number(tx.sells || 0);
 
-      const volume24h = Number(
-        a.volume_usd?.h24 || 0
-      );
+      const name = a.name || "Unknown";
 
-      const liquidity = Number(
-        a.reserve_in_usd || 0
-      );
+      const upperName = name.toUpperCase();
 
-      const change24h = Number(
-        a.price_change_percentage?.h24 || 0
-      );
+      const blocked = [
+        "USDC / USDC",
+        "USDT / USDT",
+        "DAI / DAI",
+        "USDC / USDT",
+        "USDT / USDC"
+      ];
 
-      const buys24h = Number(
-        tx.buys || 0
-      );
+      if (blocked.some(x => upperName.includes(x))) {
+        return;
+      }
 
-      const sells24h = Number(
-        tx.sells || 0
-      );
-
-      const transactions24h =
-        buys24h + sells24h;
-
-      const createdAt =
-        a.pool_created_at || null;
-
-      const market = {
+      markets.push({
         network,
-
         pool: poolId,
-
-        name:
-          a.name ||
-          "Unknown",
+        name,
 
         price: Number(
           a.base_token_price_usd || 0
         ),
 
         volume24h,
-
         liquidity,
 
         marketCap,
-
         fdv,
 
         displayValue:
-          marketCap > 0
-            ? marketCap
-            : fdv,
+          marketCap > 0 ? marketCap : fdv,
 
         valueType:
           marketCap > 0
@@ -151,92 +100,27 @@ export default async function handler(req, res) {
               ? "FDV"
               : "N/A",
 
-        change24h,
+        change24h: Number(
+          a.price_change_percentage?.h24 || 0
+        ),
 
         change1h: Number(
           a.price_change_percentage?.h1 || 0
         ),
 
         buys24h,
-
         sells24h,
+        transactions24h:
+          buys24h + sells24h,
 
-        transactions24h,
+        createdAt:
+          a.pool_created_at || null,
 
-        createdAt,
-
-        source:
-          "GeckoTerminal"
-      };
-
-      if (
-        market.name ===
-        "Unknown"
-      ) {
-        return;
-      }
-
-      /*
-        Remove extremely small pools.
-        This keeps the screener cleaner.
-      */
-      if (
-        liquidity < 50000
-      ) {
-        return;
-      }
-
-      if (
-        volume24h < 5000
-      ) {
-        return;
-      }
-
-      markets.push(market);
+        source: "GeckoTerminal"
+      });
     }
 
-    /*
-      --------------------------------------------------
-      1. GLOBAL TRENDING POOLS
-      --------------------------------------------------
-    */
-
-    const globalTrending =
-      await getPools(
-        `${BASE}/networks/trending_pools`,
-        "global-trending"
-      );
-
-    for (const pool of globalTrending) {
-      addPool(pool);
-    }
-
-    await wait(700);
-
-    /*
-      --------------------------------------------------
-      2. GLOBAL NEW POOLS
-      --------------------------------------------------
-    */
-
-    const globalNew =
-      await getPools(
-        `${BASE}/networks/new_pools`,
-        "global-new"
-      );
-
-    for (const pool of globalNew) {
-      addPool(pool);
-    }
-
-    await wait(700);
-
-    /*
-      --------------------------------------------------
-      3. TOP POOLS FOR EACH MAJOR NETWORK
-      --------------------------------------------------
-    */
-
+    // Get top pools from every major chain
     for (const network of networks) {
       const url =
         `${BASE}/networks/${network}/pools` +
@@ -244,102 +128,32 @@ export default async function handler(req, res) {
         `&sort=h24_volume_usd_desc` +
         `&page=1`;
 
-      const pools =
-        await getPools(
-          url,
-          `${network}-top`
-        );
+      const pools = await getPools(url);
 
       for (const pool of pools) {
-        addPool(
-          pool,
-          network
-        );
+        addPool(pool, network);
       }
 
-      /*
-        Public API is limited to approximately
-        10 calls/minute, so keep requests spaced.
-      */
-      await wait(900);
+      await new Promise(resolve =>
+        setTimeout(resolve, 800)
+      );
     }
 
-    /*
-      --------------------------------------------------
-      4. REMOVE STABLECOIN / INVALID PAIRS
-      --------------------------------------------------
-    */
-
-    const filteredMarkets =
-      markets.filter(market => {
-        const name =
-          String(
-            market.name || ""
-          ).toUpperCase();
-
-        const blockedPairs = [
-          "USDC / USDC",
-          "USDT / USDT",
-          "DAI / DAI",
-          "USDC / USDT",
-          "USDT / USDC",
-          "USDC/USDC",
-          "USDT/USDT",
-          "DAI/DAI"
-        ];
-
-        for (
-          const blocked of blockedPairs
-        ) {
-          if (
-            name.includes(blocked)
-          ) {
-            return false;
-          }
-        }
-
-        return true;
-      });
-
-    /*
-      --------------------------------------------------
-      5. SORT BY 24H VOLUME
-      --------------------------------------------------
-    */
-
-    filteredMarkets.sort(
+    // Sort highest 24H volume first
+    markets.sort(
       (a, b) =>
-        Number(
-          b.volume24h || 0
-        ) -
-        Number(
-          a.volume24h || 0
-        )
+        Number(b.volume24h || 0) -
+        Number(a.volume24h || 0)
     );
 
-    /*
-      --------------------------------------------------
-      6. FINAL RANKING
-      --------------------------------------------------
-    */
+    // Return top 500
+    const finalMarkets = markets
+      .slice(0, 500)
+      .map((market, index) => ({
+        rank: index + 1,
+        ...market
+      }));
 
-    const finalMarkets =
-      filteredMarkets
-        .slice(0, 500)
-        .map(
-          (market, index) => ({
-            rank:
-              index + 1,
-
-            ...market
-          })
-        );
-
-    /*
-      Cache for 60 seconds.
-      GeckoTerminal itself caches public
-      endpoint data for around 1 minute.
-    */
     res.setHeader(
       "Cache-Control",
       "s-maxage=60, stale-while-revalidate=300"
@@ -355,18 +169,10 @@ export default async function handler(req, res) {
     );
 
   } catch (error) {
-    console.error(
-      "On-chain market error:",
-      error
-    );
+    console.error(error);
 
     return res.status(500).json({
-      error:
-        "On-chain market data failed",
-
-      message:
-        error?.message ||
-        "Unknown error"
+      error: "On-chain market data failed"
     });
   }
 }
