@@ -10,24 +10,6 @@ export default async function handler(req, res) {
       "avalanche"
     ];
 
-    const STABLECOINS = [
-      "USDT",
-      "USDC",
-      "DAI",
-      "USDS",
-      "USDE",
-      "FDUSD",
-      "TUSD",
-      "USDP",
-      "PYUSD",
-      "FRAX",
-      "LUSD",
-      "GUSD",
-      "CRVUSD",
-      "USD0",
-      "USDD"
-    ];
-
     const results = await Promise.all(
       networks.map(async (network) => {
         try {
@@ -119,11 +101,9 @@ export default async function handler(req, res) {
     const markets = results
       .flat()
       .filter((market) => {
-        const rawName = String(
+        const name = String(
           market.name || ""
-        ).trim();
-
-        const name = rawName.toUpperCase();
+        ).toUpperCase();
 
         const liquidity =
           Number(market.liquidity || 0);
@@ -136,18 +116,7 @@ export default async function handler(req, res) {
             market.transactions24h || 0
           );
 
-        /*
-         * Basic data validation
-         */
-
-        if (!rawName) {
-          return false;
-        }
-
-        if (
-          !Number.isFinite(liquidity) ||
-          !Number.isFinite(volume)
-        ) {
+        if (!market.name) {
           return false;
         }
 
@@ -160,72 +129,22 @@ export default async function handler(req, res) {
         }
 
         /*
-         * Split pair name
-         *
-         * Examples:
-         * BTC / USDT
-         * SOL / USDC
-         * ETH / USDT
-         */
-
-        const parts = rawName
-          .split("/")
-          .map(part =>
-            part
-              .trim()
-              .toUpperCase()
-          );
-
-        const baseToken =
-          parts[0] || "";
-
-        const quoteToken =
-          parts[1] || "";
-
-        /*
-         * Remove invalid/same-token pairs
+         * Remove only obvious stablecoin-only
+         * pools.
          */
 
         if (
-          baseToken &&
-          quoteToken &&
-          baseToken === quoteToken
+          name.includes("USDC / USDC") ||
+          name.includes("USDT / USDT") ||
+          name.includes("DAI / DAI") ||
+          name.includes("USDC / USDT") ||
+          name.includes("USDT / USDC")
         ) {
           return false;
         }
 
         /*
-         * Remove pools where BOTH sides
-         * are stablecoins.
-         */
-
-        if (
-          STABLECOINS.includes(baseToken) &&
-          STABLECOINS.includes(quoteToken)
-        ) {
-          return false;
-        }
-
-        /*
-         * Remove common stablecoin-only
-         * naming patterns that may not split
-         * perfectly.
-         */
-
-        const stablecoinCount =
-          STABLECOINS.filter(
-            stable =>
-              name.includes(stable)
-          ).length;
-
-        if (
-          stablecoinCount >= 2
-        ) {
-          return false;
-        }
-
-        /*
-         * Volume / liquidity sanity check
+         * Basic suspicious-volume filter.
          */
 
         const volumeToLiquidity =
@@ -233,38 +152,9 @@ export default async function handler(req, res) {
             ? volume / liquidity
             : 0;
 
-        /*
-         * Extremely high volume with
-         * almost no transactions is suspicious.
-         */
-
         if (
           volumeToLiquidity > 1000 &&
           transactions < 100
-        ) {
-          return false;
-        }
-
-        /*
-         * Very high volume with almost
-         * zero transactions is also suspicious.
-         */
-
-        if (
-          volume > 10000000 &&
-          transactions < 20
-        ) {
-          return false;
-        }
-
-        /*
-         * If volume is huge compared with
-         * liquidity, require more activity.
-         */
-
-        if (
-          volumeToLiquidity > 100 &&
-          transactions < 50
         ) {
           return false;
         }
