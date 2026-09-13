@@ -15,6 +15,10 @@
       box-sizing: border-box;
     }
 
+    html {
+      background: #05070b;
+    }
+
     body {
       margin: 0;
       background: #05070b;
@@ -179,6 +183,10 @@
       border-radius: 8px;
       cursor: pointer;
       font-size: 12px;
+    }
+
+    .chain:hover {
+      color: white;
     }
 
     .chain.active {
@@ -382,13 +390,19 @@
     .loading {
       padding: 50px 20px;
       text-align: center;
-      color: #7c8796;
+      color: #737e8d;
     }
 
     .error {
-      padding: 25px;
-      color: #ff7d7d;
+      padding: 35px 20px;
       text-align: center;
+      color: #ff7d7d;
+    }
+
+    .error-small {
+      color: #6f7988;
+      font-size: 11px;
+      margin-top: 8px;
     }
 
     .footer {
@@ -399,6 +413,7 @@
     }
 
     @media (max-width: 900px) {
+
       .topbar-inner {
         flex-direction: column;
         align-items: stretch;
@@ -420,6 +435,7 @@
     }
 
     @media (max-width: 600px) {
+
       .container {
         padding-left: 13px;
         padding-right: 13px;
@@ -430,7 +446,8 @@
       }
 
       .stats {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
       }
 
       .stat {
@@ -442,7 +459,12 @@
       }
 
       .chain-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+
+      .panel-head {
+        padding: 15px;
       }
     }
   </style>
@@ -451,12 +473,17 @@
 <body>
 
   <header class="topbar">
+
     <div class="topbar-inner">
 
       <div class="brand">
-        <div class="brand-icon">F</div>
+
+        <div class="brand-icon">
+          F
+        </div>
 
         <div>
+
           <div class="brand-title">
             FlowRank
           </div>
@@ -464,26 +491,35 @@
           <div class="brand-subtitle">
             See Where The Volume Flows
           </div>
+
         </div>
+
       </div>
 
+
       <div class="search">
-        <span class="search-icon">⌕</span>
+
+        <span class="search-icon">
+          ⌕
+        </span>
 
         <input
           id="searchInput"
           type="text"
           placeholder="Search pair, token or network..."
         >
+
       </div>
 
     </div>
+
   </header>
 
 
   <main class="container">
 
     <section class="hero">
+
       <h1>
         Market Activity Dashboard
       </h1>
@@ -492,6 +528,7 @@
         Track crypto, on-chain activity,
         liquidity and market volume in one place.
       </p>
+
     </section>
 
 
@@ -545,11 +582,12 @@
       <div class="panel-head">
 
         <div>
+
           <div
             id="panelTitle"
             class="panel-title"
           >
-            Loading...
+            Crypto Markets
           </div>
 
           <div
@@ -558,11 +596,16 @@
           >
             Loading market data...
           </div>
+
         </div>
 
+
         <div class="live">
+
           <span class="live-dot"></span>
+
           Live Data
+
         </div>
 
       </div>
@@ -572,9 +615,11 @@
         id="content"
         class="table-wrap"
       >
+
         <div class="loading">
-          Loading...
+          Loading crypto markets...
         </div>
+
       </div>
 
     </section>
@@ -667,6 +712,7 @@
       }
 
       if (n >= 1) {
+
         return "$" +
           n.toLocaleString(
             "en-US",
@@ -674,6 +720,7 @@
               maximumFractionDigits: 4
             }
           );
+
       }
 
       return "$" +
@@ -722,13 +769,21 @@
     function chainLabel(value) {
 
       const map = {
+
         eth: "Ethereum",
+
         solana: "Solana",
+
         base: "Base",
+
         bsc: "BNB",
+
         arbitrum: "Arbitrum",
+
         polygon_pos: "Polygon",
+
         avalanche: "Avalanche"
+
       };
 
       return map[value] || value;
@@ -795,18 +850,23 @@
 
     function filteredMarkets() {
 
-      let data = [...marketData];
+      let data =
+        [...marketData];
+
 
       if (
         selectedChain !== "all"
       ) {
+
         data =
           data.filter(
             item =>
               item.network ===
               selectedChain
           );
+
       }
+
 
       if (searchTerm) {
 
@@ -815,19 +875,25 @@
 
         data =
           data.filter(item =>
+
             String(
               item.name || ""
             )
               .toLowerCase()
-              .includes(term) ||
+              .includes(term)
+
+            ||
 
             String(
               item.network || ""
             )
               .toLowerCase()
               .includes(term)
+
           );
+
       }
+
 
       return data;
     }
@@ -840,12 +906,92 @@
           "stats"
         );
 
+
+      if (
+        currentTab === "Crypto"
+      ) {
+
+        const volume =
+          liveData.reduce(
+            (sum, item) =>
+              sum +
+              Number(
+                item.volume24h ||
+                item.quoteVolume ||
+                0
+              ),
+            0
+          );
+
+
+        stats.innerHTML = `
+
+          <div class="stat">
+
+            <div class="stat-label">
+              Crypto Pairs
+            </div>
+
+            <div class="stat-value">
+              ${number(
+                liveData.length
+              )}
+            </div>
+
+          </div>
+
+
+          <div class="stat">
+
+            <div class="stat-label">
+              24H Volume
+            </div>
+
+            <div class="stat-value">
+              ${money(volume)}
+            </div>
+
+          </div>
+
+
+          <div class="stat">
+
+            <div class="stat-label">
+              Exchange
+            </div>
+
+            <div class="stat-value">
+              Binance
+            </div>
+
+          </div>
+
+
+          <div class="stat">
+
+            <div class="stat-label">
+              Data Status
+            </div>
+
+            <div class="stat-value">
+              Live
+            </div>
+
+          </div>
+
+        `;
+
+        return;
+      }
+
+
       if (
         currentTab === "On-Chain"
       ) {
 
         const data =
           filteredMarkets();
+
 
         const volume =
           data.reduce(
@@ -857,6 +1003,7 @@
             0
           );
 
+
         const liquidity =
           data.reduce(
             (sum, item) =>
@@ -866,6 +1013,7 @@
               ),
             0
           );
+
 
         const transactions =
           data.reduce(
@@ -877,9 +1025,11 @@
             0
           );
 
+
         stats.innerHTML = `
 
           <div class="stat">
+
             <div class="stat-label">
               DEX Markets
             </div>
@@ -887,9 +1037,12 @@
             <div class="stat-value">
               ${number(data.length)}
             </div>
+
           </div>
 
+
           <div class="stat">
+
             <div class="stat-label">
               24H Volume
             </div>
@@ -897,9 +1050,12 @@
             <div class="stat-value">
               ${money(volume)}
             </div>
+
           </div>
 
+
           <div class="stat">
+
             <div class="stat-label">
               Liquidity
             </div>
@@ -907,9 +1063,12 @@
             <div class="stat-value">
               ${money(liquidity)}
             </div>
+
           </div>
 
+
           <div class="stat">
+
             <div class="stat-label">
               24H Transactions
             </div>
@@ -917,73 +1076,7 @@
             <div class="stat-value">
               ${number(transactions)}
             </div>
-          </div>
 
-        `;
-
-        return;
-      }
-
-
-      if (
-        currentTab === "Crypto"
-      ) {
-
-        const data =
-          liveData;
-
-        const volume =
-          data.reduce(
-            (sum, item) =>
-              sum +
-              Number(
-                item.volume24h ||
-                item.volume ||
-                0
-              ),
-            0
-          );
-
-        stats.innerHTML = `
-
-          <div class="stat">
-            <div class="stat-label">
-              Crypto Pairs
-            </div>
-
-            <div class="stat-value">
-              ${number(data.length)}
-            </div>
-          </div>
-
-          <div class="stat">
-            <div class="stat-label">
-              24H Volume
-            </div>
-
-            <div class="stat-value">
-              ${money(volume)}
-            </div>
-          </div>
-
-          <div class="stat">
-            <div class="stat-label">
-              Exchange
-            </div>
-
-            <div class="stat-value">
-              Binance
-            </div>
-          </div>
-
-          <div class="stat">
-            <div class="stat-label">
-              Data Status
-            </div>
-
-            <div class="stat-value">
-              Live
-            </div>
           </div>
 
         `;
@@ -993,7 +1086,9 @@
 
 
       stats.innerHTML = `
+
         <div class="stat">
+
           <div class="stat-label">
             Status
           </div>
@@ -1001,7 +1096,9 @@
           <div class="stat-value">
             Coming Next
           </div>
+
         </div>
+
       `;
     }
 
@@ -1013,79 +1110,98 @@
           "chainButtons"
         );
 
+
       if (
         currentTab !== "On-Chain"
       ) {
+
         box.innerHTML = "";
+
         return;
       }
 
+
       const networks = [
+
         {
           id: "all",
           name: "All Networks"
         },
+
         {
           id: "eth",
           name: "Ethereum"
         },
+
         {
           id: "solana",
           name: "Solana"
         },
+
         {
           id: "base",
           name: "Base"
         },
+
         {
           id: "bsc",
           name: "BNB"
         },
+
         {
           id: "arbitrum",
           name: "Arbitrum"
         },
+
         {
           id: "polygon_pos",
           name: "Polygon"
         },
+
         {
           id: "avalanche",
           name: "Avalanche"
         }
+
       ];
 
+
       box.innerHTML =
-        networks.map(
-          network => `
+        networks
+          .map(
+            network => `
 
-            <button
-              class="chain ${
-                selectedChain === network.id
-                  ? "active"
-                  : ""
-              }"
-              onclick="selectChain('${network.id}')"
-            >
-              ${network.name}
-            </button>
+              <button
+                class="chain ${
+                  selectedChain ===
+                  network.id
+                    ? "active"
+                    : ""
+                }"
+                onclick="selectChain('${network.id}')"
+              >
+                ${network.name}
+              </button>
 
-          `
-        ).join("");
+            `
+          )
+          .join("");
     }
 
 
-    function renderMarkets() {
+    function renderCrypto() {
 
       const content =
         document.getElementById(
           "content"
         );
 
+
       const title =
         document.getElementById(
           "panelTitle"
         );
+
 
       const subtitle =
         document.getElementById(
@@ -1093,38 +1209,48 @@
         );
 
 
-      if (
-        currentTab !== "On-Chain"
-      ) {
-
-        renderCrypto();
-
-        return;
-      }
-
-
       title.textContent =
-        selectedChain === "all"
-          ? "Top DEX Pairs by 24h Volume"
-          : "Top DEX Pairs — " +
-            chainLabel(
-              selectedChain
-            );
+        "Top Crypto Pairs by 24h Volume";
+
 
       subtitle.textContent =
-        "GeckoTerminal • Ranked by 24h DEX volume";
+        "Binance • Ranked by 24h trading volume";
 
 
-      const data =
-        filteredMarkets();
+      let data =
+        [...liveData];
+
+
+      if (searchTerm) {
+
+        const term =
+          searchTerm.toLowerCase();
+
+
+        data =
+          data.filter(item =>
+
+            String(
+              item.pair ||
+              item.symbol ||
+              ""
+            )
+              .toLowerCase()
+              .includes(term)
+
+          );
+
+      }
 
 
       if (!data.length) {
 
         content.innerHTML = `
+
           <div class="empty">
-            No markets found.
+            No crypto markets found.
           </div>
+
         `;
 
         return;
@@ -1143,57 +1269,26 @@
 
               <th>Pair</th>
 
-              <th>Network</th>
+              <th>Exchange</th>
 
               <th>Price</th>
-
-              <th>Market Cap / FDV</th>
-
-              <th>Liquidity</th>
 
               <th>24H Volume</th>
 
               <th>24H Change</th>
 
-              <th>Transactions</th>
-
-              <th>Buys</th>
-
-              <th>Sells</th>
-
-              <th>Age</th>
-
             </tr>
 
           </thead>
 
+
           <tbody>
 
-            ${data.map(
-              (market, index) => {
+            ${data
+              .map(
+                (item, index) => {
 
-                const type =
-                  market.valueType ||
-                  "N/A";
-
-                const displayValue =
-                  Number(
-                    market.displayValue ||
-                    0
-                  );
-
-                return `
-
-                  <tr>
-
-                    <td class="rank">
-                      ${index + 1}
-                    </td>
-
-                    <td class="pair">
-
-                      ${escapeHTML(
-                        market.name
-                      )}
-
-               
+                  const pair =
+                    item.pair ||
+                    item.symbol ||
+           
