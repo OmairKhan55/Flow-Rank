@@ -1,1634 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>FlowRank — See Where The Volume Flows</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background: #06101f;
-      color: #e8eef7;
-      font-family: Arial, Helvetica, sans-serif;
-      min-height: 100vh;
-    }
-
-    header {
-      height: 64px;
-      background: #071525;
-      border-bottom: 1px solid #14253a;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 22px;
-      position: sticky;
-      top: 0;
-      z-index: 20;
-    }
-
-    .logo {
-      font-size: 20px;
-      font-weight: 800;
-      color: #f3f6fb;
-    }
-
-    .logo span {
-      color: #42d6a4;
-    }
-
-    nav {
-      display: flex;
-      gap: 24px;
-    }
-
-    nav a {
-      color: #8b9bb0;
-      text-decoration: none;
-      font-size: 13px;
-    }
-
-    nav a:hover {
-      color: #ffffff;
-    }
-
-    .container {
-      width: min(1180px, calc(100% - 30px));
-      margin: auto;
-    }
-
-    .hero {
-      padding: 38px 0 24px;
-    }
-
-    .hero h1 {
-      font-size: 32px;
-      line-height: 1.15;
-      margin-bottom: 12px;
-    }
-
-    .hero p {
-      color: #8798ad;
-      font-size: 14px;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      margin-bottom: 18px;
-    }
-
-    .stat {
-      background: #0b1a2c;
-      border: 1px solid #172a40;
-      border-radius: 11px;
-      padding: 18px;
-      min-height: 76px;
-    }
-
-    .stat-label {
-      color: #8999ad;
-      font-size: 11px;
-      margin-bottom: 7px;
-    }
-
-    .stat-value {
-      font-size: 19px;
-      font-weight: 700;
-    }
-
-    .toolbar {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .search {
-      width: 100%;
-      background: #0b1a2c;
-      border: 1px solid #172a40;
-      border-radius: 9px;
-      color: #ffffff;
-      padding: 12px;
-      outline: none;
-      font-size: 12px;
-    }
-
-    .search:focus {
-      border-color: #2d8e75;
-    }
-
-    .tabs {
-      display: flex;
-      background: #0b1a2c;
-      border: 1px solid #172a40;
-      border-radius: 9px;
-      overflow: hidden;
-    }
-
-    .tab {
-      border: 0;
-      background: transparent;
-      color: #8d9db0;
-      padding: 0 15px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .tab.active {
-      background: #11263d;
-      color: #ffffff;
-    }
-
-    .panel-title {
-      background: #0b1a2c;
-      border: 1px solid #172a40;
-      border-bottom: 0;
-      border-radius: 11px 11px 0 0;
-      padding: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .panel-title strong {
-      font-size: 13px;
-    }
-
-    .status {
-      color: #42d6a4;
-      font-size: 11px;
-    }
-
-    .source {
-      color: #718399;
-      font-size: 10px;
-      margin-top: 12px;
-    }
-
-    .table-wrap {
-      width: 100%;
-      overflow-x: auto;
-      background: #0b1a2c;
-      border: 1px solid #172a40;
-      border-radius: 0 0 11px 11px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 720px;
-    }
-
-    th {
-      text-align: left;
-      color: #718399;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 13px 12px;
-      border-bottom: 1px solid #172a40;
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 13px 12px;
-      font-size: 12px;
-      border-bottom: 1px solid #112237;
-      white-space: nowrap;
-    }
-
-    tr:last-child td {
-      border-bottom: 0;
-    }
-
-    .pair {
-      font-weight: 700;
-      color: #ffffff;
-    }
-
-    .positive {
-      color: #42d6a4;
-    }
-
-    .negative {
-      color: #ff6d78;
-    }
-
-    .muted {
-      color: #8090a4;
-    }
-
-    .loading {
-      text-align: center;
-      color: #8798ad;
-      padding: 42px 20px;
-    }
-
-    .error {
-      text-align: center;
-      color: #ff7a83;
-      padding: 25px 20px;
-      font-size: 12px;
-    }
-
-    .section {
-      margin-top: 22px;
-    }
-
-    .section h2 {
-      font-size: 15px;
-      margin-bottom: 10px;
-    }
-
-    .gainers-box {
-      background: #0b1a2c;
-      border: 1px solid #172a40;
-      border-radius: 11px;
-      min-height: 70px;
-      padding: 18px;
-    }
-
-    .chain-filter {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      padding: 12px;
-      background: #0b1a2c;
-      border: 1px solid #172a40;
-      border-bottom: 0;
-    }
-
-    .chain-btn {
-      border: 1px solid #1c334c;
-      background: #0d2035;
-      color: #8999ad;
-      padding: 7px 10px;
-      border-radius: 7px;
-      cursor: pointer;
-      font-size: 10px;
-    }
-
-    .chain-btn.active {
-      color: #ffffff;
-      border-color: #2d8e75;
-      background: #12352f;
-    }
-
-    .new-badge {
-      display: inline-block;
-      font-size: 9px;
-      color: #06101f;
-      background: #42d6a4;
-      padding: 3px 5px;
-      border-radius: 4px;
-      margin-left: 5px;
-      font-weight: 700;
-    }
-
-    .coming {
-      background: #0b1a2c;
-      border: 1px solid #172a40;
-      border-radius: 11px;
-      padding: 45px 20px;
-      text-align: center;
-      color: #8292a6;
-      font-size: 13px;
-    }
-
-    footer {
-      text-align: center;
-      color: #617187;
-      font-size: 10px;
-      padding: 60px 0 35px;
-    }
-
-    @media (max-width: 760px) {
-      header {
-        padding: 0 16px;
-      }
-
-      nav {
-        gap: 13px;
-      }
-
-      nav a {
-        font-size: 9px;
-      }
-
-      .hero {
-        padding-top: 30px;
-      }
-
-      .hero h1 {
-        font-size: 28px;
-      }
-
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .toolbar {
-        grid-template-columns: 1fr;
-      }
-
-      .tabs {
-        height: 38px;
-      }
-
-      .tab {
-        flex: 1;
-        padding: 0 7px;
-        font-size: 10px;
-      }
-
-      .container {
-        width: calc(100% - 20px);
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowRank — See Where The Volume Flows</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#06101f;color:#e8eef7;font-family:Arial,Helvetica,sans-serif;min-height:100vh}
+header{height:64px;background:#071525;border-bottom:1px solid #14253a;display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:20}
+.logo{font-size:20px;font-weight:800;color:#f3f6fb}.logo span{color:#42d6a4}
+nav{display:flex;gap:24px}nav a{color:#8b9bb0;text-decoration:none;font-size:13px}nav a:hover{color:#fff}
+.container{width:min(1180px,calc(100% - 30px));margin:auto}
+.hero{padding:38px 0 24px}.hero h1{font-size:32px;line-height:1.15;margin-bottom:12px}.hero p{color:#8798ad;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.stat{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;padding:18px;min-height:76px}
+.stat-label{color:#8999ad;font-size:11px;margin-bottom:7px}.stat-value{font-size:19px;font-weight:700}
+.toolbar{display:grid;grid-template-columns:1fr auto;gap:12px;margin-bottom:12px}
+.search{width:100%;background:#0b1a2c;border:1px solid #172a40;border-radius:9px;color:#fff;padding:12px;outline:none;font-size:12px}
+.search:focus{border-color:#2d8e75}
+.tabs{display:flex;background:#0b1a2c;border:1px solid #172a40;border-radius:9px;overflow:hidden}
+.tab{border:0;background:transparent;color:#8d9db0;padding:0 15px;font-size:12px;cursor:pointer}.tab.active{background:#11263d;color:#fff}
+.panel-title{background:#0b1a2c;border:1px solid #172a40;border-bottom:0;border-radius:11px 11px 0 0;padding:15px;display:flex;justify-content:space-between;align-items:center}
+.panel-title strong{font-size:13px}.status{color:#42d6a4;font-size:11px}.source{color:#718399;font-size:10px;margin-top:12px}
+.table-wrap{width:100%;overflow-x:auto;background:#0b1a2c;border:1px solid #172a40;border-radius:0 0 11px 11px}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th{text-align:left;color:#718399;font-size:10px;font-weight:600;padding:13px 12px;border-bottom:1px solid #172a40;white-space:nowrap}
+td{padding:13px 12px;font-size:12px;border-bottom:1px solid #112237;white-space:nowrap}tr:last-child td{border-bottom:0}
+.pair{font-weight:700;color:#fff}.positive{color:#42d6a4}.negative{color:#ff6d78}.muted{color:#8090a4}
+.loading{text-align:center;color:#8798ad;padding:42px 20px}.error{text-align:center;color:#ff7a83;padding:25px 20px;font-size:12px}
+.section{margin-top:22px}.section h2{font-size:15px;margin-bottom:10px}
+.gainers-box{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;min-height:70px;padding:18px}
+.chain-filter{display:flex;flex-wrap:wrap;gap:7px;padding:12px;background:#0b1a2c;border:1px solid #172a40;border-bottom:0}
+.chain-btn{border:1px solid #1c334c;background:#0d2035;color:#8999ad;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:10px}.chain-btn.active{color:#fff;border-color:#2d8e75;background:#12352f}
+.activity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.activity-card{background:#0b1a2c;border:1px solid #172a40;border-radius:9px;padding:12px;cursor:pointer}.activity-card:hover{border-color:#2d8e75}
+.activity-name{font-size:11px;font-weight:700}.activity-pct{font-size:17px;font-weight:800;margin-top:5px}.activity-vol{font-size:9px;color:#718399;margin-top:4px}
+.time-filter{display:flex;gap:7px;margin:12px 0}.time-btn{border:1px solid #1c334c;background:#0d2035;color:#8999ad;padding:7px 12px;border-radius:7px;cursor:pointer;font-size:10px}.time-btn.active{color:#fff;border-color:#2d8e75;background:#12352f}
+.revival-box{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;overflow:hidden}.revival-head{padding:13px 15px;border-bottom:1px solid #172a40;display:flex;justify-content:space-between}.revival-list{overflow-x:auto}.revival-list table{min-width:850px}
+.badge{display:inline-block;font-size:9px;padding:3px 6px;border-radius:4px;font-weight:700;background:#12352f;color:#42d6a4}.hot{background:#3b2920;color:#ffb36b}
+.clickable{cursor:pointer}.clickable:hover{background:#0d2135}
+.coming{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;padding:45px 20px;text-align:center;color:#8292a6;font-size:13px}
+footer{text-align:center;color:#617187;font-size:10px;padding:60px 0 35px}
+@media(max-width:760px){header{padding:0 16px}nav{gap:13px}nav a{font-size:9px}.hero{padding-top:30px}.hero h1{font-size:28px}.stats{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.tabs{height:38px}.tab{flex:1;padding:0 7px;font-size:10px}.container{width:calc(100% - 20px)}.activity-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
 </head>
-
 <body>
-
 <header>
-  <div class="logo">Flow<span>Rank</span></div>
-
-  <nav>
-    <a href="#" onclick="switchTab('home'); return false;">Home</a>
-    <a href="#" onclick="switchTab('crypto'); return false;">Crypto</a>
-    <a href="#" onclick="switchTab('stocks'); return false;">Stocks</a>
-    <a href="#" onclick="switchTab('forex'); return false;">Forex</a>
-    <a href="#" onclick="switchTab('onchain'); return false;">On-Chain</a>
-  </nav>
+<div class="logo">Flow<span>Rank</span></div>
+<nav>
+<a href="#" onclick="switchTab('crypto');return false;">Home</a>
+<a href="#" onclick="switchTab('crypto');return false;">Crypto</a>
+<a href="#" onclick="switchTab('stocks');return false;">Stocks</a>
+<a href="#" onclick="switchTab('forex');return false;">Forex</a>
+<a href="#" onclick="switchTab('onchain');return false;">On-Chain</a>
+</nav>
 </header>
 
 <main class="container">
-
-  <section class="hero">
-    <h1>See Where The Volume Flows.</h1>
-    <p>FlowRank tracks market activity across crypto and on-chain markets.</p>
-  </section>
-
-  <section class="stats">
-
-    <div class="stat">
-      <div class="stat-label">Crypto Markets</div>
-      <div class="stat-value" id="cryptoStat">Loading...</div>
-    </div>
-
-    <div class="stat">
-      <div class="stat-label">Chains</div>
-      <div class="stat-value" id="chainStat">Loading...</div>
-    </div>
-
-    <div class="stat">
-      <div class="stat-label">Current View</div>
-      <div class="stat-value" id="viewStat">Crypto</div>
-    </div>
-
-  </section>
-
-  <section class="toolbar">
-
-    <input
-      id="search"
-      class="search"
-      type="text"
-      placeholder="Search assets, pairs or networks..."
-      autocomplete="off"
-    >
-
-    <div class="tabs">
-
-      <button
-        id="tabCrypto"
-        class="tab active"
-        onclick="switchTab('crypto')">
-        Crypto
-      </button>
-
-      <button
-        id="tabStocks"
-        class="tab"
-        onclick="switchTab('stocks')">
-        Stocks
-      </button>
-
-      <button
-        id="tabForex"
-        class="tab"
-        onclick="switchTab('forex')">
-        Forex
-      </button>
-
-      <button
-        id="tabOnchain"
-        class="tab"
-        onclick="switchTab('onchain')">
-        On-Chain
-      </button>
-
-    </div>
-
-  </section>
-
-  <!-- CRYPTO -->
-
-  <section id="cryptoView">
-
-    <div class="panel-title">
-
-      <div>
-        <strong>Top Crypto Pairs by 24h Volume</strong>
-
-        <div class="source">
-          Source: <b>Binance</b>
-          &nbsp;&nbsp; Ranking: 24h pair volume
-        </div>
-      </div>
-
-      <div id="cryptoStatus" class="status">
-        Loading Crypto...
-      </div>
-
-    </div>
-
-    <div class="table-wrap">
-
-      <table>
-
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>PAIR</th>
-            <th>EXCHANGE</th>
-            <th>PRICE</th>
-            <th>24H VOLUME</th>
-            <th>24H CHANGE</th>
-          </tr>
-        </thead>
-
-        <tbody id="cryptoBody">
-          <tr>
-            <td colspan="6" class="loading">
-              Loading market data...
-            </td>
-          </tr>
-        </tbody>
-
-      </table>
-
-    </div>
-
-    <div class="section">
-
-      <h2>Top Gainers (24h)</h2>
-
-      <div id="gainers" class="gainers-box">
-        <div class="loading">Loading...</div>
-      </div>
-
-    </div>
-
-  </section>
-
-  <!-- ON CHAIN -->
-
-  <section id="onchainView" style="display:none;">
-
-    <div class="panel-title">
-
-      <div>
-        <strong>Top On-Chain DEX Markets</strong>
-
-        <div class="source">
-          Source: <b>GeckoTerminal</b>
-          &nbsp;&nbsp; Ranking: 24h DEX volume
-        </div>
-      </div>
-
-      <div id="marketStatus" class="status">
-        Loading...
-      </div>
-
-    </div>
-
-    <div class="chain-filter">
-
-      <button
-        class="chain-btn active"
-        data-chain="all"
-        onclick="setChain('all')">
-        All Chains
-      </button>
-
-      <button
-        class="chain-btn"
-        data-chain="solana"
-        onclick="setChain('solana')">
-        Solana
-      </button>
-
-      <button
-        class="chain-btn"
-        data-chain="eth"
-        onclick="setChain('eth')">
-        Ethereum
-      </button>
-
-      <button
-        class="chain-btn"
-        data-chain="base"
-        onclick="setChain('base')">
-        Base
-      </button>
-
-      <button
-        class="chain-btn"
-        data-chain="bsc"
-        onclick="setChain('bsc')">
-        BNB
-      </button>
-
-      <button
-        class="chain-btn"
-        data-chain="arbitrum"
-        onclick="setChain('arbitrum')">
-        Arbitrum
-      </button>
-
-      <button
-        class="chain-btn"
-        data-chain="polygon_pos"
-        onclick="setChain('polygon_pos')">
-        Polygon
-      </button>
-
-      <button
-        class="chain-btn"
-        data-chain="avalanche"
-        onclick="setChain('avalanche')">
-        Avalanche
-      </button>
-
-    </div>
-
-    <div class="table-wrap">
-
-      <table>
-
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>PAIR</th>
-            <th>NETWORK</th>
-            <th>PRICE</th>
-            <th>MARKET CAP / FDV</th>
-            <th>LIQUIDITY</th>
-            <th>24H VOLUME</th>
-            <th>24H CHANGE</th>
-            <th>TXNS</th>
-            <th>BUYS</th>
-            <th>SELLS</th>
-            <th>AGE</th>
-          </tr>
-        </thead>
-
-        <tbody id="marketBody">
-
-          <tr>
-            <td colspan="12" class="loading">
-              Loading on-chain markets...
-            </td>
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-  </section>
-
-  <!-- STOCKS -->
-
-  <section id="stocksView" style="display:none;">
-
-    <div class="coming">
-      Stock market data is coming next.
-    </div>
-
-  </section>
-
-  <!-- FOREX -->
-
-  <section id="forexView" style="display:none;">
-
-    <div class="coming">
-      Forex market data is coming next.
-    </div>
-
-  </section>
-
+<section class="hero"><h1>See Where The Volume Flows.</h1><p>FlowRank tracks market activity across crypto and on-chain markets.</p></section>
+
+<section class="stats">
+<div class="stat"><div class="stat-label">Crypto Markets</div><div class="stat-value" id="cryptoStat">Loading...</div></div>
+<div class="stat"><div class="stat-label">Chains</div><div class="stat-value" id="chainStat">Loading...</div></div>
+<div class="stat"><div class="stat-label">Current View</div><div class="stat-value" id="viewStat">Crypto</div></div>
+</section>
+
+<section class="toolbar">
+<input id="search" class="search" type="text" placeholder="Search assets, pairs or networks..." autocomplete="off">
+<div class="tabs">
+<button id="tabCrypto" class="tab active" onclick="switchTab('crypto')">Crypto</button>
+<button id="tabStocks" class="tab" onclick="switchTab('stocks')">Stocks</button>
+<button id="tabForex" class="tab" onclick="switchTab('forex')">Forex</button>
+<button id="tabOnchain" class="tab" onclick="switchTab('onchain')">On-Chain</button>
+</div>
+</section>
+
+<section id="cryptoView">
+<div class="panel-title"><div><strong>Top Crypto Pairs by 24h Volume</strong><div class="source">Source: <b>Binance</b> &nbsp;&nbsp; Ranking: 24h pair volume</div></div><div id="cryptoStatus" class="status">Loading Crypto...</div></div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>PAIR</th><th>EXCHANGE</th><th>PRICE</th><th>24H VOLUME</th><th>24H CHANGE</th></tr></thead><tbody id="cryptoBody"><tr><td colspan="6" class="loading">Loading market data...</td></tr></tbody></table></div>
+<div class="section"><h2>Top Gainers (24h)</h2><div id="gainers" class="gainers-box"><div class="loading">Loading...</div></div></div>
+</section>
+
+<section id="onchainView" style="display:none;">
+<div class="panel-title"><div><strong>Top On-Chain DEX Markets</strong><div class="source">Source: <b>GeckoTerminal</b> &nbsp;&nbsp; Ranking: 24h DEX volume</div></div><div id="marketStatus" class="status">Loading...</div></div>
+
+<div class="section" style="margin-top:12px">
+<h2>Chain Volume Activity</h2>
+<div id="activityGrid" class="activity-grid"><div class="loading">Loading chain activity...</div></div>
+</div>
+
+<div class="section">
+<div class="panel-title" style="border-bottom:1px solid #172a40;border-radius:11px"><div><strong id="chainViewTitle">All Chains — Highest Volume</strong><div class="source">Click a chain above to view its highest-volume markets.</div></div></div>
+<div class="chain-filter">
+<button class="chain-btn active" data-chain="all" onclick="setChain('all')">All Chains</button>
+<button class="chain-btn" data-chain="solana" onclick="setChain('solana')">Solana</button>
+<button class="chain-btn" data-chain="eth" onclick="setChain('eth')">Ethereum</button>
+<button class="chain-btn" data-chain="base" onclick="setChain('base')">Base</button>
+<button class="chain-btn" data-chain="bsc" onclick="setChain('bsc')">BNB</button>
+<button class="chain-btn" data-chain="arbitrum" onclick="setChain('arbitrum')">Arbitrum</button>
+<button class="chain-btn" data-chain="polygon_pos" onclick="setChain('polygon_pos')">Polygon</button>
+<button class="chain-btn" data-chain="avalanche" onclick="setChain('avalanche')">Avalanche</button>
+</div>
+<div class="time-filter">
+<button class="time-btn active" data-time="24h" onclick="setTimeframe('24h')">24H</button>
+<button class="time-btn" data-time="1h" onclick="setTimeframe('1h')">1H</button>
+</div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>PAIR</th><th>NETWORK</th><th>PRICE</th><th>MARKET CAP / FDV</th><th>LIQUIDITY</th><th>24H VOLUME</th><th>24H CHANGE</th><th>TXNS</th><th>BUYS</th><th>SELLS</th><th>AGE</th></tr></thead><tbody id="marketBody"><tr><td colspan="12" class="loading">Loading on-chain markets...</td></tr></tbody></table></div>
+</div>
+
+<div class="section">
+<h2>🔥 Revival / Buying Started</h2>
+<div class="revival-box">
+<div class="revival-head"><strong>Markets showing renewed activity</strong><span id="revivalStatus" class="status">Scanning...</span></div>
+<div class="revival-list"><table><thead><tr><th>PAIR</th><th>NETWORK</th><th>PRICE</th><th>1H VOLUME</th><th>24H VOLUME</th><th>BUYS</th><th>SELLS</th><th>1H CHANGE</th><th>STATUS</th></tr></thead><tbody id="revivalBody"><tr><td colspan="9" class="loading">Loading revival data...</td></tr></tbody></table></div>
+</div>
+</div>
+</section>
+
+<section id="stocksView" style="display:none;"><div class="coming">Stock market data is coming next.</div></section>
+<section id="forexView" style="display:none;"><div class="coming">Forex market data is coming next.</div></section>
 </main>
 
-<footer>
-  FlowRank — Market data dashboard.<br>
-  Data may be delayed or incomplete.
-</footer>
-
+<footer>FlowRank — Market data dashboard.<br>Data may be delayed or incomplete.</footer>
 
 <script>
-
-  /* =========================
-     GLOBAL DATA
-  ========================= */
-
-  let cryptoData = [];
-  let chainData = [];
-  let marketData = [];
-
-  let currentTab = "crypto";
-  let currentChain = "all";
-
-
-  /* =========================
-     HELPERS
-  ========================= */
-
-  function formatNumber(value) {
-
-    const number = Number(value || 0);
-
-    if (!Number.isFinite(number)) {
-      return "—";
-    }
-
-    if (number >= 1000000000) {
-      return "$" + (number / 1000000000).toFixed(2) + "B";
-    }
-
-    if (number >= 1000000) {
-      return "$" + (number / 1000000).toFixed(2) + "M";
-    }
-
-    if (number >= 1000) {
-      return "$" + (number / 1000).toFixed(2) + "K";
-    }
-
-    return "$" + number.toFixed(2);
-  }
-
-
-  function formatPrice(value) {
-
-    const number = Number(value || 0);
-
-    if (!Number.isFinite(number)) {
-      return "—";
-    }
-
-    if (number >= 1000) {
-      return "$" + number.toLocaleString(
-        "en-US",
-        {
-          maximumFractionDigits: 2
-        }
-      );
-    }
-
-    if (number >= 1) {
-      return "$" + number.toFixed(2);
-    }
-
-    if (number >= 0.01) {
-      return "$" + number.toFixed(4);
-    }
-
-    return "$" + number.toFixed(8);
-  }
-
-
-  function formatPercent(value) {
-
-    const number = Number(value || 0);
-
-    if (!Number.isFinite(number)) {
-      return "—";
-    }
-
-    const sign = number > 0 ? "+" : "";
-
-    const cls =
-      number > 0
-        ? "positive"
-        : number < 0
-          ? "negative"
-          : "muted";
-
-    return `<span class="${cls}">
-      ${sign}${number.toFixed(2)}%
-    </span>`;
-  }
-
-
-  function escapeHTML(value) {
-
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-
-  function networkName(network) {
-
-    const names = {
-      eth: "Ethereum",
-      ethereum: "Ethereum",
-      solana: "Solana",
-      base: "Base",
-      bsc: "BNB Chain",
-      arbitrum: "Arbitrum",
-      polygon_pos: "Polygon",
-      avalanche: "Avalanche"
-    };
-
-    return names[network] || network || "Unknown";
-  }
-
-
-  function ageText(createdAt) {
-
-    if (!createdAt) {
-      return "—";
-    }
-
-    const created = new Date(createdAt);
-
-    if (Number.isNaN(created.getTime())) {
-      return "—";
-    }
-
-    const diff =
-      Date.now() - created.getTime();
-
-    const days =
-      Math.floor(
-        diff / 86400000
-      );
-
-    if (days <= 0) {
-      return "New";
-    }
-
-    if (days === 1) {
-      return "1d";
-    }
-
-    if (days < 30) {
-      return days + "d";
-    }
-
-    if (days < 365) {
-      return Math.floor(days / 30) + "mo";
-    }
-
-    return Math.floor(days / 365) + "y";
-  }
-
-
-  /* =========================
-     API FETCH
-  ========================= */
-
-  async function fetchAPI(path, timeout = 15000) {
-
-    const controller =
-      new AbortController();
-
-    const timer =
-      setTimeout(
-        () => controller.abort(),
-        timeout
-      );
-
-    try {
-
-      const separator =
-        path.includes("?")
-          ? "&"
-          : "?";
-
-      const url =
-        path +
-        separator +
-        "_=" +
-        Date.now();
-
-      const response =
-        await fetch(
-          url,
-          {
-            method: "GET",
-            cache: "no-store",
-            credentials: "same-origin",
-            headers: {
-              "Accept": "application/json"
-            },
-            signal: controller.signal
-          }
-        );
-
-      const text =
-        await response.text();
-
-      if (!response.ok) {
-
-        throw new Error(
-          "HTTP " +
-          response.status +
-          ": " +
-          text.slice(0, 180)
-        );
-      }
-
-      let data;
-
-      try {
-
-        data =
-          JSON.parse(text);
-
-      } catch (error) {
-
-        throw new Error(
-          "API returned invalid JSON"
-        );
-      }
-
-      return data;
-
-    } finally {
-
-      clearTimeout(timer);
-    }
-  }
-
-
-  /* =========================
-     CRYPTO
-  ========================= */
-
-  async function loadCrypto() {
-
-    const status =
-      document.getElementById(
-        "cryptoStatus"
-      );
-
-    const body =
-      document.getElementById(
-        "cryptoBody"
-      );
-
-    status.textContent =
-      "Connecting...";
-
-    body.innerHTML = `
-      <tr>
-        <td colspan="6" class="loading">
-          Connecting to Binance data...
-        </td>
-      </tr>
-    `;
-
-    try {
-
-      const data =
-        await fetchAPI(
-          "/api/crypto",
-          15000
-        );
-
-      if (!Array.isArray(data)) {
-
-        throw new Error(
-          "Crypto API did not return an array"
-        );
-      }
-
-      cryptoData = data;
-
-      renderCrypto();
-
-      document.getElementById(
-        "cryptoStat"
-      ).textContent =
-        cryptoData.length +
-        " Pairs";
-
-      status.textContent =
-        "Live";
-
-    } catch (error) {
-
-      console.error(
-        "Crypto API error:",
-        error
-      );
-
-      body.innerHTML = `
-        <tr>
-          <td colspan="6" class="error">
-            Crypto data failed to load.<br>
-            ${escapeHTML(error.message)}
-          </td>
-        </tr>
-      `;
-
-      status.textContent =
-        "API Error";
-
-      document.getElementById(
-        "cryptoStat"
-      ).textContent =
-        "Error";
-    }
-  }
-
-
-  function renderCrypto() {
-
-    const body =
-      document.getElementById(
-        "cryptoBody"
-      );
-
-    const query =
-      document.getElementById(
-        "search"
-      ).value
-        .trim()
-        .toLowerCase();
-
-    let rows =
-      cryptoData.filter(item => {
-
-        if (!query) {
-          return true;
-        }
-
-        return (
-          String(item.pair || "")
-            .toLowerCase()
-            .includes(query) ||
-
-          String(item.exchange || "")
-            .toLowerCase()
-            .includes(query)
-        );
-
-      });
-
-
-    if (!rows.length) {
-
-      body.innerHTML = `
-        <tr>
-          <td colspan="6" class="loading">
-            No matching markets found.
-          </td>
-        </tr>
-      `;
-
-      return;
-    }
-
-
-    body.innerHTML =
-      rows.map((item, index) => {
-
-        return `
-          <tr>
-
-            <td>
-              ${index + 1}
-            </td>
-
-            <td class="pair">
-              ${escapeHTML(item.pair)}
-            </td>
-
-            <td class="muted">
-              ${escapeHTML(item.exchange)}
-            </td>
-
-            <td>
-              ${formatPrice(item.price)}
-            </td>
-
-            <td>
-              ${formatNumber(item.volume24h)}
-            </td>
-
-            <td>
-              ${formatPercent(item.change24h)}
-            </td>
-
-          </tr>
-        `;
-
-      }).join("");
-
-    renderGainers();
-  }
-
-
-  function renderGainers() {
-
-    const box =
-      document.getElementById(
-        "gainers"
-      );
-
-    if (!cryptoData.length) {
-
-      box.innerHTML =
-        `<div class="loading">No data.</div>`;
-
-      return;
-    }
-
-    const gainers =
-      [...cryptoData]
-        .sort(
-          (a, b) =>
-            Number(b.change24h || 0) -
-            Number(a.change24h || 0)
-        )
-        .filter(
-          item =>
-            Number(item.change24h || 0) > 0
-        )
-        .slice(0, 5);
-
-
-    if (!gainers.length) {
-
-      box.innerHTML =
-        `<div class="loading">
-          No positive 24h movers found.
-        </div>`;
-
-      return;
-    }
-
-
-    box.innerHTML =
-      gainers.map(item => {
-
-        return `
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            padding:8px 0;
-            border-bottom:1px solid #112237;
-          ">
-
-            <span class="pair">
-              ${escapeHTML(item.pair)}
-            </span>
-
-            <span class="positive">
-              +${Number(
-                item.change24h
-              ).toFixed(2)}%
-            </span>
-
-          </div>
-        `;
-
-      }).join("");
-  }
-
-
-  /* =========================
-     CHAINS
-  ========================= */
-
-  async function loadChains() {
-
-    try {
-
-      const data =
-        await fetchAPI(
-          "/api/onchain",
-          15000
-        );
-
-      if (Array.isArray(data)) {
-
-        chainData = data;
-
-        document.getElementById(
-          "chainStat"
-        ).textContent =
-          chainData.length +
-          " Chains";
-
-      } else {
-
-        document.getElementById(
-          "chainStat"
-        ).textContent =
-          "Available";
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Chain API error:",
-        error
-      );
-
-      document.getElementById(
-        "chainStat"
-      ).textContent =
-        "Error";
-    }
-  }
-
-
-  /* =========================
-     ON-CHAIN MARKETS
-  ========================= */
-
-  async function loadMarkets() {
-
-    const status =
-      document.getElementById(
-        "marketStatus"
-      );
-
-    status.textContent =
-      "Connecting...";
-
-    try {
-
-      const data =
-        await fetchAPI(
-          "/api/markets",
-          25000
-        );
-
-      if (!Array.isArray(data)) {
-
-        throw new Error(
-          "Market API did not return an array"
-        );
-      }
-
-      marketData = data;
-
-      renderMarkets();
-
-      status.textContent =
-        marketData.length +
-        " Markets";
-
-    } catch (error) {
-
-      console.error(
-        "Markets API error:",
-        error
-      );
-
-      document.getElementById(
-        "marketBody"
-      ).innerHTML = `
-        <tr>
-          <td colspan="12" class="error">
-            On-chain market data failed.<br>
-            ${escapeHTML(error.message)}
-          </td>
-        </tr>
-      `;
-
-      status.textContent =
-        "API Error";
-    }
-  }
-
-
-  function renderMarkets() {
-
-    const body =
-      document.getElementById(
-        "marketBody"
-      );
-
-    const query =
-      document.getElementById(
-        "search"
-      ).value
-        .trim()
-        .toLowerCase();
-
-
-    let rows =
-      marketData.filter(item => {
-
-        const network =
-          String(
-            item.network || ""
-          ).toLowerCase();
-
-        const name =
-          String(
-            item.name || ""
-          ).toLowerCase();
-
-        const pair =
-          String(
-            item.name || ""
-          ).toLowerCase();
-
-        const matchesChain =
-          currentChain === "all" ||
-          network === currentChain;
-
-        const matchesSearch =
-          !query ||
-          name.includes(query) ||
-          pair.includes(query) ||
-          network.includes(query);
-
-        return (
-          matchesChain &&
-          matchesSearch
-        );
-
-      });
-
-
-    rows =
-      rows
-        .sort(
-          (a, b) =>
-            Number(b.volume24h || 0) -
-            Number(a.volume24h || 0)
-        )
-        .slice(0, 100);
-
-
-    if (!rows.length) {
-
-      body.innerHTML = `
-        <tr>
-          <td colspan="12" class="loading">
-            No on-chain markets found.
-          </td>
-        </tr>
-      `;
-
-      return;
-    }
-
-
-    body.innerHTML =
-      rows.map((item, index) => {
-
-        const created =
-          item.createdAt
-            ? new Date(item.createdAt)
-            : null;
-
-        let isNew = false;
-
-        if (created && !Number.isNaN(created.getTime())) {
-
-          const age =
-            Date.now() -
-            created.getTime();
-
-          isNew =
-            age <=
-            7 * 86400000;
-        }
-
-
-        return `
-          <tr>
-
-            <td>
-              ${index + 1}
-            </td>
-
-            <td class="pair">
-              ${escapeHTML(item.name)}
-
-              ${
-                isNew
-                  ? `<span class="new-badge">NEW</span>`
-                  : ""
-              }
-            </td>
-
-            <td class="muted">
-              ${escapeHTML(
-                networkName(item.network)
-              )}
-            </td>
-
-            <td>
-              ${formatPrice(item.price)}
-            </td>
-
-            <td>
-              ${formatNumber(
-                item.displayValue
-              )}
-
-              <span class="muted" style="font-size:9px;">
-                ${escapeHTML(
-                  item.valueType || ""
-                )}
-              </span>
-            </td>
-
-            <td>
-              ${formatNumber(
-                item.liquidity
-              )}
-            </td>
-
-            <td>
-              ${formatNumber(
-                item.volume24h
-              )}
-            </td>
-
-            <td>
-              ${formatPercent(
-                item.change24h
-              )}
-            </td>
-
-            <td>
-              ${Number(
-                item.transactions24h || 0
-              ).toLocaleString()}
-            </td>
-
-            <td class="positive">
-              ${Number(
-                item.buys24h || 0
-              ).toLocaleString()}
-            </td>
-
-            <td class="negative">
-              ${Number(
-                item.sells24h || 0
-              ).toLocaleString()}
-            </td>
-
-            <td>
-              ${ageText(
-                item.createdAt
-              )}
-            </td>
-
-          </tr>
-        `;
-
-      }).join("");
-  }
-
-
-  /* =========================
-     TABS
-  ========================= */
-
-  function hideAllViews() {
-
-    document.getElementById(
-      "cryptoView"
-    ).style.display = "none";
-
-    document.getElementById(
-      "stocksView"
-    ).style.display = "none";
-
-    document.getElementById(
-      "forexView"
-    ).style.display = "none";
-
-    document.getElementById(
-      "onchainView"
-    ).style.display = "none";
-  }
-
-
-  function resetTabs() {
-
-    document.querySelectorAll(
-      ".tab"
-    ).forEach(button => {
-
-      button.classList.remove(
-        "active"
-      );
-
-    });
-  }
-
-
-  function switchTab(tab) {
-
-    currentTab = tab;
-
-    hideAllViews();
-    resetTabs();
-
-    document.getElementById(
-      "viewStat"
-    ).textContent =
-      tab === "onchain"
-        ? "On-Chain"
-        : tab === "stocks"
-          ? "Stocks"
-          : tab === "forex"
-            ? "Forex"
-            : "Crypto";
-
-
-    if (tab === "crypto") {
-
-      document.getElementById(
-        "cryptoView"
-      ).style.display = "block";
-
-      document.getElementById(
-        "tabCrypto"
-      ).classList.add("active");
-
-      renderCrypto();
-
-    }
-
-
-    if (tab === "onchain") {
-
-      document.getElementById(
-        "onchainView"
-      ).style.display = "block";
-
-      document.getElementById(
-        "tabOnchain"
-      ).classList.add("active");
-
-      renderMarkets();
-
-      if (!marketData.length) {
-        loadMarkets();
-      }
-
-    }
-
-
-    if (tab === "stocks") {
-
-      document.getElementById(
-        "stocksView"
-      ).style.display = "block";
-
-      document.getElementById(
-        "tabStocks"
-      ).classList.add("active");
-
-    }
-
-
-    if (tab === "forex") {
-
-      document.getElementById(
-        "forexView"
-      ).style.display = "block";
-
-      document.getElementById(
-        "tabForex"
-      ).classList.add("active");
-
-    }
-
-  }
-
-
-  /* =========================
-     CHAIN FILTER
-  ========================= */
-
-  function setChain(chain) {
-
-    currentChain = chain;
-
-    document.querySelectorAll(
-      ".chain-btn"
-    ).forEach(button => {
-
-      button.classList.remove(
-        "active"
-      );
-
-      if (
-        button.dataset.chain === chain
-      ) {
-        button.classList.add(
-          "active"
-        );
-      }
-
-    });
-
-    renderMarkets();
-  }
-
-
-  /* =========================
-     SEARCH
-  ========================= */
-
-  document
-    .getElementById("search")
-    .addEventListener(
-      "input",
-      function() {
-
-        if (
-          currentTab === "crypto"
-        ) {
-
-          renderCrypto();
-
-        }
-
-        if (
-          currentTab === "onchain"
-        ) {
-
-          renderMarkets();
-
-        }
-
-      }
-    );
-
-
-  /* =========================
-     START
-  ========================= */
-
-  async function startApp() {
-
-    /*
-      IMPORTANT:
-      Crypto loads first.
-      On-chain is NOT allowed to block Crypto.
-    */
-
-    await loadCrypto();
-
-    /*
-      Chains load separately.
-      If chains fail, Crypto still works.
-    */
-
-    loadChains();
-
-    /*
-      Markets load separately.
-      If markets are slow, Crypto still works.
-    */
-
-    loadMarkets();
-
-  }
-
-
-  startApp();
-
+let cryptoData=[],chainData=[],marketData=[];
+let currentTab="crypto",currentChain="all",currentTimeframe="24h";
+
+function formatNumber(value){
+ const n=Number(value||0); if(!Number.isFinite(n))return"—";
+ if(n>=1e9)return"$"+(n/1e9).toFixed(2)+"B";
+ if(n>=1e6)return"$"+(n/1e6).toFixed(2)+"M";
+ if(n>=1e3)return"$"+(n/1e3).toFixed(2)+"K";
+ return"$"+n.toFixed(2);
+}
+function formatPrice(value){
+ const n=Number(value||0); if(!Number.isFinite(n))return"—";
+ if(n>=1000)return"$"+n.toLocaleString("en-US",{maximumFractionDigits:2});
+ if(n>=1)return"$"+n.toFixed(2);
+ if(n>=.01)return"$"+n.toFixed(4);
+ return"$"+n.toFixed(8);
+}
+function formatPercent(value){
+ const n=Number(value||0); if(!Number.isFinite(n))return"—";
+ const cls=n>0?"positive":n<0?"negative":"muted",sign=n>0?"+":"";
+ return'<span class="'+cls+'">'+sign+n.toFixed(2)+"%</span>";
+}
+function escapeHTML(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function networkName(n){return({eth:"Ethereum",ethereum:"Ethereum",solana:"Solana",base:"Base",bsc:"BNB Chain",arbitrum:"Arbitrum",polygon_pos:"Polygon",avalanche:"Avalanche"})[n]||n||"Unknown"}
+function ageText(v){
+ if(!v)return"—";const d=new Date(v);if(Number.isNaN(d.getTime()))return"—";
+ const days=Math.floor((Date.now()-d.getTime())/86400000);
+ if(days<=0)return"New";if(days===1)return"1d";if(days<30)return days+"d";if(days<365)return Math.floor(days/30)+"mo";return Math.floor(days/365)+"y";
+}
+async function fetchAPI(path,timeout=15000){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);
+ try{
+  const sep=path.includes("?")?"&":"?",response=await fetch(path+sep+"_="+Date.now(),{cache:"no-store",credentials:"same-origin",headers:{"Accept":"application/json"},signal:controller.signal});
+  const text=await response.text();
+  if(!response.ok)throw new Error("HTTP "+response.status+": "+text.slice(0,180));
+  try{return JSON.parse(text)}catch(e){throw new Error("API returned invalid JSON")}
+ }finally{clearTimeout(timer)}
+}
+
+async function loadCrypto(){
+ const status=document.getElementById("cryptoStatus"),body=document.getElementById("cryptoBody");
+ status.textContent="Connecting...";body.innerHTML='<tr><td colspan="6" class="loading">Connecting to Binance data...</td></tr>';
+ try{
+  const data=await fetchAPI("/api/crypto");if(!Array.isArray(data))throw new Error("Crypto API did not return an array");
+  cryptoData=data;renderCrypto();document.getElementById("cryptoStat").textContent=cryptoData.length+" Pairs";status.textContent="Live";
+ }catch(e){console.error(e);body.innerHTML='<tr><td colspan="6" class="error">Crypto data failed to load.<br>'+escapeHTML(e.message)+"</td></tr>";status.textContent="API Error";document.getElementById("cryptoStat").textContent="Error"}
+}
+function renderCrypto(){
+ const body=document.getElementById("cryptoBody"),q=document.getElementById("search").value.trim().toLowerCase();
+ const rows=cryptoData.filter(x=>!q||String(x.pair||"").toLowerCase().includes(q)||String(x.exchange||"").toLowerCase().includes(q));
+ if(!rows.length){body.innerHTML='<tr><td colspan="6" class="loading">No matching markets found.</td></tr>';return}
+ body.innerHTML=rows.map((x,i)=>'<tr><td>'+(i+1)+'</td><td class="pair">'+escapeHTML(x.pair)+'</td><td class="muted">'+escapeHTML(x.exchange)+'</td><td>'+formatPrice(x.price)+'</td><td>'+formatNumber(x.volume24h)+'</td><td>'+formatPercent(x.change24h)+'</td></tr>').join("");
+ renderGainers();
+}
+function renderGainers(){
+ const box=document.getElementById("gainers"),g=[...cryptoData].filter(x=>Number(x.change24h||0)>0).sort((a,b)=>Number(b.change24h||0)-Number(a.change24h||0)).slice(0,5);
+ if(!g.length){box.innerHTML='<div class="loading">No positive 24h movers found.</div>';return}
+ box.innerHTML=g.map(x=>'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #112237"><span class="pair">'+escapeHTML(x.pair)+'</span><span class="positive">+'+Number(x.change24h).toFixed(2)+'%</span></div>').join("");
+}
+
+async function loadChains(){
+ try{
+  const data=await fetchAPI("/api/onchain");
+  if(Array.isArray(data)){chainData=data;document.getElementById("chainStat").textContent=chainData.length+" Chains"}else document.getElementById("chainStat").textContent="—";
+ }catch(e){console.error(e);document.getElementById("chainStat").textContent="Error"}
+}
+
+function chainVolumeStats(rows){
+ const map={};rows.forEach(x=>{const n=x.network||"unknown";map[n]=(map[n]||0)+Number(x.volume24h||0)});
+ const total=Object.values(map).reduce((a,b)=>a+b,0);
+ return Object.entries(map).map(([network,volume])=>({network,volume,pct:total?volume/total*100:0})).sort((a,b)=>b.volume-a.volume);
+}
+function renderActivity(){
+ const box=document.getElementById("activityGrid"),stats=chainVolumeStats(marketData);
+ if(!stats.length){box.innerHTML='<div class="loading">No chain activity data.</div>';return}
+ box.innerHTML=stats.slice(0,8).map(x=>'<div class="activity-card" onclick="setChain(\''+escapeHTML(x.network)+'\')"><div class="activity-name">'+escapeHTML(networkName(x.network))+'</div><div class="activity-pct">'+x.pct.toFixed(1)+'%</div><div class="activity-vol">'+formatNumber(x.volume)+' 24H volume</div></div>').join("");
+}
+
+function setChain(chain){
+ currentChain=chain;
+ document.querySelectorAll(".chain-btn").forEach(b=>b.classList.toggle("active",b.dataset.chain===chain));
+ document.getElementById("chainViewTitle").textContent=(chain==="all"?"All Chains":networkName(chain))+" — Highest Volume";
+ renderMarkets();
+}
+function setTimeframe(tf){
+ currentTimeframe=tf;document.querySelectorAll(".time-btn").forEach(b=>b.classList.toggle("active",b.dataset.time===tf));renderMarkets();
+}
+
+function renderMarkets(){
+ const body=document.getElementById("marketBody"),q=document.getElementById("search").value.trim().toLowerCase();
+ let rows=marketData.filter(x=>currentChain==="all"||x.network===currentChain);
+ rows=rows.filter(x=>!q||[x.name,x.tokenA,x.tokenB,x.network].some(v=>String(v||"").toLowerCase().includes(q)));
+ const volumeKey=currentTimeframe==="1h"?"volume1h":"volume24h";
+ rows.sort((a,b)=>Number(b[volumeKey]||0)-Number(a[volumeKey]||0));
+ rows=rows.slice(0,100);
+ if(!rows.length){body.innerHTML='<tr><td colspan="12" class="loading">No matching on-chain markets found.</td></tr>';return}
+ body.innerHTML=rows.map((x,i)=>{
+  const display=x.displayValue||0;
+  return '<tr class="clickable"><td>'+(i+1)+'</td><td class="pair">'+escapeHTML(x.name||((x.tokenA||"")+" / "+(x.tokenB||"")))+(x.revival?'<span class="badge hot"> REVIVAL</span>':"")+'</td><td class="muted">'+escapeHTML(networkName(x.network))+'</td><td>'+formatPrice(x.price)+'</td><td>'+formatNumber(display)+' <span class="muted" style="font-size:9px">'+escapeHTML(x.valueType||"")+"</span></td><td>"+formatNumber(x.liquidity)+"</td><td>"+formatNumber(x.volume24h)+"</td><td>"+formatPercent(x.change24h)+"</td><td>"+Number(x.transactions24h||0).toLocaleString()+"</td><td>"+Number(x.buys24h||0).toLocaleString()+"</td><td>"+Number(x.sells24h||0).toLocaleString()+"</td><td>"+ageText(x.createdAt)+"</td></tr>"
+ }).join("");
+}
+
+function renderRevival(){
+ const body=document.getElementById("revivalBody");
+ let rows=marketData.filter(x=>x.revival).sort((a,b)=>Number(b.revivalScore||0)-Number(a.revivalScore||0));
+ if(currentChain!=="all")rows=rows.filter(x=>x.network===currentChain);
+ rows=rows.slice(0,30);
+ document.getElementById("revivalStatus").textContent=rows.length+" found";
+ if(!rows.length){body.innerHTML='<tr><td colspan="9" class="loading">No strong revival activity detected yet.</td></tr>';return}
+ body.innerHTML=rows.map(x=>'<tr><td class="pair">'+escapeHTML(x.name||"—")+'</td><td class="muted">'+escapeHTML(networkName(x.network))+'</td><td>'+formatPrice(x.price)+'</td><td>'+formatNumber(x.volume1h)+'</td><td>'+formatNumber(x.volume24h)+'</td><td>'+Number(x.buys24h||0).toLocaleString()+'</td><td>'+Number(x.sells24h||0).toLocaleString()+'</td><td>'+formatPercent(x.change1h)+'</td><td><span class="badge '+(x.revivalStatus==="Buying Started"?"hot":"")+'">'+escapeHTML(x.revivalStatus||"Reviving")+"</span></td></tr>").join("");
+}
+
+async function loadMarkets(){
+ const status=document.getElementById("marketStatus"),body=document.getElementById("marketBody");
+ status.textContent="Connecting...";body.innerHTML='<tr><td colspan="12" class="loading">Connecting to GeckoTerminal data...</td></tr>';
+ try{
+  const data=await fetchAPI("/api/markets",20000);
+  if(!Array.isArray(data))throw new Error("Markets API did not return an array");
+  marketData=data;renderActivity();renderMarkets();renderRevival();status.textContent=marketData.length+" Markets";
+ }catch(e){console.error(e);body.innerHTML='<tr><td colspan="12" class="error">On-chain data failed to load.<br>'+escapeHTML(e.message)+"</td></tr>";status.textContent="API Error";document.getElementById("revivalStatus").textContent="API Error"}
+}
+
+function switchTab(tab){
+ currentTab=tab==="home"?"crypto":tab;
+ document.getElementById("cryptoView").style.display=currentTab==="crypto"?"block":"none";
+ document.getElementById("onchainView").style.display=currentTab==="onchain"?"block":"none";
+ document.getElementById("stocksView").style.display=currentTab==="stocks"?"block":"none";
+ document.getElementById("forexView").style.display=currentTab==="forex"?"block":"none";
+ ["crypto","stocks","forex","onchain"].forEach(x=>document.getElementById("tab"+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle("active",currentTab===x));
+ document.getElementById("viewStat").textContent=currentTab==="onchain"?"On-Chain":currentTab.charAt(0).toUpperCase()+currentTab.slice(1);
+ if(currentTab==="onchain"&&!marketData.length)loadMarkets();
+}
+
+document.getElementById("search").addEventListener("input",()=>{if(currentTab==="crypto")renderCrypto();if(currentTab==="onchain"){renderMarkets();renderRevival()}});
+
+loadCrypto();loadChains();
 </script>
-
 </body>
 </html>
