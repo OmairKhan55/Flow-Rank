@@ -6,6 +6,7 @@ export default async function handler(req, res) {
       Accept: "application/json;version=20230203"
     };
 
+    // Major chains
     const networks = [
       "eth",
       "solana",
@@ -24,11 +25,12 @@ export default async function handler(req, res) {
         const response = await fetch(url, { headers });
 
         if (!response.ok) {
-          console.error("GeckoTerminal:", response.status);
+          console.error("GeckoTerminal status:", response.status);
           return [];
         }
 
         const json = await response.json();
+
         return Array.isArray(json.data) ? json.data : [];
       } catch (error) {
         console.error("Fetch error:", error);
@@ -41,6 +43,7 @@ export default async function handler(req, res) {
 
       const poolId = String(pool.id);
 
+      // Remove duplicates
       if (seenPools.has(poolId)) return;
       seenPools.add(poolId);
 
@@ -50,6 +53,7 @@ export default async function handler(req, res) {
       const volume24h = Number(a.volume_usd?.h24 || 0);
       const liquidity = Number(a.reserve_in_usd || 0);
 
+      // Ignore extremely small pools
       if (volume24h < 5000) return;
       if (liquidity < 50000) return;
 
@@ -60,18 +64,22 @@ export default async function handler(req, res) {
       const sells24h = Number(tx.sells || 0);
 
       const name = a.name || "Unknown";
-
       const upperName = name.toUpperCase();
 
+      // Remove obvious stablecoin-vs-stablecoin pools
       const blocked = [
         "USDC / USDC",
         "USDT / USDT",
         "DAI / DAI",
         "USDC / USDT",
-        "USDT / USDC"
+        "USDT / USDC",
+        "USDC/USDC",
+        "USDT/USDT",
+        "USDC/USDT",
+        "USDT/USDC"
       ];
 
-      if (blocked.some(x => upperName.includes(x))) {
+      if (blocked.some(item => upperName.includes(item))) {
         return;
       }
 
@@ -91,7 +99,11 @@ export default async function handler(req, res) {
         fdv,
 
         displayValue:
-          marketCap > 0 ? marketCap : fdv,
+          marketCap > 0
+            ? marketCap
+            : fdv > 0
+              ? fdv
+              : 0,
 
         valueType:
           marketCap > 0
@@ -110,6 +122,7 @@ export default async function handler(req, res) {
 
         buys24h,
         sells24h,
+
         transactions24h:
           buys24h + sells24h,
 
@@ -120,7 +133,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Get top pools from every major chain
+    // Get highest-volume pools from every selected chain
     for (const network of networks) {
       const url =
         `${BASE}/networks/${network}/pools` +
@@ -134,12 +147,14 @@ export default async function handler(req, res) {
         addPool(pool, network);
       }
 
+      // Small delay between requests
       await new Promise(resolve =>
         setTimeout(resolve, 800)
       );
     }
 
-    // Sort highest 24H volume first
+    // IMPORTANT:
+    // Highest 24H volume comes first.
     markets.sort(
       (a, b) =>
         Number(b.volume24h || 0) -
@@ -164,12 +179,10 @@ export default async function handler(req, res) {
       "application/json"
     );
 
-    return res.status(200).json(
-      finalMarkets
-    );
+    return res.status(200).json(finalMarkets);
 
   } catch (error) {
-    console.error(error);
+    console.error("Markets API error:", error);
 
     return res.status(500).json({
       error: "On-chain market data failed"
