@@ -20,7 +20,6 @@ export default async function handler(req, res) {
     const seenPools = new Set();
     const seenPairs = new Set();
 
-    // Stablecoins we don't want as the main token
     const stablecoins = new Set([
       "USDT",
       "USDC",
@@ -47,7 +46,9 @@ export default async function handler(req, res) {
 
     async function getPools(url) {
       try {
-        const response = await fetch(url, { headers });
+        const response = await fetch(url, {
+          headers
+        });
 
         if (!response.ok) {
           console.error(
@@ -82,22 +83,26 @@ export default async function handler(req, res) {
     }
 
     function getTokenSymbols(pool) {
-      const included = pool.included || [];
+      const included =
+        pool.included || [];
 
       let baseSymbol = "";
       let quoteSymbol = "";
 
       for (const item of included) {
-        const type = item.type;
+        if (item.type !== "token") {
+          continue;
+        }
+
         const symbol =
           item.attributes?.symbol || "";
 
-        if (type === "token") {
-          if (!baseSymbol) {
-            baseSymbol = cleanSymbol(symbol);
-          } else if (!quoteSymbol) {
-            quoteSymbol = cleanSymbol(symbol);
-          }
+        if (!baseSymbol) {
+          baseSymbol =
+            cleanSymbol(symbol);
+        } else if (!quoteSymbol) {
+          quoteSymbol =
+            cleanSymbol(symbol);
         }
       }
 
@@ -107,255 +112,74 @@ export default async function handler(req, res) {
       };
     }
 
-    function addPool(pool, network) {
-      if (!pool || !pool.id) return;
+    function calculateRevival(
+      volume1h,
+      volume24h,
+      buys24h,
+      sells24h,
+      change1h,
+      change24h
+    ) {
+      const v1h =
+        Number(volume1h || 0);
 
-      const poolId = String(pool.id);
+      const v24h =
+        Number(volume24h || 0);
 
-      if (seenPools.has(poolId)) {
-        return;
-      }
+      const buys =
+        Number(buys24h || 0);
 
-      seenPools.add(poolId);
+      const sells =
+        Number(sells24h || 0);
 
-      const a = pool.attributes || {};
-      const tx = a.transactions?.h24 || {};
+      const totalTx =
+        buys + sells;
 
-      const volume24h =
-        Number(a.volume_usd?.h24 || 0);
-
-      const liquidity =
-        Number(a.reserve_in_usd || 0);
-
-      if (volume24h < 5000) return;
-      if (liquidity < 50000) return;
-
-      const {
-        baseSymbol,
-        quoteSymbol
-      } = getTokenSymbols(pool);
-
-      const pairName =
-        a.name || "Unknown";
-
-      /*
-       * Try to get symbols from pair name
-       * when included token data is unavailable.
-       */
-      let symbols = [
-        baseSymbol,
-        quoteSymbol
-      ].filter(Boolean);
-
-      if (symbols.length < 2) {
-        const parts = pairName
-          .split("/")
-          .map(x => cleanSymbol(x));
-
-        if (parts.length >= 2) {
-          symbols = [
-            parts[0],
-            parts[1]
-          ];
-        }
-      }
-
-      const tokenA = symbols[0] || "";
-      const tokenB = symbols[1] || "";
-
-      /*
-       * Remove pairs where BOTH sides
-       * are stablecoins.
-       */
-      if (
-        stablecoins.has(tokenA) &&
-        stablecoins.has(tokenB)
-      ) {
-        return;
+      if (v1h <= 0 || v24h <= 0) {
+        return {
+          revival: false,
+          revivalScore: 0,
+          revivalStatus: "Normal"
+        };
       }
 
       /*
-       * Remove duplicate token pairs.
-       *
-       * Example:
-       * SOL / USDC
-       * SOL / USDC
-       *
-       * Only the highest-volume pool remains.
+       * Compare the latest 1H volume
+       * with the average hourly volume
+       * over the last 24H.
        */
-      const pairKey = [
-        network,
-        tokenA,
-        tokenB
-      ]
-        .sort()
-        .join("_");
+      const averageHourly =
+        v24h / 24;
 
-      if (
-        tokenA &&
-        tokenB &&
-        seenPairs.has(pairKey)
-      ) {
-        return;
+      const volumeAcceleration =
+        averageHourly > 0
+          ? v1h / averageHourly
+          : 0;
+
+      const buyRatio =
+        totalTx > 0
+          ? buys / totalTx
+          : 0;
+
+      let score = 0;
+
+      // Strong recent volume
+      if (volumeAcceleration >= 2) {
+        score += 40;
+      } else if (volumeAcceleration >= 1.5) {
+        score += 25;
+      } else if (volumeAcceleration >= 1.2) {
+        score += 15;
       }
 
-      if (
-        tokenA &&
-        tokenB
-      ) {
-        seenPairs.add(pairKey);
+      // Buying activity
+      if (buyRatio >= 0.65) {
+        score += 35;
+      } else if (buyRatio >= 0.58) {
+        score += 25;
+      } else if (buyRatio >= 0.52) {
+        score += 10;
       }
 
-      const marketCap =
-        Number(
-          a.market_cap_usd || 0
-        );
-
-      const fdv =
-        Number(
-          a.fdv_usd || 0
-        );
-
-      const buys24h =
-        Number(tx.buys || 0);
-
-      const sells24h =
-        Number(tx.sells || 0);
-
-      markets.push({
-        network,
-
-        pool: poolId,
-
-        name: pairName,
-
-        tokenA,
-
-        tokenB,
-
-        price:
-          Number(
-            a.base_token_price_usd || 0
-          ),
-
-        volume24h,
-
-        liquidity,
-
-        marketCap,
-
-        fdv,
-
-        displayValue:
-          marketCap > 0
-            ? marketCap
-            : fdv > 0
-              ? fdv
-              : 0,
-
-        valueType:
-          marketCap > 0
-            ? "Market Cap"
-            : fdv > 0
-              ? "FDV"
-              : "N/A",
-
-        change24h:
-          Number(
-            a.price_change_percentage?.h24 || 0
-          ),
-
-        change1h:
-          Number(
-            a.price_change_percentage?.h1 || 0
-          ),
-
-        buys24h,
-
-        sells24h,
-
-        transactions24h:
-          buys24h + sells24h,
-
-        createdAt:
-          a.pool_created_at || null,
-
-        source:
-          "GeckoTerminal"
-      });
-    }
-
-    // Get pools from each major chain
-    for (const network of networks) {
-      const url =
-        `${BASE}/networks/${network}/pools` +
-        `?include=base_token,quote_token` +
-        `&sort=h24_volume_usd_desc` +
-        `&page=1`;
-
-      const pools =
-        await getPools(url);
-
-      for (const pool of pools) {
-        addPool(
-          pool,
-          network
-        );
-      }
-
-      await new Promise(resolve =>
-        setTimeout(
-          resolve,
-          800
-        )
-      );
-    }
-
-    // Highest 24H DEX volume first
-    markets.sort(
-      (a, b) =>
-        Number(
-          b.volume24h || 0
-        ) -
-        Number(
-          a.volume24h || 0
-        )
-    );
-
-    // Final ranking
-    const finalMarkets =
-      markets
-        .slice(0, 500)
-        .map(
-          (market, index) => ({
-            rank: index + 1,
-            ...market
-          })
-        );
-
-    res.setHeader(
-      "Cache-Control",
-      "s-maxage=60, stale-while-revalidate=300"
-    );
-
-    res.setHeader(
-      "Content-Type",
-      "application/json"
-    );
-
-    return res.status(200).json(
-      finalMarkets
-    );
-
-  } catch (error) {
-    console.error(
-      "Markets API error:",
-      error
-    );
-
-    return res.status(500).json({
-      error:
-        "On-chain market data failed"
-    });
-  }
-}
+      // Recent positive movement
+      if (Number(change1
