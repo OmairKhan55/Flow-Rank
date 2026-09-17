@@ -1,7 +1,6 @@
 export default async function handler(req, res) {
   try {
-    const BASE =
-      "https://api.geckoterminal.com/api/v2";
+    const BASE = "https://api.geckoterminal.com/api/v2";
 
     const headers = {
       Accept: "application/json;version=20230203"
@@ -41,47 +40,8 @@ export default async function handler(req, res) {
       "USDT.E"
     ]);
 
-    const markets = [];
-    const seenPools = new Set();
-
-    async function getPools(network) {
-      const url =
-        `${BASE}/networks/${network}/pools` +
-        `?include=base_token,quote_token` +
-        `&sort=h24_volume_usd_desc` +
-        `&page=1`;
-
-      try {
-        const response = await fetch(url, {
-          headers
-        });
-
-        if (!response.ok) {
-          console.error(
-            network,
-            response.status
-          );
-          return [];
-        }
-
-        const json =
-          await response.json();
-
-        return Array.isArray(json.data)
-          ? json.data
-          : [];
-      } catch (error) {
-        console.error(
-          network,
-          error
-        );
-        return [];
-      }
-    }
-
     function cleanSymbol(value) {
       if (!value) return "";
-
       return String(value)
         .replace(/\$/g, "")
         .trim()
@@ -89,27 +49,19 @@ export default async function handler(req, res) {
     }
 
     function getSymbols(pool) {
-      const included =
-        Array.isArray(pool.included)
-          ? pool.included
-          : [];
+      const included = Array.isArray(pool.included)
+        ? pool.included
+        : [];
 
-      const tokens =
-        included.filter(
-          item =>
-            item &&
-            item.type === "token"
-        );
+      const tokens = included.filter(
+        item => item && item.type === "token"
+      );
 
-      const symbols =
-        tokens
-          .map(
-            token =>
-              cleanSymbol(
-                token.attributes?.symbol
-              )
-          )
-          .filter(Boolean);
+      const symbols = tokens
+        .map(token =>
+          cleanSymbol(token.attributes?.symbol)
+        )
+        .filter(Boolean);
 
       return {
         tokenA: symbols[0] || "",
@@ -117,53 +69,31 @@ export default async function handler(req, res) {
       };
     }
 
-    function isStablePair(
-      tokenA,
-      tokenB
-    ) {
-      return (
-        stablecoins.has(tokenA) &&
-        stablecoins.has(tokenB)
-      );
+    function isStablePair(a, b) {
+      return stablecoins.has(a) && stablecoins.has(b);
     }
 
     function revivalScore(data) {
-      const volume1h =
-        Number(data.volume1h || 0);
+      const volume1h = Number(data.volume1h || 0);
+      const volume24h = Number(data.volume24h || 0);
+      const buys = Number(data.buys24h || 0);
+      const sells = Number(data.sells24h || 0);
+      const change1h = Number(data.change1h || 0);
 
-      const volume24h =
-        Number(data.volume24h || 0);
-
-      const buys =
-        Number(data.buys24h || 0);
-
-      const sells =
-        Number(data.sells24h || 0);
-
-      const change1h =
-        Number(data.change1h || 0);
-
-      if (
-        volume1h <= 0 ||
-        volume24h <= 0
-      ) {
+      if (volume1h <= 0 || volume24h <= 0) {
         return 0;
       }
 
-      const averageHourly =
-        volume24h / 24;
+      const averageHourly = volume24h / 24;
 
       const acceleration =
         averageHourly > 0
           ? volume1h / averageHourly
           : 0;
 
-      const total =
-        buys + sells;
-
       const buyRatio =
-        total > 0
-          ? buys / total
+        buys + sells > 0
+          ? buys / (buys + sells)
           : 0;
 
       let score = 0;
@@ -193,66 +123,96 @@ export default async function handler(req, res) {
       return score;
     }
 
-    // Fetch all chains in parallel
-    const results =
-      await Promise.all(
-        networks.map(
-          network =>
-            getPools(network)
-        )
-      );
+    /*
+      IMPORTANT:
+      GeckoTerminal public API is rate-limited.
+      We fetch networks SEQUENTIALLY instead of 7 requests
+      at the exact same time.
+    */
 
-    for (
-      let i = 0;
-      i < networks.length;
-      i++
-    ) {
-      const network =
-        networks[i];
+    async function getPools(network) {
+      const url =
+        `${BASE}/networks/${network}/pools` +
+        `?include=base_token,quote_token` +
+        `&sort=h24_volume_usd_desc` +
+        `&page=1`;
 
-      const pools =
-        results[i];
+      try {
+        const response = await fetch(url, {
+          headers
+        });
 
-      for (const pool of pools) {
-        if (
-          !pool ||
-          !pool.id
-        ) {
-          continue;
+        if (response.status === 429) {
+          console.log(`${network} rate limited`);
+          return [];
         }
 
-        const poolId =
-          String(pool.id);
+        if (!response.ok) {
+          console.log(
+            `${network} HTTP ${response.status}`
+          );
+          return [];
+        }
 
-        if (
-          seenPools.has(poolId)
-        ) {
+        const json = await response.json();
+
+        return Array.isArray(json.data)
+          ? json.data
+          : [];
+      } catch (error) {
+        console.log(
+          `${network} request failed`,
+          error?.message || error
+        );
+
+        return [];
+      }
+    }
+
+    const markets = [];
+    const seenPools = new Set();
+
+    /*
+      Small delay between networks.
+      This reduces burst traffic.
+    */
+    function sleep(ms) {
+      return new Promise(resolve =>
+        setTimeout(resolve, ms)
+      );
+    }
+
+    for (const network of networks) {
+      const pools = await getPools(network);
+
+      for (const pool of pools) {
+        if (!pool || !pool.id) continue;
+
+        const poolId = String(pool.id);
+
+        if (seenPools.has(poolId)) {
           continue;
         }
 
         seenPools.add(poolId);
 
-        const a =
-          pool.attributes || {};
+        const a = pool.attributes || {};
 
         const tx =
           a.transactions?.h24 || {};
 
         const volume24h =
-          Number(
-            a.volume_usd?.h24 || 0
-          );
+          Number(a.volume_usd?.h24 || 0);
 
         const volume1h =
-          Number(
-            a.volume_usd?.h1 || 0
-          );
+          Number(a.volume_usd?.h1 || 0);
 
         const liquidity =
-          Number(
-            a.reserve_in_usd || 0
-          );
+          Number(a.reserve_in_usd || 0);
 
+        /*
+          Ignore extremely small pools.
+        */
         if (
           volume24h < 5000 ||
           liquidity < 50000
@@ -260,158 +220,121 @@ export default async function handler(req, res) {
           continue;
         }
 
-        const {
-          tokenA,
-          tokenB
-        } = getSymbols(pool);
+        let { tokenA, tokenB } =
+          getSymbols(pool);
 
-        let finalA = tokenA;
-        let finalB = tokenB;
-
-        // Fallback to pair name
-        if (
-          !finalA ||
-          !finalB
-        ) {
+        if (!tokenA || !tokenB) {
           const parts =
-            String(
-              a.name || ""
-            )
+            String(a.name || "")
               .split("/")
-              .map(
-                x =>
-                  cleanSymbol(x)
-              );
+              .map(x => cleanSymbol(x));
 
-          finalA =
-            finalA || parts[0] || "";
+          tokenA =
+            tokenA || parts[0] || "";
 
-          finalB =
-            finalB || parts[1] || "";
+          tokenB =
+            tokenB || parts[1] || "";
         }
 
-        // Remove stablecoin-only pairs
-        if (
-          isStablePair(
-            finalA,
-            finalB
-          )
-        ) {
+        if (!tokenA || !tokenB) {
+          continue;
+        }
+
+        /*
+          Remove stablecoin/stablecoin pairs.
+        */
+        if (isStablePair(tokenA, tokenB)) {
           continue;
         }
 
         const marketCap =
-          Number(
-            a.market_cap_usd || 0
-          );
+          Number(a.market_cap_usd || 0);
 
         const fdv =
-          Number(
-            a.fdv_usd || 0
-          );
+          Number(a.fdv_usd || 0);
 
         const buys24h =
-          Number(
-            tx.buys || 0
-          );
+          Number(tx.buys || 0);
 
         const sells24h =
-          Number(
-            tx.sells || 0
-          );
+          Number(tx.sells || 0);
 
         const transactions24h =
-          buys24h +
-          sells24h;
+          buys24h + sells24h;
 
         const change1h =
           Number(
-            a.price_change_percentage
-              ?.h1 || 0
+            a.price_change_percentage?.h1 || 0
           );
 
         const change24h =
           Number(
-            a.price_change_percentage
-              ?.h24 || 0
+            a.price_change_percentage?.h24 || 0
           );
 
-        const score =
-          revivalScore({
-            volume1h,
-            volume24h,
-            buys24h,
-            sells24h,
-            change1h
-          });
+        const score = revivalScore({
+          volume1h,
+          volume24h,
+          buys24h,
+          sells24h,
+          change1h
+        });
 
-        let revivalStatus =
-          "Normal";
+        let revivalStatus = "Normal";
 
         if (score >= 65) {
-          revivalStatus =
-            "Buying Started";
+          revivalStatus = "Buying Started";
         } else if (score >= 45) {
-          revivalStatus =
-            "Reviving";
+          revivalStatus = "Reviving";
         }
 
         markets.push({
           network,
-
           pool: poolId,
 
           name:
             a.name ||
-            `${finalA} / ${finalB}`,
+            `${tokenA} / ${tokenB}`,
 
-          tokenA: finalA,
-
-          tokenB: finalB,
+          tokenA,
+          tokenB,
 
           price:
             Number(
-              a.base_token_price_usd ||
-              0
+              a.base_token_price_usd || 0
             ),
 
           volume1h,
-
           volume24h,
 
           liquidity,
 
           marketCap,
-
           fdv,
 
           displayValue:
             marketCap > 0
               ? marketCap
               : fdv > 0
-                ? fdv
-                : 0,
+              ? fdv
+              : 0,
 
           valueType:
             marketCap > 0
               ? "Market Cap"
               : fdv > 0
-                ? "FDV"
-                : "N/A",
+              ? "FDV"
+              : "N/A",
 
           change1h,
-
           change24h,
 
           buys24h,
-
           sells24h,
-
           transactions24h,
 
           createdAt:
-            a.pool_created_at ||
-            null,
+            a.pool_created_at || null,
 
           revival:
             score >= 45,
@@ -425,32 +348,42 @@ export default async function handler(req, res) {
             "GeckoTerminal"
         });
       }
+
+      /*
+        Give the API a small breathing gap
+        before the next network.
+      */
+      await sleep(700);
     }
 
-    // Highest 24H volume first
+    /*
+      Highest 24H volume first.
+    */
     markets.sort(
       (a, b) =>
-        Number(
-          b.volume24h || 0
-        ) -
-        Number(
-          a.volume24h || 0
-        )
+        Number(b.volume24h || 0) -
+        Number(a.volume24h || 0)
     );
 
+    /*
+      Keep maximum 500 markets.
+    */
     const finalMarkets =
       markets
         .slice(0, 500)
-        .map(
-          (market, index) => ({
-            rank: index + 1,
-            ...market
-          })
-        );
+        .map((market, index) => ({
+          rank: index + 1,
+          ...market
+        }));
 
+    /*
+      CDN cache.
+      This is very important because the data
+      does not need a fresh API call every second.
+    */
     res.setHeader(
       "Cache-Control",
-      "s-maxage=60, stale-while-revalidate=300"
+      "s-maxage=120, stale-while-revalidate=300"
     );
 
     res.setHeader(
@@ -458,11 +391,9 @@ export default async function handler(req, res) {
       "application/json"
     );
 
-    // IMPORTANT:
-    // Frontend already expects an ARRAY.
-    return res.status(200).json(
-      finalMarkets
-    );
+    return res
+      .status(200)
+      .json(finalMarkets);
 
   } catch (error) {
     console.error(
@@ -470,9 +401,11 @@ export default async function handler(req, res) {
       error
     );
 
-    return res.status(500).json({
-      error:
-        "On-chain market data failed"
-    });
+    return res
+      .status(500)
+      .json({
+        error:
+          "On-chain market data failed"
+      });
   }
 }
