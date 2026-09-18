@@ -39,29 +39,9 @@ td{padding:13px 12px;font-size:12px;border-bottom:1px solid #112237;white-space:
 .revival-box{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;overflow:hidden}.revival-head{padding:13px 15px;border-bottom:1px solid #172a40;display:flex;justify-content:space-between}.revival-list{overflow-x:auto}.revival-list table{min-width:850px}
 .badge{display:inline-block;font-size:9px;padding:3px 6px;border-radius:4px;font-weight:700;background:#12352f;color:#42d6a4}.hot{background:#3b2920;color:#ffb36b}
 .clickable{cursor:pointer}.clickable:hover{background:#0d2135}
-.detail-page{display:none}
-.detail-top{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;padding:15px;margin-bottom:12px}
-.detail-back{border:1px solid #1c334c;background:#0d2035;color:#aab8c8;padding:7px 11px;border-radius:7px;cursor:pointer;font-size:10px;margin-bottom:14px}
-.detail-pair{font-size:20px;font-weight:800}.detail-network{color:#8090a4;font-size:10px;margin-top:5px}
-.detail-price{font-size:25px;font-weight:800;margin-top:12px}.detail-change{font-size:12px;margin-top:5px}
-.detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
-.detail-card{background:#0b1a2c;border:1px solid #172a40;border-radius:9px;padding:13px}
-.detail-label{font-size:9px;color:#718399;margin-bottom:6px}.detail-value{font-size:14px;font-weight:700}
-.detail-main{display:grid;grid-template-columns:1.7fr 1fr;gap:12px}
-.detail-panel{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;overflow:hidden}
-.detail-panel-head{padding:13px 15px;border-bottom:1px solid #172a40;display:flex;justify-content:space-between;align-items:center}
-.detail-panel-head strong{font-size:12px}
-.detail-chart{height:330px;display:flex;align-items:center;justify-content:center;color:#718399;font-size:12px;background:linear-gradient(180deg,#0b1a2c,#081525)}
-.detail-chart-inner{width:90%;height:75%;border:1px dashed #20354c;border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}
-.detail-stats{display:grid;grid-template-columns:1fr 1fr}.detail-stat{padding:13px 15px;border-bottom:1px solid #112237}
-.detail-stat:nth-child(odd){border-right:1px solid #112237}.detail-stat-label{font-size:9px;color:#718399;margin-bottom:5px}
-.detail-stat-value{font-size:12px;font-weight:700}
-.trading-coming{margin-top:12px;background:#0b1a2c;border:1px solid #172a40;border-radius:11px;padding:22px;text-align:center}
-.trading-coming strong{display:block;font-size:13px;margin-bottom:7px}.trading-coming span{font-size:10px;color:#718399}
-.detail-info{padding:15px;font-size:11px;color:#8999ad;line-height:1.8}.detail-info b{color:#e8eef7}
 .coming{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;padding:45px 20px;text-align:center;color:#8292a6;font-size:13px}
 footer{text-align:center;color:#617187;font-size:10px;padding:60px 0 35px}
-@media(max-width:760px){.detail-grid{grid-template-columns:repeat(2,1fr)}.detail-main{grid-template-columns:1fr}.detail-chart{height:260px}header{padding:0 16px}nav{gap:13px}nav a{font-size:9px}.hero{padding-top:30px}.hero h1{font-size:28px}.stats{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.tabs{height:38px}.tab{flex:1;padding:0 7px;font-size:10px}.container{width:calc(100% - 20px)}.activity-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){header{padding:0 16px}nav{gap:13px}nav a{font-size:9px}.hero{padding-top:30px}.hero h1{font-size:28px}.stats{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.tabs{height:38px}.tab{flex:1;padding:0 7px;font-size:10px}.container{width:calc(100% - 20px)}.activity-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -135,60 +115,6 @@ footer{text-align:center;color:#617187;font-size:10px;padding:60px 0 35px}
 <div class="revival-list"><table><thead><tr><th>PAIR</th><th>NETWORK</th><th>PRICE</th><th>1H VOLUME</th><th>24H VOLUME</th><th>BUYS</th><th>SELLS</th><th>1H CHANGE</th><th>STATUS</th></tr></thead><tbody id="revivalBody"><tr><td colspan="9" class="loading">Loading revival data...</td></tr></tbody></table></div>
 </div>
 </div>
-</section>
-
-
-<section id="detailView" class="detail-page">
-  <div class="detail-top">
-    <button class="detail-back" onclick="closeTokenDetail()">← Back to On-Chain</button>
-    <div class="detail-pair" id="detailPair">—</div>
-    <div class="detail-network" id="detailNetwork">—</div>
-    <div class="detail-price" id="detailPrice">—</div>
-    <div id="detailChange" class="detail-change">—</div>
-  </div>
-
-  <div class="detail-grid">
-    <div class="detail-card"><div class="detail-label">Market Cap / FDV</div><div class="detail-value" id="detailMarketCap">—</div></div>
-    <div class="detail-card"><div class="detail-label">Liquidity</div><div class="detail-value" id="detailLiquidity">—</div></div>
-    <div class="detail-card"><div class="detail-label">24H Volume</div><div class="detail-value" id="detailVolume">—</div></div>
-    <div class="detail-card"><div class="detail-label">Pool Age</div><div class="detail-value" id="detailAge">—</div></div>
-  </div>
-
-  <div class="detail-main">
-    <div class="detail-panel">
-      <div class="detail-panel-head"><strong>Price Chart</strong><span class="status">Chart Ready</span></div>
-      <div class="detail-chart"><div class="detail-chart-inner">Historical price chart will connect to live pool-history data here.</div></div>
-    </div>
-
-    <div class="detail-panel">
-      <div class="detail-panel-head"><strong>Market Activity</strong><span class="muted">Live pool data</span></div>
-      <div class="detail-stats">
-        <div class="detail-stat"><div class="detail-stat-label">1H Volume</div><div class="detail-stat-value" id="detail1hVolume">—</div></div>
-        <div class="detail-stat"><div class="detail-stat-label">24H Volume</div><div class="detail-stat-value" id="detail24hVolume">—</div></div>
-        <div class="detail-stat"><div class="detail-stat-label">Buys</div><div class="detail-stat-value positive" id="detailBuys">—</div></div>
-        <div class="detail-stat"><div class="detail-stat-label">Sells</div><div class="detail-stat-value negative" id="detailSells">—</div></div>
-        <div class="detail-stat"><div class="detail-stat-label">Transactions</div><div class="detail-stat-value" id="detailTxns">—</div></div>
-        <div class="detail-stat"><div class="detail-stat-label">1H Change</div><div class="detail-stat-value" id="detail1hChange">—</div></div>
-        <div class="detail-stat"><div class="detail-stat-label">24H Change</div><div class="detail-stat-value" id="detail24hChange">—</div></div>
-        <div class="detail-stat"><div class="detail-stat-label">Revival</div><div class="detail-stat-value" id="detailRevival">—</div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="trading-coming">
-    <strong>Trading Interface — Coming Soon</strong>
-    <span>Trading will be added in a future FlowRank phase. This dashboard is data-only for now.</span>
-  </div>
-
-  <div class="detail-panel" style="margin-top:12px">
-    <div class="detail-panel-head"><strong>Pool Information</strong></div>
-    <div class="detail-info">
-      <div><b>Pool:</b> <span id="detailPool">—</span></div>
-      <div><b>Network:</b> <span id="detailNetworkInfo">—</span></div>
-      <div><b>Pair:</b> <span id="detailPairInfo">—</span></div>
-      <div><b>Value type:</b> <span id="detailValueType">—</span></div>
-    </div>
-  </div>
 </section>
 
 <section id="stocksView" style="display:none;"><div class="coming">Stock market data is coming next.</div></section>
@@ -296,7 +222,7 @@ function renderMarkets(){
  if(!rows.length){body.innerHTML='<tr><td colspan="12" class="loading">No matching on-chain markets found.</td></tr>';return}
  body.innerHTML=rows.map((x,i)=>{
   const display=x.displayValue||0;
-  return '<tr class="clickable" onclick="openTokenDetail('+marketData.indexOf(x)+')"><td>'+(i+1)+'</td><td class="pair">'+escapeHTML(x.name||((x.tokenA||"")+" / "+(x.tokenB||"")))+(x.revival?'<span class="badge hot"> REVIVAL</span>':"")+'</td><td class="muted">'+escapeHTML(networkName(x.network))+'</td><td>'+formatPrice(x.price)+'</td><td>'+formatNumber(display)+' <span class="muted" style="font-size:9px">'+escapeHTML(x.valueType||"")+"</span></td><td>"+formatNumber(x.liquidity)+"</td><td>"+formatNumber(x.volume24h)+"</td><td>"+formatPercent(x.change24h)+"</td><td>"+Number(x.transactions24h||0).toLocaleString()+"</td><td>"+Number(x.buys24h||0).toLocaleString()+"</td><td>"+Number(x.sells24h||0).toLocaleString()+"</td><td>"+ageText(x.createdAt)+"</td></tr>"
+  return '<tr class="clickable"><td>'+(i+1)+'</td><td class="pair">'+escapeHTML(x.name||((x.tokenA||"")+" / "+(x.tokenB||"")))+(x.revival?'<span class="badge hot"> REVIVAL</span>':"")+'</td><td class="muted">'+escapeHTML(networkName(x.network))+'</td><td>'+formatPrice(x.price)+'</td><td>'+formatNumber(display)+' <span class="muted" style="font-size:9px">'+escapeHTML(x.valueType||"")+"</span></td><td>"+formatNumber(x.liquidity)+"</td><td>"+formatNumber(x.volume24h)+"</td><td>"+formatPercent(x.change24h)+"</td><td>"+Number(x.transactions24h||0).toLocaleString()+"</td><td>"+Number(x.buys24h||0).toLocaleString()+"</td><td>"+Number(x.sells24h||0).toLocaleString()+"</td><td>"+ageText(x.createdAt)+"</td></tr>"
  }).join("");
 }
 
@@ -320,50 +246,6 @@ async function loadMarkets(){
  }catch(e){console.error(e);body.innerHTML='<tr><td colspan="12" class="error">On-chain data failed to load.<br>'+escapeHTML(e.message)+"</td></tr>";status.textContent="API Error";document.getElementById("revivalStatus").textContent="API Error"}
 }
 
-
-function openTokenDetail(index){
-  const x=marketData[index];
-  if(!x)return;
-
-  document.getElementById("cryptoView").style.display="none";
-  document.getElementById("onchainView").style.display="none";
-  document.getElementById("stocksView").style.display="none";
-  document.getElementById("forexView").style.display="none";
-  document.getElementById("detailView").style.display="block";
-
-  const pair=x.name||((x.tokenA||"")+" / "+(x.tokenB||""));
-  document.getElementById("detailPair").textContent=pair;
-  document.getElementById("detailNetwork").textContent=networkName(x.network);
-  document.getElementById("detailPrice").textContent=formatPrice(x.price);
-  document.getElementById("detailChange").innerHTML="24H "+formatPercent(x.change24h);
-  document.getElementById("detailMarketCap").innerHTML=formatNumber(x.displayValue)+" <span class='muted' style='font-size:9px'>"+escapeHTML(x.valueType||"")+"</span>";
-  document.getElementById("detailLiquidity").textContent=formatNumber(x.liquidity);
-  document.getElementById("detailVolume").textContent=formatNumber(x.volume24h);
-  document.getElementById("detailAge").textContent=ageText(x.createdAt);
-
-  document.getElementById("detail1hVolume").textContent=formatNumber(x.volume1h);
-  document.getElementById("detail24hVolume").textContent=formatNumber(x.volume24h);
-  document.getElementById("detailBuys").textContent=Number(x.buys24h||0).toLocaleString();
-  document.getElementById("detailSells").textContent=Number(x.sells24h||0).toLocaleString();
-  document.getElementById("detailTxns").textContent=Number(x.transactions24h||0).toLocaleString();
-  document.getElementById("detail1hChange").innerHTML=formatPercent(x.change1h);
-  document.getElementById("detail24hChange").innerHTML=formatPercent(x.change24h);
-  document.getElementById("detailRevival").textContent=x.revivalStatus||"Normal";
-
-  document.getElementById("detailPool").textContent=x.pool||"—";
-  document.getElementById("detailNetworkInfo").textContent=networkName(x.network);
-  document.getElementById("detailPairInfo").textContent=pair;
-  document.getElementById("detailValueType").textContent=x.valueType||"—";
-
-  document.getElementById("viewStat").textContent="Token";
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-
-function closeTokenDetail(){
-  document.getElementById("detailView").style.display="none";
-  switchTab("onchain");
-}
-
 function switchTab(tab){
  currentTab=tab==="home"?"crypto":tab;
  document.getElementById("cryptoView").style.display=currentTab==="crypto"?"block":"none";
@@ -377,7 +259,16 @@ function switchTab(tab){
 
 document.getElementById("search").addEventListener("input",()=>{if(currentTab==="crypto")renderCrypto();if(currentTab==="onchain"){renderMarkets();renderRevival()}});
 
+window.addEventListener("popstate",()=>{
+  if(document.getElementById("detailView").style.display==="block"){
+    activeDetailMarket=null;
+    document.getElementById("detailView").style.display="none";
+    switchTab("onchain");
+  }
+});
+
 loadCrypto();loadChains();
+
 </script>
 </body>
 </html>
