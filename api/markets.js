@@ -40,51 +40,122 @@ export default async function handler(req, res) {
       "USDT.E"
     ]);
 
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     function cleanSymbol(value) {
       if (!value) return "";
+
       return String(value)
         .replace(/\$/g, "")
         .trim()
         .toUpperCase();
     }
 
-    function getSymbols(pool) {
-      const included = Array.isArray(pool.included)
-        ? pool.included
+    function getIncludedMap(json) {
+      const included = Array.isArray(json?.included)
+        ? json.included
         : [];
 
-      const tokens = included.filter(
-        item => item && item.type === "token"
-      );
+      const map = new Map();
 
-      const symbols = tokens
-        .map(token =>
-          cleanSymbol(token.attributes?.symbol)
-        )
-        .filter(Boolean);
+      for (const item of included) {
+        if (item?.id) {
+          map.set(String(item.id), item);
+        }
+      }
+
+      return map;
+    }
+
+    function getTokenInfo(pool, includedMap) {
+      const baseId =
+        pool?.relationships?.base_token?.data?.id || "";
+
+      const quoteId =
+        pool?.relationships?.quote_token?.data?.id || "";
+
+      const baseToken =
+        includedMap.get(String(baseId));
+
+      const quoteToken =
+        includedMap.get(String(quoteId));
+
+      const tokenA =
+        cleanSymbol(
+          baseToken?.attributes?.symbol
+        );
+
+      const tokenB =
+        cleanSymbol(
+          quoteToken?.attributes?.symbol
+        );
+
+      const tokenAAddress =
+        String(
+          baseToken?.attributes?.address || ""
+        );
+
+      const tokenBAddress =
+        String(
+          quoteToken?.attributes?.address || ""
+        );
 
       return {
-        tokenA: symbols[0] || "",
-        tokenB: symbols[1] || ""
+        tokenA,
+        tokenB,
+        tokenAAddress,
+        tokenBAddress
+      };
+    }
+
+    function getNameFallback(pool) {
+      const name =
+        pool?.attributes?.name || "";
+
+      const parts = String(name)
+        .split("/")
+        .map(x => cleanSymbol(x));
+
+      return {
+        tokenA: parts[0] || "",
+        tokenB: parts[1] || ""
       };
     }
 
     function isStablePair(a, b) {
-      return stablecoins.has(a) && stablecoins.has(b);
+      return (
+        stablecoins.has(a) &&
+        stablecoins.has(b)
+      );
     }
 
     function revivalScore(data) {
-      const volume1h = Number(data.volume1h || 0);
-      const volume24h = Number(data.volume24h || 0);
-      const buys = Number(data.buys24h || 0);
-      const sells = Number(data.sells24h || 0);
-      const change1h = Number(data.change1h || 0);
+      const volume1h =
+        Number(data.volume1h || 0);
 
-      if (volume1h <= 0 || volume24h <= 0) {
+      const volume24h =
+        Number(data.volume24h || 0);
+
+      const buys =
+        Number(data.buys24h || 0);
+
+      const sells =
+        Number(data.sells24h || 0);
+
+      const change1h =
+        Number(data.change1h || 0);
+
+      if (
+        volume1h <= 0 ||
+        volume24h <= 0
+      ) {
         return 0;
       }
 
-      const averageHourly = volume24h / 24;
+      const averageHourly =
+        volume24h / 24;
 
       const acceleration =
         averageHourly > 0
@@ -123,13 +194,6 @@ export default async function handler(req, res) {
       return score;
     }
 
-    /*
-      IMPORTANT:
-      GeckoTerminal public API is rate-limited.
-      We fetch networks SEQUENTIALLY instead of 7 requests
-      at the exact same time.
-    */
-
     async function getPools(network) {
       const url =
         `${BASE}/networks/${network}/pools` +
@@ -143,52 +207,114 @@ export default async function handler(req, res) {
         });
 
         if (response.status === 429) {
-          console.log(`${network} rate limited`);
-          return [];
+          console.log(
+            `${network} rate limited`
+          );
+
+          /*
+            Wait before one retry.
+            Public API is rate limited, so
+            we don't spam repeated requests.
+          */
+          await sleep(4000);
+
+          const retry = await fetch(url, {
+            headers
+          });
+
+          if (!retry.ok) {
+            console.log(
+              `${network} retry HTTP ${retry.status}`
+            );
+
+            return {
+              data: [],
+              included: []
+            };
+          }
+
+          const retryJson =
+            await retry.json();
+
+          return {
+            data: Array.isArray(retryJson?.data)
+              ? retryJson.data
+              : [],
+
+            included: Array.isArray(
+              retryJson?.included
+            )
+              ? retryJson.included
+              : []
+          };
         }
 
         if (!response.ok) {
           console.log(
             `${network} HTTP ${response.status}`
           );
-          return [];
+
+          return {
+            data: [],
+            included: []
+          };
         }
 
-        const json = await response.json();
+        const json =
+          await response.json();
 
-        return Array.isArray(json.data)
-          ? json.data
-          : [];
+        return {
+          data: Array.isArray(json?.data)
+            ? json.data
+            : [],
+
+          included: Array.isArray(json?.included)
+            ? json.included
+            : []
+        };
+
       } catch (error) {
         console.log(
           `${network} request failed`,
           error?.message || error
         );
 
-        return [];
+        return {
+          data: [],
+          included: []
+        };
       }
     }
 
     const markets = [];
     const seenPools = new Set();
 
-    /*
-      Small delay between networks.
-      This reduces burst traffic.
-    */
-    function sleep(ms) {
-      return new Promise(resolve =>
-        setTimeout(resolve, ms)
-      );
-    }
-
     for (const network of networks) {
-      const pools = await getPools(network);
+      const result =
+        await getPools(network);
+
+      const pools =
+        Array.isArray(result.data)
+          ? result.data
+          : [];
+
+      const includedMap =
+        new Map();
+
+      for (const item of result.included || []) {
+        if (item?.id) {
+          includedMap.set(
+            String(item.id),
+            item
+          );
+        }
+      }
 
       for (const pool of pools) {
-        if (!pool || !pool.id) continue;
+        if (!pool?.id) continue;
 
-        const poolId = String(pool.id);
+        const poolId =
+          String(pool.id);
 
         if (seenPools.has(poolId)) {
           continue;
@@ -196,22 +322,29 @@ export default async function handler(req, res) {
 
         seenPools.add(poolId);
 
-        const a = pool.attributes || {};
+        const a =
+          pool.attributes || {};
 
         const tx =
           a.transactions?.h24 || {};
 
         const volume24h =
-          Number(a.volume_usd?.h24 || 0);
+          Number(
+            a.volume_usd?.h24 || 0
+          );
 
         const volume1h =
-          Number(a.volume_usd?.h1 || 0);
+          Number(
+            a.volume_usd?.h1 || 0
+          );
 
         const liquidity =
-          Number(a.reserve_in_usd || 0);
+          Number(
+            a.reserve_in_usd || 0
+          );
 
         /*
-          Ignore extremely small pools.
+          Ignore tiny pools.
         */
         if (
           volume24h < 5000 ||
@@ -220,20 +353,30 @@ export default async function handler(req, res) {
           continue;
         }
 
-        let { tokenA, tokenB } =
-          getSymbols(pool);
+        let {
+          tokenA,
+          tokenB,
+          tokenAAddress,
+          tokenBAddress
+        } = getTokenInfo(
+          pool,
+          includedMap
+        );
 
+        /*
+          Fallback to pool name.
+        */
         if (!tokenA || !tokenB) {
-          const parts =
-            String(a.name || "")
-              .split("/")
-              .map(x => cleanSymbol(x));
+          const fallback =
+            getNameFallback(pool);
 
           tokenA =
-            tokenA || parts[0] || "";
+            tokenA ||
+            fallback.tokenA;
 
           tokenB =
-            tokenB || parts[1] || "";
+            tokenB ||
+            fallback.tokenB;
         }
 
         if (!tokenA || !tokenB) {
@@ -241,55 +384,77 @@ export default async function handler(req, res) {
         }
 
         /*
-          Remove stablecoin/stablecoin pairs.
+          Remove stablecoin/stablecoin
+          markets.
         */
-        if (isStablePair(tokenA, tokenB)) {
+        if (
+          isStablePair(
+            tokenA,
+            tokenB
+          )
+        ) {
           continue;
         }
 
         const marketCap =
-          Number(a.market_cap_usd || 0);
+          Number(
+            a.market_cap_usd || 0
+          );
 
         const fdv =
-          Number(a.fdv_usd || 0);
+          Number(
+            a.fdv_usd || 0
+          );
 
         const buys24h =
-          Number(tx.buys || 0);
+          Number(
+            tx.buys || 0
+          );
 
         const sells24h =
-          Number(tx.sells || 0);
+          Number(
+            tx.sells || 0
+          );
 
         const transactions24h =
-          buys24h + sells24h;
+          buys24h +
+          sells24h;
 
         const change1h =
           Number(
-            a.price_change_percentage?.h1 || 0
+            a.price_change_percentage?.h1 ||
+              0
           );
 
         const change24h =
           Number(
-            a.price_change_percentage?.h24 || 0
+            a.price_change_percentage?.h24 ||
+              0
           );
 
-        const score = revivalScore({
-          volume1h,
-          volume24h,
-          buys24h,
-          sells24h,
-          change1h
-        });
+        const score =
+          revivalScore({
+            volume1h,
+            volume24h,
+            buys24h,
+            sells24h,
+            change1h
+          });
 
-        let revivalStatus = "Normal";
+        let revivalStatus =
+          "Normal";
 
         if (score >= 65) {
-          revivalStatus = "Buying Started";
+          revivalStatus =
+            "Buying Started";
         } else if (score >= 45) {
-          revivalStatus = "Reviving";
+          revivalStatus =
+            "Reviving";
         }
 
         markets.push({
           network,
+
           pool: poolId,
 
           name:
@@ -298,6 +463,22 @@ export default async function handler(req, res) {
 
           tokenA,
           tokenB,
+
+          /*
+            Contract / Mint addresses
+          */
+          tokenAAddress,
+          tokenBAddress,
+
+          /*
+            Frontend can use this as
+            the main token address.
+          */
+          tokenAddress:
+            tokenAAddress || "",
+
+          baseTokenAddress:
+            tokenAAddress || "",
 
           price:
             Number(
@@ -334,7 +515,8 @@ export default async function handler(req, res) {
           transactions24h,
 
           createdAt:
-            a.pool_created_at || null,
+            a.pool_created_at ||
+            null,
 
           revival:
             score >= 45,
@@ -350,10 +532,10 @@ export default async function handler(req, res) {
       }
 
       /*
-        Give the API a small breathing gap
-        before the next network.
+        Small gap between networks
+        to reduce API burst.
       */
-      await sleep(700);
+      await sleep(1200);
     }
 
     /*
@@ -366,7 +548,7 @@ export default async function handler(req, res) {
     );
 
     /*
-      Keep maximum 500 markets.
+      Maximum 500 markets.
     */
     const finalMarkets =
       markets
@@ -376,11 +558,6 @@ export default async function handler(req, res) {
           ...market
         }));
 
-    /*
-      CDN cache.
-      This is very important because the data
-      does not need a fresh API call every second.
-    */
     res.setHeader(
       "Cache-Control",
       "s-maxage=120, stale-while-revalidate=300"
@@ -398,7 +575,7 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error(
       "Markets API error:",
-      error
+      error?.message || error
     );
 
     return res
