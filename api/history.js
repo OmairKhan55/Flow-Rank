@@ -7,9 +7,13 @@ export default async function handler(req, res) {
     }
 
     const pool = String(req.query?.pool || "").trim();
-    const range = String(req.query?.range || "24h").trim().toLowerCase();
+
+    const range = String(
+      req.query?.range || "24h"
+    ).trim().toLowerCase();
+
     const timeframe = String(
-      req.query?.timeframe || "1h"
+      req.query?.timeframe || ""
     ).trim().toLowerCase();
 
     if (!pool) {
@@ -26,8 +30,13 @@ export default async function handler(req, res) {
       });
     }
 
-    const network = pool.slice(0, separator).trim();
-    const poolAddress = pool.slice(separator + 1).trim();
+    const network = pool
+      .slice(0, separator)
+      .trim();
+
+    const poolAddress = pool
+      .slice(separator + 1)
+      .trim();
 
     if (!network || !poolAddress) {
       return res.status(400).json({
@@ -35,31 +44,8 @@ export default async function handler(req, res) {
       });
     }
 
-    const BASE = "https://api.geckoterminal.com/api/v2";
-
-    /*
-      Supported FlowRank timeframes:
-
-      1m  = 1 minute
-      5m  = 5 minutes
-      15m = 15 minutes
-      30m = 30 minutes
-      1h  = 1 hour
-      4h  = 4 hours
-      12h = 12 hours
-      1d  = 1 day
-      1w  = 1 week
-      1M  = 1 month
-
-      GeckoTerminal uses:
-      - minute
-      - hour
-      - day
-      - week
-      - month
-
-      Aggregate controls the candle size.
-    */
+    const BASE =
+      "https://api.geckoterminal.com/api/v2";
 
     const timeframeMap = {
       "1m": {
@@ -116,12 +102,6 @@ export default async function handler(req, res) {
         limit: 120
       },
 
-      "1mth": {
-        endpoint: "month",
-        aggregate: 1,
-        limit: 120
-      },
-
       "1month": {
         endpoint: "month",
         aggregate: 1,
@@ -129,21 +109,12 @@ export default async function handler(req, res) {
       }
     };
 
-    /*
-      Backward compatibility:
-
-      Existing frontend sends:
-      range=24h
-      range=7d
-
-      If no timeframe is supplied, use:
-      24h -> 1h candles
-      7d  -> 4h candles
-    */
-
     let selectedTimeframe = timeframe;
 
-    if (!req.query?.timeframe) {
+    /*
+      Old frontend compatibility
+    */
+    if (!selectedTimeframe) {
       if (range === "7d") {
         selectedTimeframe = "4h";
       } else {
@@ -151,6 +122,72 @@ export default async function handler(req, res) {
       }
     }
 
+    /*
+      Custom timeframe
+      Examples:
+      2m
+      10m
+      2h
+      6h
+      2d
+      2w
+    */
+    if (!timeframeMap[selectedTimeframe]) {
+      const custom =
+        selectedTimeframe.match(
+          /^(\d+)(m|h|d|w)$/
+        );
+
+      if (custom) {
+        const value =
+          Number(custom[1]);
+
+        const unit =
+          custom[2];
+
+        if (
+          Number.isFinite(value) &&
+          value > 0 &&
+          value <= 100
+        ) {
+          if (unit === "m") {
+            timeframeMap[selectedTimeframe] = {
+              endpoint: "minute",
+              aggregate: value,
+              limit: 120
+            };
+          }
+
+          if (unit === "h") {
+            timeframeMap[selectedTimeframe] = {
+              endpoint: "hour",
+              aggregate: value,
+              limit: 120
+            };
+          }
+
+          if (unit === "d") {
+            timeframeMap[selectedTimeframe] = {
+              endpoint: "day",
+              aggregate: value,
+              limit: 120
+            };
+          }
+
+          if (unit === "w") {
+            timeframeMap[selectedTimeframe] = {
+              endpoint: "day",
+              aggregate: value * 7,
+              limit: 120
+            };
+          }
+        }
+      }
+    }
+
+    /*
+      Fallback
+    */
     const config =
       timeframeMap[selectedTimeframe] ||
       timeframeMap["1h"];
@@ -164,19 +201,22 @@ export default async function handler(req, res) {
       `&currency=usd`;
 
     console.log(
-      "FlowRank history request:",
+      "FlowRank history:",
       selectedTimeframe,
-      url
+      network,
+      poolAddress
     );
 
     const response = await fetch(url, {
       headers: {
-        Accept: "application/json;version=20230203"
+        Accept:
+          "application/json;version=20230203"
       }
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      const errorText =
+        await response.text();
 
       console.log(
         "GeckoTerminal history error:",
@@ -184,67 +224,82 @@ export default async function handler(req, res) {
         errorText
       );
 
-      return res.status(200).json([]);
+      return res
+        .status(200)
+        .json([]);
     }
 
-    const json = await response.json();
+    const json =
+      await response.json();
 
     const list =
       json?.data?.attributes?.ohlcv_list;
 
     if (!Array.isArray(list)) {
       console.log(
-        "No OHLCV list returned for:",
+        "No OHLCV data:",
         selectedTimeframe
       );
 
-      return res.status(200).json([]);
+      return res
+        .status(200)
+        .json([]);
     }
 
-    /*
-      GeckoTerminal OHLCV format:
+    const points =
+      list
+        .map((row) => ({
+          timestamp:
+            Number(row?.[0] || 0),
 
-      [
-        timestamp,
-        open,
-        high,
-        low,
-        close,
-        volume
-      ]
-    */
+          open:
+            Number(row?.[1] || 0),
 
-    const points = list
-      .map((row) => ({
-        timestamp: Number(row?.[0] || 0),
+          high:
+            Number(row?.[2] || 0),
 
-        open: Number(row?.[1] || 0),
+          low:
+            Number(row?.[3] || 0),
 
-        high: Number(row?.[2] || 0),
+          close:
+            Number(row?.[4] || 0),
 
-        low: Number(row?.[3] || 0),
+          volume:
+            Number(row?.[5] || 0)
+        }))
+        .filter((point) => {
+          return (
+            Number.isFinite(
+              point.timestamp
+            ) &&
+            point.timestamp > 0 &&
 
-        close: Number(row?.[4] || 0),
+            Number.isFinite(
+              point.open
+            ) &&
+            point.open > 0 &&
 
-        volume: Number(row?.[5] || 0)
-      }))
-      .filter(
-        (point) =>
-          Number.isFinite(point.timestamp) &&
-          point.timestamp > 0 &&
-          Number.isFinite(point.open) &&
-          point.open > 0 &&
-          Number.isFinite(point.high) &&
-          point.high > 0 &&
-          Number.isFinite(point.low) &&
-          point.low > 0 &&
-          Number.isFinite(point.close) &&
-          point.close > 0
-      )
-      .sort(
-        (a, b) =>
-          a.timestamp - b.timestamp
-      );
+            Number.isFinite(
+              point.high
+            ) &&
+            point.high > 0 &&
+
+            Number.isFinite(
+              point.low
+            ) &&
+            point.low > 0 &&
+
+            Number.isFinite(
+              point.close
+            ) &&
+            point.close > 0
+          );
+        })
+        .sort(
+          (a, b) =>
+            a.timestamp -
+            b.timestamp
+        );
 
     res.setHeader(
       "Cache-Control",
@@ -256,12 +311,14 @@ export default async function handler(req, res) {
       "application/json"
     );
 
-    return res.status(200).json({
-      timeframe: selectedTimeframe,
-      network,
-      pool: poolAddress,
-      candles: points
-    });
+    /*
+      IMPORTANT:
+      Return direct array so index.html
+      can render the candles immediately.
+    */
+    return res
+      .status(200)
+      .json(points);
 
   } catch (error) {
     console.error(
@@ -269,9 +326,8 @@ export default async function handler(req, res) {
       error?.message || error
     );
 
-    return res.status(200).json({
-      timeframe: "1h",
-      candles: []
-    });
+    return res
+      .status(200)
+      .json([]);
   }
 }
