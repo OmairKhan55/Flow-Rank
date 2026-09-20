@@ -36,7 +36,7 @@ td{padding:13px 12px;font-size:12px;border-bottom:1px solid #112237;white-space:
 .activity-card{background:#0b1a2c;border:1px solid #172a40;border-radius:9px;padding:12px;cursor:pointer}.activity-card:hover{border-color:#2d8e75}
 .activity-name{font-size:11px;font-weight:700}.activity-pct{font-size:17px;font-weight:800;margin-top:5px}.activity-vol{font-size:9px;color:#718399;margin-top:4px}
 .time-filter{display:flex;gap:7px;margin:12px 0}.time-btn{border:1px solid #1c334c;background:#0d2035;color:#8999ad;padding:7px 12px;border-radius:7px;cursor:pointer;font-size:10px}.time-btn.active{color:#fff;border-color:#2d8e75;background:#12352f}
-.revival-box{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;overflow:hidden}.revival-head{padding:13px 15px;border-bottom:1px solid #172a40;display:flex;justify-content:space-between}.revival-list{overflow-x:auto}.revival-list table{min-width:850px}
+.revival-box{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;overflow:hidden}.revival-head{padding:13px 15px;border-bottom:1px solid #172a40;display:flex;justify-content:space-between}.revival-list{overflow-x:auto}.revival-list table{min-width:980px}.revival-filter{display:flex;gap:7px;padding:10px 12px;border-bottom:1px solid #172a40}.revival-filter-btn{border:1px solid #20354c;background:#0b1a2c;color:#7f93a9;border-radius:6px;padding:5px 9px;font-size:9px;cursor:pointer}.revival-filter-btn.active{background:#12304a;color:#dbeafe;border-color:#2d6b9b}.pressure{font-weight:700;color:#42d6a4}
 .badge{display:inline-block;font-size:9px;padding:3px 6px;border-radius:4px;font-weight:700;background:#12352f;color:#42d6a4}.hot{background:#3b2920;color:#ffb36b}
 .clickable{cursor:pointer}.clickable:hover{background:#0d2135}
 .detail-page{display:none}
@@ -51,7 +51,7 @@ td{padding:13px 12px;font-size:12px;border-bottom:1px solid #112237;white-space:
 .detail-panel{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;overflow:hidden}
 .detail-panel-head{padding:13px 15px;border-bottom:1px solid #172a40;display:flex;justify-content:space-between;align-items:center}
 .detail-panel-head strong{font-size:12px}
-.detail-chart{height:330px;display:flex;align-items:center;justify-content:center;color:#718399;font-size:12px;background:linear-gradient(180deg,#0b1a2c,#081525)}
+.detail-chart{height:430px;position:relative;background:linear-gradient(180deg,#0b1a2c,#081525);overflow:hidden}.chart-area{position:relative;width:100%;height:100%;}.chart-controls{display:flex;gap:5px;flex-wrap:wrap;align-items:center}.chart-select-btn{border:1px solid #20354c;background:#0b1a2c;color:#7f93a9;border-radius:6px;padding:5px 8px;font-size:10px;cursor:pointer}.chart-select-btn.active{background:#12304a;color:#dbeafe;border-color:#2d6b9b}.chart-plus{border:1px solid #2d6b9b;background:#0d2438;color:#dbeafe;border-radius:6px;padding:5px 9px;font-size:11px;cursor:pointer}.chart-type{display:flex;gap:5px;margin-left:6px}.chart-canvas{width:100%;height:100%;display:block}.chart-tooltip{position:absolute;display:none;pointer-events:none;background:#071525;border:1px solid #29435e;border-radius:6px;padding:7px 9px;font-size:9px;color:#dbeafe;z-index:3;white-space:nowrap}.chart-ohlc{position:absolute;left:12px;top:8px;color:#9fb0c3;font-size:9px;z-index:2}.chart-volume-label{position:absolute;left:12px;bottom:10px;color:#718399;font-size:9px;z-index:2}
 .chart-tools{display:flex;gap:6px}
 .chart-btn{border:1px solid #20354c;background:#0b1a2c;color:#7f93a9;border-radius:6px;padding:5px 9px;font-size:10px;cursor:pointer}
 .chart-btn.active{background:#12304a;color:#dbeafe;border-color:#2d6b9b}
@@ -141,7 +141,8 @@ footer{text-align:center;color:#617187;font-size:10px;padding:60px 0 35px}
 <h2>🔥 Revival / Buying Started</h2>
 <div class="revival-box">
 <div class="revival-head"><strong>Markets showing renewed activity</strong><span id="revivalStatus" class="status">Scanning...</span></div>
-<div class="revival-list"><table><thead><tr><th>PAIR</th><th>NETWORK</th><th>PRICE</th><th>1H VOLUME</th><th>24H VOLUME</th><th>BUYS</th><th>SELLS</th><th>1H CHANGE</th><th>STATUS</th></tr></thead><tbody id="revivalBody"><tr><td colspan="9" class="loading">Loading revival data...</td></tr></tbody></table></div>
+<div class="revival-filter"><button class="revival-filter-btn active" data-revival-filter="all" onclick="setRevivalFilter('all')">All</button><button class="revival-filter-btn" data-revival-filter="buying" onclick="setRevivalFilter('buying')">Buying Started</button><button class="revival-filter-btn" data-revival-filter="reviving" onclick="setRevivalFilter('reviving')">Reviving</button></div>
+<div class="revival-list"><table><thead><tr><th>PAIR</th><th>NETWORK</th><th>PRICE</th><th>1H VOLUME</th><th>24H VOLUME</th><th>BUY PRESSURE</th><th>BUYS</th><th>SELLS</th><th>1H CHANGE</th><th>STATUS</th></tr></thead><tbody id="revivalBody"><tr><td colspan="10" class="loading">Loading revival data...</td></tr></tbody></table></div>
 </div>
 </div>
 </section>
@@ -165,16 +166,37 @@ footer{text-align:center;color:#617187;font-size:10px;padding:60px 0 35px}
 
   <div class="detail-main">
     <div class="detail-panel">
-      <div class="detail-panel-head">
+      <div class="detail-panel-head" style="align-items:flex-start;gap:10px;flex-wrap:wrap">
         <strong>Price Chart</strong>
-        <div class="chart-tools">
-          <button class="chart-btn active" data-chart-range="24h" onclick="loadDetailChart('24h')">24H</button>
-          <button class="chart-btn" data-chart-range="7d" onclick="loadDetailChart('7d')">7D</button>
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end">
+          <div class="chart-controls" id="chartTimeframes">
+            <button class="chart-select-btn" data-chart-tf="24h" onclick="loadDetailChart('24h')">24H</button>
+            <button class="chart-select-btn" data-chart-tf="7d" onclick="loadDetailChart('7d')">7D</button>
+            <button class="chart-select-btn" data-chart-tf="1m" onclick="loadDetailChart('1m')">1m</button>
+            <button class="chart-select-btn" data-chart-tf="5m" onclick="loadDetailChart('5m')">5m</button>
+            <button class="chart-select-btn" data-chart-tf="15m" onclick="loadDetailChart('15m')">15m</button>
+            <button class="chart-select-btn" data-chart-tf="30m" onclick="loadDetailChart('30m')">30m</button>
+            <button class="chart-select-btn active" data-chart-tf="1h" onclick="loadDetailChart('1h')">1H</button>
+            <button class="chart-select-btn" data-chart-tf="4h" onclick="loadDetailChart('4h')">4H</button>
+            <button class="chart-select-btn" data-chart-tf="12h" onclick="loadDetailChart('12h')">12H</button>
+            <button class="chart-select-btn" data-chart-tf="1d" onclick="loadDetailChart('1d')">1D</button>
+            <button class="chart-select-btn" data-chart-tf="1w" onclick="loadDetailChart('1w')">1W</button>
+            <button class="chart-select-btn" data-chart-tf="1month" onclick="loadDetailChart('1month')">1M</button>
+            <button class="chart-plus" onclick="addCustomTimeframe()">+</button>
+          </div>
+          <div class="chart-type">
+            <button class="chart-select-btn active" data-chart-type="candles" onclick="setChartType('candles')">Candles</button>
+            <button class="chart-select-btn" data-chart-type="line" onclick="setChartType('line')">Line</button>
+            <button class="chart-select-btn" data-chart-type="area" onclick="setChartType('area')">Area</button>
+          </div>
         </div>
       </div>
       <div class="detail-chart">
         <div id="chartLoading" class="detail-chart-inner">Loading live price history...</div>
-        <svg id="priceChartSvg" class="price-chart-svg" viewBox="0 0 900 330" preserveAspectRatio="none" style="display:none" aria-label="Live price chart"></svg>
+        <div id="chartOhlc" class="chart-ohlc" style="display:none"></div>
+        <svg id="priceChartSvg" class="chart-canvas" viewBox="0 0 900 430" preserveAspectRatio="none" style="display:none" aria-label="Live candlestick price chart"></svg>
+        <div id="chartTooltip" class="chart-tooltip"></div>
+        <div class="chart-volume-label">Volume</div>
       </div>
       <div id="chartMeta" class="chart-meta">Live pool history</div>
     </div>
@@ -206,6 +228,8 @@ footer{text-align:center;color:#617187;font-size:10px;padding:60px 0 35px}
       <div><b>Network:</b> <span id="detailNetworkInfo">—</span></div>
       <div><b>Pair:</b> <span id="detailPairInfo">—</span></div>
       <div><b>Value type:</b> <span id="detailValueType">—</span></div>
+      <div><b>Token / Mint Address:</b> <span id="detailTokenAddress">—</span> <button class="chain-btn" style="margin-left:6px" onclick="copyTokenAddress()">Copy</button></div>
+      <div><b>Pool Address:</b> <span id="detailPoolAddress">—</span> <button class="chain-btn" style="margin-left:6px" onclick="copyPoolAddress()">Copy</button></div>
     </div>
   </div>
 </section>
@@ -319,14 +343,35 @@ function renderMarkets(){
  }).join("");
 }
 
+let revivalFilter="all";
+function setRevivalFilter(filter){
+ revivalFilter=filter;
+ document.querySelectorAll("[data-revival-filter]").forEach(b=>b.classList.toggle("active",b.dataset.revivalFilter===filter));
+ renderRevival();
+}
+function buyingPressure(x){
+ const buys=Number(x.buys24h||0),sells=Number(x.sells24h||0),total=buys+sells;
+ return total>0?(buys/total)*100:0;
+}
+function revivalStrength(x){
+ const p=buyingPressure(x),v24=Number(x.volume24h||0),v1=Number(x.volume1h||0),change=Number(x.change1h||0);
+ const activity=v24>0?(v1/v24)*100:0;
+ return Number(x.revivalScore||0)+(p>=55?15:0)+(activity>=5?10:0)+(change>0?5:0);
+}
 function renderRevival(){
  const body=document.getElementById("revivalBody");
- let rows=marketData.filter(x=>x.revival).sort((a,b)=>Number(b.revivalScore||0)-Number(a.revivalScore||0));
+ let rows=marketData.filter(x=>x.revival).slice();
  if(currentChain!=="all")rows=rows.filter(x=>x.network===currentChain);
+ if(revivalFilter==="buying")rows=rows.filter(x=>x.revivalStatus==="Buying Started"||buyingPressure(x)>=55);
+ if(revivalFilter==="reviving")rows=rows.filter(x=>x.revivalStatus!=="Buying Started");
+ rows.sort((a,b)=>revivalStrength(b)-revivalStrength(a));
  rows=rows.slice(0,30);
  document.getElementById("revivalStatus").textContent=rows.length+" found";
- if(!rows.length){body.innerHTML='<tr><td colspan="9" class="loading">No strong revival activity detected yet.</td></tr>';return}
- body.innerHTML=rows.map(x=>'<tr><td class="pair">'+escapeHTML(x.name||"—")+'</td><td class="muted">'+escapeHTML(networkName(x.network))+'</td><td>'+formatPrice(x.price)+'</td><td>'+formatNumber(x.volume1h)+'</td><td>'+formatNumber(x.volume24h)+'</td><td>'+Number(x.buys24h||0).toLocaleString()+'</td><td>'+Number(x.sells24h||0).toLocaleString()+'</td><td>'+formatPercent(x.change1h)+'</td><td><span class="badge '+(x.revivalStatus==="Buying Started"?"hot":"")+'">'+escapeHTML(x.revivalStatus||"Reviving")+"</span></td></tr>").join("");
+ if(!rows.length){body.innerHTML='<tr><td colspan="10" class="loading">No matching revival activity detected yet.</td></tr>';return}
+ body.innerHTML=rows.map(x=>{
+  const pressure=buyingPressure(x),status=x.revivalStatus||"Reviving",idx=marketData.indexOf(x);
+  return '<tr class="clickable" onclick="openTokenDetail('+idx+')"><td class="pair">'+escapeHTML(x.name||"—")+'</td><td class="muted">'+escapeHTML(networkName(x.network))+'</td><td>'+formatPrice(x.price)+'</td><td>'+formatNumber(x.volume1h)+'</td><td>'+formatNumber(x.volume24h)+'</td><td><span class="pressure">'+pressure.toFixed(1)+'%</span></td><td>'+Number(x.buys24h||0).toLocaleString()+'</td><td>'+Number(x.sells24h||0).toLocaleString()+'</td><td>'+formatPercent(x.change1h)+'</td><td><span class="badge '+(status==="Buying Started"?"hot":"")+'">'+escapeHTML(status)+"</span></td></tr>";
+ }).join("");
 }
 
 async function loadMarkets(){
@@ -343,88 +388,164 @@ async function loadMarkets(){
 
 let activeDetailMarket=null;
 
-function setChartButtons(range){
- document.querySelectorAll(".chart-btn").forEach(b=>b.classList.toggle("active",b.dataset.chartRange===range));
+let activeChartTimeframe="1h";
+let activeChartType="candles";
+let activeChartPoints=[];
+
+function setChartButtons(timeframe){
+ document.querySelectorAll("[data-chart-tf]").forEach(b=>b.classList.toggle("active",b.dataset.chartTf===timeframe));
+ activeChartTimeframe=timeframe;
 }
 
-function chartPath(points, width=900, height=330){
- if(!points.length)return "";
- const pad={l:18,r:18,t:18,b:24};
- const w=width-pad.l-pad.r, h=height-pad.t-pad.b;
- const prices=points.map(p=>Number(p.close)).filter(Number.isFinite);
- if(!prices.length)return "";
- let min=Math.min(...prices),max=Math.max(...prices);
- if(min===max){min*=0.999;max*=1.001}
- const x=i=>pad.l+(i/(points.length-1||1))*w;
- const y=v=>pad.t+((max-v)/(max-min))*h;
- const line=points.map((p,i)=>(i===0?"M":"L")+x(i).toFixed(2)+" "+y(Number(p.close)).toFixed(2)).join(" ");
- const area=line+" L "+x(points.length-1).toFixed(2)+" "+(height-pad.b)+" L "+x(0).toFixed(2)+" "+(height-pad.b)+" Z";
- return {line,area,min,max,last:prices[prices.length-1]};
+function setChartType(type){
+ activeChartType=type;
+ document.querySelectorAll("[data-chart-type]").forEach(b=>b.classList.toggle("active",b.dataset.chartType===type));
+ if(activeChartPoints.length) renderPriceChart(activeChartPoints);
 }
+
+function addCustomTimeframe(){
+ const value=prompt("Enter timeframe (example: 2h, 6h, 3d)");
+ if(!value)return;
+ const tf=value.trim().toLowerCase();
+ if(!/^\d+(m|h|d|w)$/.test(tf)){
+   alert("Use minutes, hours, days or weeks. Example: 2h");
+   return;
+ }
+ let btn=document.querySelector('[data-chart-tf="'+CSS.escape(tf)+'"]');
+ if(!btn){
+   btn=document.createElement("button");
+   btn.className="chart-select-btn";
+   btn.dataset.chartTf=tf;
+   btn.textContent=tf;
+   btn.onclick=()=>loadDetailChart(tf);
+   const plus=document.querySelector(".chart-plus");
+   document.getElementById("chartTimeframes").insertBefore(btn,plus);
+ }
+ loadDetailChart(tf);
+}
+
+function niceNumber(n){
+ n=Number(n||0);
+ if(!Number.isFinite(n))return "—";
+ if(n>=1e9)return (n/1e9).toFixed(2)+"B";
+ if(n>=1e6)return (n/1e6).toFixed(2)+"M";
+ if(n>=1e3)return (n/1e3).toFixed(2)+"K";
+ return n.toFixed(n<1?8:2);
+}
+
+function chartGeometry(points,width=900,height=430){
+ const pad={l:42,r:48,t:28,b:58};
+ const w=width-pad.l-pad.r;
+ const priceHeight=Math.round((height-pad.t-pad.b)*0.76);
+ const volumeTop=pad.t+priceHeight+16;
+ const volumeHeight=height-pad.b-volumeTop;
+ const highs=points.map(p=>Number(p.high)).filter(Number.isFinite);
+ const lows=points.map(p=>Number(p.low)).filter(Number.isFinite);
+ const vols=points.map(p=>Math.max(0,Number(p.volume||0))).filter(Number.isFinite);
+ if(!highs.length||!lows.length)return null;
+ let min=Math.min(...lows),max=Math.max(...highs);
+ if(min===max){min=min*0.999;max=max*1.001}
+ const range=max-min;
+ min-=range*0.06;max+=range*0.06;
+ const vmax=Math.max(...vols,1);
+ const x=i=>pad.l+(i/(Math.max(points.length-1,1)))*w;
+ const y=v=>pad.t+((max-v)/(max-min))*priceHeight;
+ const vy=v=>volumeTop+volumeHeight-(v/vmax)*volumeHeight;
+ return {pad,w,priceHeight,volumeTop,volumeHeight,min,max,vmax,x,y,vy};
+}
+
+function svgEsc(v){return String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
 
 function renderPriceChart(points){
  const svg=document.getElementById("priceChartSvg");
  const loading=document.getElementById("chartLoading");
  const meta=document.getElementById("chartMeta");
+ const ohlc=document.getElementById("chartOhlc");
  if(!svg||!loading||!meta)return;
-
- if(!Array.isArray(points)||!points.length){
-   svg.style.display="none";
-   loading.style.display="flex";
+ activeChartPoints=Array.isArray(points)?points:[];
+ if(!activeChartPoints.length){
+   svg.style.display="none";loading.style.display="flex";
    loading.textContent="No price history available for this pool.";
    meta.textContent="No historical data returned";
+   if(ohlc)ohlc.style.display="none";
    return;
  }
-
- const p=chartPath(points);
- if(!p){
-   svg.style.display="none";
-   loading.style.display="flex";
-   loading.textContent="Price history is unavailable.";
-   meta.textContent="No valid price points";
-   return;
+ const g=chartGeometry(activeChartPoints);
+ if(!g){loading.style.display="flex";loading.textContent="Price history is unavailable.";svg.style.display="none";return;}
+ loading.style.display="none";svg.style.display="block";
+ const rows=activeChartPoints;
+ const grid=[];
+ for(let i=0;i<5;i++){
+   const yy=g.pad.t+(g.priceHeight/4)*i;
+   const val=g.max-((g.max-g.min)/4)*i;
+   grid.push('<line x1="'+g.pad.l+'" y1="'+yy.toFixed(2)+'" x2="'+(900-g.pad.r)+'" y2="'+yy.toFixed(2)+'" stroke="#17304a" stroke-width="1"/>');
+   grid.push('<text x="'+(900-g.pad.r+5)+'" y="'+(yy+3).toFixed(2)+'" fill="#718399" font-size="9">'+svgEsc(formatPrice(val))+'</text>');
  }
-
- loading.style.display="none";
- svg.style.display="block";
- const gridY=[55,120,185,250,305];
- const grid=gridY.map(y=>'<line class="price-chart-grid" x1="18" y1="'+y+'" x2="882" y2="'+y+'"></line>').join("");
- const lastX=882;
- const lastY=18+((p.max-p.last)/(p.max-p.min))*288;
- svg.innerHTML=grid+
-   '<path class="price-chart-area" d="'+p.area+'"></path>'+
-   '<path class="price-chart-line" d="'+p.line+'"></path>'+
-   '<circle class="price-chart-dot" cx="'+lastX.toFixed(2)+'" cy="'+lastY.toFixed(2)+'" r="4"></circle>';
-
- const firstTs=Number(points[0].timestamp||0)*1000;
- const lastTs=Number(points[points.length-1].timestamp||0)*1000;
- const first=new Date(firstTs),last=new Date(lastTs);
- const rangeLabel=(firstTs&&lastTs&&!Number.isNaN(first.getTime())&&!Number.isNaN(last.getTime()))
-   ? first.toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})+" → "+last.toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})
-   : "Live pool history";
- meta.textContent=rangeLabel+" • "+points.length+" price points";
+ const bars=[];
+ const step=g.w/Math.max(rows.length-1,1);
+ const bodyW=Math.max(2,Math.min(10,step*0.62));
+ rows.forEach((p,i)=>{
+   const open=Number(p.open),high=Number(p.high),low=Number(p.low),close=Number(p.close),vol=Math.max(0,Number(p.volume||0));
+   if(![open,high,low,close].every(Number.isFinite))return;
+   const xx=g.x(i), yO=g.y(open),yC=g.y(close),yH=g.y(high),yL=g.y(low);
+   const up=close>=open;
+   const wick=up?'#42d6a4':'#ff6d78';
+   const bodyY=Math.min(yO,yC),bodyH=Math.max(1,Math.abs(yC-yO));
+   const fill=up?'#42d6a4':'#ff6d78';
+   bars.push('<line x1="'+xx.toFixed(2)+'" y1="'+yH.toFixed(2)+'" x2="'+xx.toFixed(2)+'" y2="'+yL.toFixed(2)+'" stroke="'+wick+'" stroke-width="1"/>');
+   bars.push('<rect x="'+(xx-bodyW/2).toFixed(2)+'" y="'+bodyY.toFixed(2)+'" width="'+bodyW.toFixed(2)+'" height="'+bodyH.toFixed(2)+'" fill="'+fill+'" opacity="0.95"><title>O '+formatPrice(open)+' H '+formatPrice(high)+' L '+formatPrice(low)+' C '+formatPrice(close)+'</title></rect>');
+   const vh=Math.max(1,g.volumeHeight*(vol/g.vmax));
+   bars.push('<rect x="'+(xx-bodyW/2).toFixed(2)+'" y="'+(g.volumeTop+g.volumeHeight-vh).toFixed(2)+'" width="'+bodyW.toFixed(2)+'" height="'+vh.toFixed(2)+'" fill="'+fill+'" opacity="0.35"/>');
+ });
+ let closePath="";
+ rows.forEach((p,i)=>{const c=Number(p.close);if(!Number.isFinite(c))return;closePath+=(closePath?" L ":"M ")+g.x(i).toFixed(2)+" "+g.y(c).toFixed(2)});
+ const areaPath=closePath+" L "+g.x(rows.length-1).toFixed(2)+" "+(g.volumeTop-5)+" L "+g.x(0).toFixed(2)+" "+(g.volumeTop-5)+" Z";
+ const timeLabels=[];
+ const picks=[0,Math.floor((rows.length-1)/2),rows.length-1];
+ [...new Set(picks)].forEach(i=>{
+   const ts=Number(rows[i]?.timestamp||0)*1000;
+   if(!ts)return;
+   const d=new Date(ts);
+   const label=d.toLocaleString([],rows.length>48?{month:"short",day:"numeric"}:{hour:"2-digit",minute:"2-digit"});
+   timeLabels.push('<text x="'+g.x(i).toFixed(2)+'" y="'+(height=420)+'" fill="#718399" font-size="9" text-anchor="middle">'+svgEsc(label)+'</text>');
+ });
+ let content=grid.join("");
+ content+='<line x1="'+g.pad.l+'" y1="'+g.volumeTop+'" x2="'+(900-g.pad.r)+'" y2="'+g.volumeTop+'" stroke="#20354c" stroke-width="1"/>';
+ if(activeChartType==="line"){
+   content+='<path d="'+areaPath+'" fill="rgba(73,211,255,.06)"/>';
+   content+='<path d="'+closePath+'" fill="none" stroke="#49d3ff" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+ }else if(activeChartType==="area"){
+   content+='<path d="'+areaPath+'" fill="rgba(73,211,255,.12)"/>';
+   content+='<path d="'+closePath+'" fill="none" stroke="#49d3ff" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+ }else{
+   content+=bars.join("");
+ }
+ content+=timeLabels.join("");
+ svg.innerHTML=content;
+ const last=rows[rows.length-1];
+ if(ohlc){ohlc.style.display="block";ohlc.textContent="O "+formatPrice(last.open)+"  H "+formatPrice(last.high)+"  L "+formatPrice(last.low)+"  C "+formatPrice(last.close);}
+ const firstTs=Number(rows[0]?.timestamp||0)*1000,lastTs=Number(last?.timestamp||0)*1000;
+ const first=new Date(firstTs),lastDate=new Date(lastTs);
+ meta.textContent=(Number.isFinite(first.getTime())&&Number.isFinite(lastDate.getTime())?first.toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})+" → "+lastDate.toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}):"Live pool history")+" • "+rows.length+" candles • "+activeChartTimeframe;
 }
 
-async function loadDetailChart(range="24h"){
+async function loadDetailChart(timeframe="1h"){
  if(!activeDetailMarket)return;
- setChartButtons(range);
+ setChartButtons(timeframe);
  const loading=document.getElementById("chartLoading");
  const svg=document.getElementById("priceChartSvg");
  const meta=document.getElementById("chartMeta");
- loading.style.display="flex";
- loading.textContent="Loading live price history...";
- svg.style.display="none";
- meta.textContent="Fetching pool history...";
+ const ohlc=document.getElementById("chartOhlc");
+ loading.style.display="flex";loading.textContent="Loading "+timeframe+" price history...";
+ svg.style.display="none";if(ohlc)ohlc.style.display="none";meta.textContent="Fetching pool history...";
  try{
    const pool=encodeURIComponent(activeDetailMarket.pool||"");
-   const data=await fetchAPI("/api/history?pool="+pool+"&range="+encodeURIComponent(range),20000);
-   renderPriceChart(data);
+   const data=await fetchAPI("/api/history?pool="+pool+"&timeframe="+encodeURIComponent(timeframe),20000);
+   const points=Array.isArray(data)?data:(Array.isArray(data?.candles)?data.candles:[]);
+   renderPriceChart(points);
  }catch(e){
-   console.error(e);
-   svg.style.display="none";
-   loading.style.display="flex";
-   loading.textContent="Price history failed to load.";
-   meta.textContent=e.message||"Chart API error";
+   console.error(e);svg.style.display="none";loading.style.display="flex";
+   loading.textContent="Price history failed to load.";meta.textContent=e.message||"Chart API error";
  }
 }
 
@@ -463,28 +584,31 @@ function openTokenDetail(index){
   document.getElementById("detailNetworkInfo").textContent=networkName(x.network);
   document.getElementById("detailPairInfo").textContent=pair;
   document.getElementById("detailValueType").textContent=x.valueType||"—";
+  const tokenAddress=x.tokenAddress||x.baseTokenAddress||x.tokenAAddress||x.base_token_address||"—";
+  document.getElementById("detailTokenAddress").textContent=tokenAddress;
+  document.getElementById("detailTokenAddress").dataset.address=tokenAddress;
+  document.getElementById("detailPoolAddress").textContent=x.pool||"—";
+  document.getElementById("detailPoolAddress").dataset.address=x.pool||"";
 
   document.getElementById("viewStat").textContent="Token";
   loadDetailChart("24h");
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
+async function copyText(value){
+  if(!value||value==="—")return;
+  try{await navigator.clipboard.writeText(value);}
+  catch(e){
+    const ta=document.createElement("textarea");ta.value=value;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();
+  }
+}
+function copyTokenAddress(){copyText(document.getElementById("detailTokenAddress")?.dataset.address||"")}
+function copyPoolAddress(){copyText(document.getElementById("detailPoolAddress")?.dataset.address||"")}
+
 function closeTokenDetail(){
   activeDetailMarket=null;
-
-  // Close the token detail inside FlowRank only.
-  // Do NOT call history.back() here, otherwise Chrome can leave FlowRank.
-  try{
-    history.replaceState(
-      {flowrankPage:"onchain"},
-      "",
-      window.location.pathname+window.location.search+"#onchain"
-    );
-  }catch(e){}
-
   document.getElementById("detailView").style.display="none";
   switchTab("onchain");
-  window.scrollTo({top:0,behavior:"smooth"});
 }
 
 function switchTab(tab){
@@ -502,20 +626,9 @@ document.getElementById("search").addEventListener("input",()=>{if(currentTab===
 
 window.addEventListener("popstate",()=>{
   const detail=document.getElementById("detailView");
-
   if(detail && detail.style.display==="block"){
     activeDetailMarket=null;
     detail.style.display="none";
-    switchTab("onchain");
-    return;
-  }
-
-  if(window.location.hash==="#token"){
-    history.replaceState(
-      {flowrankPage:"onchain"},
-      "",
-      window.location.pathname+window.location.search+"#onchain"
-    );
     switchTab("onchain");
   }
 });
