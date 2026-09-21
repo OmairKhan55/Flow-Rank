@@ -385,7 +385,7 @@ async function loadMarkets(){
  const status=document.getElementById("marketStatus"),body=document.getElementById("marketBody");
  status.textContent="Connecting...";body.innerHTML='<tr><td colspan="12" class="loading">Connecting to GeckoTerminal data...</td></tr>';
  try{
-  const data=await fetchAPI("/api/markets",60000);
+  const data=await fetchAPI("/api/markets",180000);
   if(!Array.isArray(data))throw new Error("Markets API did not return an array");
   marketData=data;renderActivity();renderMarkets();renderRevival();status.textContent=marketData.length+" Markets";
  }catch(e){console.error(e);body.innerHTML='<tr><td colspan="12" class="error">On-chain data failed to load.<br>'+escapeHTML(e.message)+"</td></tr>";status.textContent="API Error";document.getElementById("revivalStatus").textContent="API Error"}
