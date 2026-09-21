@@ -6,6 +6,7 @@ export default async function handler(req, res) {
       Accept: "application/json;version=20230203"
     };
 
+    // Supported chains
     const networks = [
       "eth",
       "solana",
@@ -53,64 +54,45 @@ export default async function handler(req, res) {
         .toUpperCase();
     }
 
-    function getIncludedMap(json) {
-      const included = Array.isArray(json?.included)
-        ? json.included
-        : [];
-
-      const map = new Map();
-
-      for (const item of included) {
-        if (item?.id) {
-          map.set(String(item.id), item);
-        }
-      }
-
-      return map;
+    function isStablePair(a, b) {
+      return stablecoins.has(a) && stablecoins.has(b);
     }
 
-    function getTokenInfo(pool, includedMap) {
+    function getTokenInfo(pool, included) {
       const baseId =
         pool?.relationships?.base_token?.data?.id || "";
 
       const quoteId =
         pool?.relationships?.quote_token?.data?.id || "";
 
-      const baseToken =
-        includedMap.get(String(baseId));
+      const baseToken = included.find(
+        x => String(x?.id || "") === String(baseId)
+      );
 
-      const quoteToken =
-        includedMap.get(String(quoteId));
-
-      const tokenA =
-        cleanSymbol(
-          baseToken?.attributes?.symbol
-        );
-
-      const tokenB =
-        cleanSymbol(
-          quoteToken?.attributes?.symbol
-        );
-
-      const tokenAAddress =
-        String(
-          baseToken?.attributes?.address || ""
-        );
-
-      const tokenBAddress =
-        String(
-          quoteToken?.attributes?.address || ""
-        );
+      const quoteToken = included.find(
+        x => String(x?.id || "") === String(quoteId)
+      );
 
       return {
-        tokenA,
-        tokenB,
-        tokenAAddress,
-        tokenBAddress
+        tokenA: cleanSymbol(
+          baseToken?.attributes?.symbol
+        ),
+
+        tokenB: cleanSymbol(
+          quoteToken?.attributes?.symbol
+        ),
+
+        tokenAAddress: String(
+          baseToken?.attributes?.address || ""
+        ),
+
+        tokenBAddress: String(
+          quoteToken?.attributes?.address || ""
+        )
       };
     }
 
-    function getNameFallback(pool) {
+    function fallbackTokenInfo(pool) {
       const name =
         pool?.attributes?.name || "";
 
@@ -124,14 +106,13 @@ export default async function handler(req, res) {
       };
     }
 
-    function isStablePair(a, b) {
-      return (
-        stablecoins.has(a) &&
-        stablecoins.has(b)
-      );
-    }
+    /*
+      Revival / Buying Activity
 
-    function revivalScore(data) {
+      This is a DATA-BASED HEURISTIC.
+      It does not guarantee future price movement.
+    */
+    function calculateRevival(data) {
       const volume1h =
         Number(data.volume1h || 0);
 
@@ -139,10 +120,10 @@ export default async function handler(req, res) {
         Number(data.volume24h || 0);
 
       const buys =
-        Number(data.buys24h || 0);
+        Number(data.buys || 0);
 
       const sells =
-        Number(data.sells24h || 0);
+        Number(data.sells || 0);
 
       const change1h =
         Number(data.change1h || 0);
@@ -151,49 +132,110 @@ export default async function handler(req, res) {
         volume1h <= 0 ||
         volume24h <= 0
       ) {
-        return 0;
+        return {
+          score: 0,
+          status: "Normal",
+          revival: false,
+          buyPressure: 0
+        };
       }
 
-      const averageHourly =
+      const hourlyAverage =
         volume24h / 24;
 
       const acceleration =
-        averageHourly > 0
-          ? volume1h / averageHourly
+        hourlyAverage > 0
+          ? volume1h / hourlyAverage
           : 0;
 
-      const buyRatio =
-        buys + sells > 0
-          ? buys / (buys + sells)
+      const totalTrades =
+        buys + sells;
+
+      const buyPressure =
+        totalTrades > 0
+          ? buys / totalTrades
           : 0;
 
       let score = 0;
 
-      if (acceleration >= 2) {
+      /*
+        Volume acceleration
+      */
+      if (acceleration >= 3) {
         score += 40;
+      } else if (acceleration >= 2) {
+        score += 30;
       } else if (acceleration >= 1.5) {
-        score += 25;
+        score += 20;
       } else if (acceleration >= 1.2) {
-        score += 15;
-      }
-
-      if (buyRatio >= 0.65) {
-        score += 35;
-      } else if (buyRatio >= 0.58) {
-        score += 25;
-      } else if (buyRatio >= 0.52) {
         score += 10;
       }
 
-      if (change1h >= 5) {
-        score += 15;
+      /*
+        Buy pressure
+      */
+      if (buyPressure >= 0.65) {
+        score += 35;
+      } else if (buyPressure >= 0.60) {
+        score += 30;
+      } else if (buyPressure >= 0.55) {
+        score += 20;
+      } else if (buyPressure >= 0.52) {
+        score += 10;
+      }
+
+      /*
+        Positive 1H movement
+      */
+      if (change1h >= 10) {
+        score += 25;
+      } else if (change1h >= 5) {
+        score += 20;
       } else if (change1h >= 2) {
         score += 10;
+      } else if (change1h > 0) {
+        score += 5;
       }
 
-      return score;
+      let status = "Normal";
+
+      /*
+        Buying Started:
+        strong recent activity + buy pressure
+      */
+      if (
+        acceleration >= 1.2 &&
+        buyPressure >= 0.55 &&
+        change1h >= 0
+      ) {
+        status = "Buying Started";
+      }
+
+      /*
+        Reviving:
+        recent volume/activity increasing
+      */
+      else if (
+        acceleration >= 1.5 &&
+        buyPressure >= 0.50
+      ) {
+        status = "Reviving";
+      }
+
+      return {
+        score,
+        status,
+        revival: status !== "Normal",
+        buyPressure
+      };
     }
 
+    /*
+      Get pools for one network.
+
+      Retry several times, but slowly,
+      to reduce GeckoTerminal rate-limit problems.
+    */
     async function getPools(network) {
       const url =
         `${BASE}/networks/${network}/pools` +
@@ -201,95 +243,69 @@ export default async function handler(req, res) {
         `&sort=h24_volume_usd_desc` +
         `&page=1`;
 
-      try {
-        const response = await fetch(url, {
-          headers
-        });
+      const delays = [
+        0,
+        4000,
+        8000
+      ];
 
-        if (response.status === 429) {
-          console.log(
-            `${network} rate limited`
-          );
+      for (let attempt = 0; attempt < delays.length; attempt++) {
+        try {
+          if (delays[attempt] > 0) {
+            await sleep(delays[attempt]);
+          }
 
-          /*
-            Wait before one retry.
-            Public API is rate limited, so
-            we don't spam repeated requests.
-          */
-          await sleep(4000);
-
-          const retry = await fetch(url, {
+          const response = await fetch(url, {
             headers
           });
 
-          if (!retry.ok) {
-            console.log(
-              `${network} retry HTTP ${retry.status}`
-            );
+          if (response.ok) {
+            const json = await response.json();
 
             return {
-              data: [],
-              included: []
+              network,
+              data: Array.isArray(json?.data)
+                ? json.data
+                : [],
+              included: Array.isArray(json?.included)
+                ? json.included
+                : []
             };
           }
 
-          const retryJson =
-            await retry.json();
-
-          return {
-            data: Array.isArray(retryJson?.data)
-              ? retryJson.data
-              : [],
-
-            included: Array.isArray(
-              retryJson?.included
-            )
-              ? retryJson.included
-              : []
-          };
-        }
-
-        if (!response.ok) {
           console.log(
-            `${network} HTTP ${response.status}`
+            `${network} attempt ${attempt + 1} HTTP ${response.status}`
           );
 
-          return {
-            data: [],
-            included: []
-          };
+        } catch (error) {
+          console.log(
+            `${network} attempt ${attempt + 1} failed`,
+            error?.message || error
+          );
         }
-
-        const json =
-          await response.json();
-
-        return {
-          data: Array.isArray(json?.data)
-            ? json.data
-            : [],
-
-          included: Array.isArray(json?.included)
-            ? json.included
-            : []
-        };
-
-      } catch (error) {
-        console.log(
-          `${network} request failed`,
-          error?.message || error
-        );
-
-        return {
-          data: [],
-          included: []
-        };
       }
+
+      return {
+        network,
+        data: [],
+        included: []
+      };
     }
 
     const markets = [];
     const seenPools = new Set();
 
+    /*
+      IMPORTANT:
+      Networks are requested sequentially.
+      This avoids sending 7 requests at once.
+    */
     for (const network of networks) {
+
+      console.log(
+        `Loading GeckoTerminal network: ${network}`
+      );
+
       const result =
         await getPools(network);
 
@@ -298,19 +314,13 @@ export default async function handler(req, res) {
           ? result.data
           : [];
 
-      const includedMap =
-        new Map();
-
-      for (const item of result.included || []) {
-        if (item?.id) {
-          includedMap.set(
-            String(item.id),
-            item
-          );
-        }
-      }
+      const included =
+        Array.isArray(result.included)
+          ? result.included
+          : [];
 
       for (const pool of pools) {
+
         if (!pool?.id) continue;
 
         const poolId =
@@ -322,34 +332,35 @@ export default async function handler(req, res) {
 
         seenPools.add(poolId);
 
-        const a =
+        const attributes =
           pool.attributes || {};
 
-        const tx =
-          a.transactions?.h24 || {};
+        const transactions =
+          attributes.transactions?.h24 || {};
 
         const volume24h =
           Number(
-            a.volume_usd?.h24 || 0
+            attributes.volume_usd?.h24 || 0
           );
 
         const volume1h =
           Number(
-            a.volume_usd?.h1 || 0
+            attributes.volume_usd?.h1 || 0
           );
 
         const liquidity =
           Number(
-            a.reserve_in_usd || 0
+            attributes.reserve_in_usd || 0
           );
 
         /*
-          Ignore tiny pools.
+          Remove very tiny / unusable pools.
         */
-        if (
-          volume24h < 5000 ||
-          liquidity < 50000
-        ) {
+        if (volume24h < 5000) {
+          continue;
+        }
+
+        if (liquidity < 50000) {
           continue;
         }
 
@@ -360,15 +371,17 @@ export default async function handler(req, res) {
           tokenBAddress
         } = getTokenInfo(
           pool,
-          includedMap
+          included
         );
 
         /*
-          Fallback to pool name.
+          Fallback if token relationships
+          are missing.
         */
         if (!tokenA || !tokenB) {
+
           const fallback =
-            getNameFallback(pool);
+            fallbackTokenInfo(pool);
 
           tokenA =
             tokenA ||
@@ -384,8 +397,7 @@ export default async function handler(req, res) {
         }
 
         /*
-          Remove stablecoin/stablecoin
-          markets.
+          Remove stablecoin / stablecoin pairs.
         */
         if (
           isStablePair(
@@ -398,22 +410,22 @@ export default async function handler(req, res) {
 
         const marketCap =
           Number(
-            a.market_cap_usd || 0
+            attributes.market_cap_usd || 0
           );
 
         const fdv =
           Number(
-            a.fdv_usd || 0
+            attributes.fdv_usd || 0
           );
 
         const buys24h =
           Number(
-            tx.buys || 0
+            transactions.buys || 0
           );
 
         const sells24h =
           Number(
-            tx.sells || 0
+            transactions.sells || 0
           );
 
         const transactions24h =
@@ -422,58 +434,57 @@ export default async function handler(req, res) {
 
         const change1h =
           Number(
-            a.price_change_percentage?.h1 ||
-              0
+            attributes.price_change_percentage?.h1 ||
+            0
           );
 
         const change24h =
           Number(
-            a.price_change_percentage?.h24 ||
-              0
+            attributes.price_change_percentage?.h24 ||
+            0
           );
 
-        const score =
-          revivalScore({
+        const revival =
+          calculateRevival({
             volume1h,
             volume24h,
-            buys24h,
-            sells24h,
+            buys: buys24h,
+            sells: sells24h,
             change1h
           });
 
-        let revivalStatus =
-          "Normal";
+        const displayValue =
+          marketCap > 0
+            ? marketCap
+            : fdv > 0
+            ? fdv
+            : 0;
 
-        if (score >= 65) {
-          revivalStatus =
-            "Buying Started";
-        } else if (score >= 45) {
-          revivalStatus =
-            "Reviving";
-        }
+        const valueType =
+          marketCap > 0
+            ? "Market Cap"
+            : fdv > 0
+            ? "FDV"
+            : "N/A";
 
         markets.push({
+
           network,
 
           pool: poolId,
 
           name:
-            a.name ||
+            attributes.name ||
             `${tokenA} / ${tokenB}`,
 
           tokenA,
+
           tokenB,
 
-          /*
-            Contract / Mint addresses
-          */
           tokenAAddress,
+
           tokenBAddress,
 
-          /*
-            Frontend can use this as
-            the main token address.
-          */
           tokenAddress:
             tokenAAddress || "",
 
@@ -482,60 +493,67 @@ export default async function handler(req, res) {
 
           price:
             Number(
-              a.base_token_price_usd || 0
+              attributes.base_token_price_usd || 0
             ),
 
           volume1h,
+
           volume24h,
 
           liquidity,
 
           marketCap,
+
           fdv,
 
-          displayValue:
-            marketCap > 0
-              ? marketCap
-              : fdv > 0
-              ? fdv
-              : 0,
+          displayValue,
 
-          valueType:
-            marketCap > 0
-              ? "Market Cap"
-              : fdv > 0
-              ? "FDV"
-              : "N/A",
+          valueType,
 
           change1h,
+
           change24h,
 
           buys24h,
+
           sells24h,
+
           transactions24h,
 
           createdAt:
-            a.pool_created_at ||
+            attributes.pool_created_at ||
             null,
 
+          /*
+            Revival information
+          */
           revival:
-            score >= 45,
+            revival.revival,
 
           revivalScore:
-            score,
+            revival.score,
 
-          revivalStatus,
+          revivalStatus:
+            revival.status,
 
+          buyPressure:
+            Number(
+              revival.buyPressure || 0
+            ),
+
+          /*
+            Useful for frontend
+          */
           source:
             "GeckoTerminal"
         });
       }
 
       /*
-        Small gap between networks
-        to reduce API burst.
+        2 second gap between networks.
+        This keeps requests spread out.
       */
-      await sleep(1200);
+      await sleep(2000);
     }
 
     /*
@@ -548,7 +566,7 @@ export default async function handler(req, res) {
     );
 
     /*
-      Maximum 500 markets.
+      Return up to 500 markets.
     */
     const finalMarkets =
       markets
@@ -558,9 +576,14 @@ export default async function handler(req, res) {
           ...market
         }));
 
+    /*
+      Cache the result.
+      This helps avoid hitting the public API
+      on every page refresh.
+    */
     res.setHeader(
       "Cache-Control",
-      "s-maxage=120, stale-while-revalidate=300"
+      "s-maxage=180, stale-while-revalidate=600"
     );
 
     res.setHeader(
@@ -573,8 +596,9 @@ export default async function handler(req, res) {
       .json(finalMarkets);
 
   } catch (error) {
+
     console.error(
-      "Markets API error:",
+      "FlowRank Markets API Error:",
       error?.message || error
     );
 
