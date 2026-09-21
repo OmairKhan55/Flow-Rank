@@ -646,10 +646,26 @@ async function loadTrades(){
 
 function closeTokenDetail(){
   activeDetailMarket=null;
-  document.getElementById("detailView").style.display="none";
-  switchTab("onchain");
-}
 
+  document.getElementById("detailView").style.display="none";
+  document.getElementById("cryptoView").style.display="none";
+  document.getElementById("stocksView").style.display="none";
+  document.getElementById("forexView").style.display="none";
+  document.getElementById("onchainView").style.display="block";
+
+  currentTab="onchain";
+
+  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tabOnchain").classList.add("active");
+
+  document.getElementById("viewStat").textContent="On-Chain";
+
+  renderActivity();
+  renderMarkets();
+  renderRevival();
+
+  window.scrollTo({top:0,behavior:"instant"});
+}
 function switchTab(tab){
  currentTab=tab==="home"?"crypto":tab;
  document.getElementById("cryptoView").style.display=currentTab==="crypto"?"block":"none";
