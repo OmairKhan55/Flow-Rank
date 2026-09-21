@@ -658,7 +658,7 @@ function switchTab(tab){
  document.getElementById("forexView").style.display=currentTab==="forex"?"block":"none";
  ["crypto","stocks","forex","onchain"].forEach(x=>document.getElementById("tab"+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle("active",currentTab===x));
  document.getElementById("viewStat").textContent=currentTab==="onchain"?"On-Chain":currentTab.charAt(0).toUpperCase()+currentTab.slice(1);
- if(currentTab==="onchain"&&!marketData.length)loadMarkets();
+ if(currentTab==="onchain")loadMarkets();
 }
 
 document.getElementById("search").addEventListener("input",()=>{if(currentTab==="crypto")renderCrypto();if(currentTab==="onchain"){renderMarkets();renderRevival()}});
