@@ -71,6 +71,8 @@ td{padding:13px 12px;font-size:12px;border-bottom:1px solid #112237;white-space:
 .coming{background:#0b1a2c;border:1px solid #172a40;border-radius:11px;padding:45px 20px;text-align:center;color:#8292a6;font-size:13px}
 footer{text-align:center;color:#617187;font-size:10px;padding:60px 0 35px}
 @media(max-width:760px){.detail-grid{grid-template-columns:repeat(2,1fr)}.detail-main{grid-template-columns:1fr}.detail-chart{height:260px}header{padding:0 16px}nav{gap:13px}nav a{font-size:9px}.hero{padding-top:30px}.hero h1{font-size:28px}.stats{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.tabs{height:38px}.tab{flex:1;padding:0 7px;font-size:10px}.container{width:calc(100% - 20px)}.activity-grid{grid-template-columns:repeat(2,1fr)}}
+
+.trade-table{width:100%;border-collapse:collapse;min-width:620px}.trade-table th,.trade-table td{padding:9px 10px;border-bottom:1px solid #172a40;text-align:left;font-size:10px;white-space:nowrap}.trade-table th{color:#718399;font-weight:500;font-size:9px}.trade-table td{color:#c9d5e2}.trade-type-buy{color:#28e6a3!important}.trade-type-sell{color:#ff5d6c!important}.trade-time{color:#718399!important}.trade-hash{color:#8ab4d8!important;max-width:120px;overflow:hidden;text-overflow:ellipsis}.trade-empty{padding:22px;text-align:center;color:#718399;font-size:10px}.trade-panel{margin-top:12px}.trade-panel .table-wrap{overflow-x:auto}
 </style>
 </head>
 <body>
@@ -221,6 +223,11 @@ footer{text-align:center;color:#617187;font-size:10px;padding:60px 0 35px}
     <span>Trading will be added in a future FlowRank phase. This dashboard is data-only for now.</span>
   </div>
 
+  <div class="detail-panel trade-panel">
+    <div class="detail-panel-head"><strong>Recent Transactions</strong><span id="tradeStatus" class="muted">Loading...</span></div>
+    <div class="table-wrap"><table class="trade-table"><thead><tr><th>TYPE</th><th>TIME</th><th>PRICE</th><th>VALUE</th><th>FROM</th><th>TO</th><th>TX</th></tr></thead><tbody id="tradeBody"><tr><td colspan="7" class="trade-empty">Loading recent transactions...</td></tr></tbody></table></div>
+  </div>
+
   <div class="detail-panel" style="margin-top:12px">
     <div class="detail-panel-head"><strong>Pool Information</strong></div>
     <div class="detail-info">
@@ -270,7 +277,7 @@ function ageText(v){
  const days=Math.floor((Date.now()-d.getTime())/86400000);
  if(days<=0)return"New";if(days===1)return"1d";if(days<30)return days+"d";if(days<365)return Math.floor(days/30)+"mo";return Math.floor(days/365)+"y";
 }
-async function fetchAPI(path,timeout=15000){
+async function fetchAPI(path,timeout=60000){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);
  try{
   const sep=path.includes("?")?"&":"?",response=await fetch(path+sep+"_="+Date.now(),{cache:"no-store",credentials:"same-origin",headers:{"Accept":"application/json"},signal:controller.signal});
@@ -378,7 +385,7 @@ async function loadMarkets(){
  const status=document.getElementById("marketStatus"),body=document.getElementById("marketBody");
  status.textContent="Connecting...";body.innerHTML='<tr><td colspan="12" class="loading">Connecting to GeckoTerminal data...</td></tr>';
  try{
-  const data=await fetchAPI("/api/markets",20000);
+  const data=await fetchAPI("/api/markets",60000);
   if(!Array.isArray(data))throw new Error("Markets API did not return an array");
   marketData=data;renderActivity();renderMarkets();renderRevival();status.textContent=marketData.length+" Markets";
  }catch(e){console.error(e);body.innerHTML='<tr><td colspan="12" class="error">On-chain data failed to load.<br>'+escapeHTML(e.message)+"</td></tr>";status.textContent="API Error";document.getElementById("revivalStatus").textContent="API Error"}
@@ -592,6 +599,7 @@ function openTokenDetail(index){
 
   document.getElementById("viewStat").textContent="Token";
   loadDetailChart("24h");
+  loadTrades();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -604,6 +612,37 @@ async function copyText(value){
 }
 function copyTokenAddress(){copyText(document.getElementById("detailTokenAddress")?.dataset.address||"")}
 function copyPoolAddress(){copyText(document.getElementById("detailPoolAddress")?.dataset.address||"")}
+
+async function loadTrades(){
+  const body=document.getElementById("tradeBody");
+  const status=document.getElementById("tradeStatus");
+  if(!body||!status||!activeDetailMarket)return;
+  body.innerHTML='<tr><td colspan="7" class="trade-empty">Loading recent transactions...</td></tr>';
+  status.textContent="Loading...";
+  try{
+    const pool=encodeURIComponent(activeDetailMarket.pool||"");
+    const data=await fetchAPI("/api/trades?pool="+pool,20000);
+    const rows=Array.isArray(data)?data:[];
+    if(!rows.length){
+      body.innerHTML='<tr><td colspan="7" class="trade-empty">No recent transactions available.</td></tr>';
+      status.textContent="No data";
+      return;
+    }
+    body.innerHTML=rows.slice(0,30).map(t=>{
+      const type=String(t.type||"trade").toLowerCase();
+      const cls=type==="buy"?"trade-type-buy":type==="sell"?"trade-type-sell":"";
+      const time=new Date(Number(t.timestamp)*1000);
+      const timeText=Number.isFinite(time.getTime())?time.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"}):"—";
+      const hash=t.txHash?String(t.txHash):"—";
+      const hashHtml=hash!=="—"?'<span class="trade-hash" title="'+escapeHTML(hash)+'">'+escapeHTML(hash.slice(0,10))+"…"+'</span>':"—";
+      return '<tr><td class="'+cls+'">'+escapeHTML(type.toUpperCase())+'</td><td class="trade-time">'+timeText+'</td><td>'+formatPrice(t.priceUsd)+'</td><td>'+formatNumber(t.volumeUsd)+'</td><td>'+escapeHTML(t.fromToken||"—")+'</td><td>'+escapeHTML(t.toToken||"—")+'</td><td>'+hashHtml+'</td></tr>';
+    }).join("");
+    status.textContent=rows.length+" trades";
+  }catch(e){
+    body.innerHTML='<tr><td colspan="7" class="trade-empty">Transactions failed to load.</td></tr>';
+    status.textContent="Unavailable";
+  }
+}
 
 function closeTokenDetail(){
   activeDetailMarket=null;
