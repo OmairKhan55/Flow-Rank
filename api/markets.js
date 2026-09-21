@@ -41,10 +41,6 @@ export default async function handler(req, res) {
       "USDT.E"
     ]);
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
     function cleanSymbol(value) {
       if (!value) return "";
 
@@ -109,7 +105,7 @@ export default async function handler(req, res) {
     /*
       Revival / Buying Activity
 
-      This is a DATA-BASED HEURISTIC.
+      DATA-BASED HEURISTIC.
       It does not guarantee future price movement.
     */
     function calculateRevival(data) {
@@ -200,8 +196,7 @@ export default async function handler(req, res) {
       let status = "Normal";
 
       /*
-        Buying Started:
-        strong recent activity + buy pressure
+        Buying Started
       */
       if (
         acceleration >= 1.2 &&
@@ -212,8 +207,7 @@ export default async function handler(req, res) {
       }
 
       /*
-        Reviving:
-        recent volume/activity increasing
+        Reviving
       */
       else if (
         acceleration >= 1.5 &&
@@ -231,10 +225,11 @@ export default async function handler(req, res) {
     }
 
     /*
-      Get pools for one network.
+      Get pools for ONE network.
 
-      Retry several times, but slowly,
-      to reduce GeckoTerminal rate-limit problems.
+      IMPORTANT:
+      No long sleep here.
+      All supported networks can load in parallel.
     */
     async function getPools(network) {
       const url =
@@ -243,89 +238,104 @@ export default async function handler(req, res) {
         `&sort=h24_volume_usd_desc` +
         `&page=1`;
 
-      const delays = [
-        0,
-        4000,
-        8000
-      ];
+      try {
+        const response = await fetch(url, {
+          headers
+        });
 
-      for (let attempt = 0; attempt < delays.length; attempt++) {
-        try {
-          if (delays[attempt] > 0) {
-            await sleep(delays[attempt]);
-          }
-
-          const response = await fetch(url, {
-            headers
-          });
-
-          if (response.ok) {
-            const json = await response.json();
-
-            return {
-              network,
-              data: Array.isArray(json?.data)
-                ? json.data
-                : [],
-              included: Array.isArray(json?.included)
-                ? json.included
-                : []
-            };
-          }
-
+        if (!response.ok) {
           console.log(
-            `${network} attempt ${attempt + 1} HTTP ${response.status}`
+            `${network} HTTP ${response.status}`
           );
 
-        } catch (error) {
-          console.log(
-            `${network} attempt ${attempt + 1} failed`,
-            error?.message || error
-          );
+          return {
+            network,
+            data: [],
+            included: []
+          };
         }
-      }
 
-      return {
-        network,
-        data: [],
-        included: []
-      };
+        const json = await response.json();
+
+        return {
+          network,
+
+          data: Array.isArray(json?.data)
+            ? json.data
+            : [],
+
+          included: Array.isArray(json?.included)
+            ? json.included
+            : []
+        };
+
+      } catch (error) {
+        console.log(
+          `${network} failed:`,
+          error?.message || error
+        );
+
+        return {
+          network,
+          data: [],
+          included: []
+        };
+      }
     }
+
+    /*
+      =====================================================
+      FAST NETWORK LOADING
+      =====================================================
+
+      OLD:
+      Ethereum -> wait -> Solana -> wait -> Base -> etc.
+
+      NEW:
+      All 7 networks request data together.
+
+      This is the main speed improvement.
+    */
+    const results =
+      await Promise.all(
+        networks.map(network =>
+          getPools(network)
+        )
+      );
 
     const markets = [];
     const seenPools = new Set();
 
     /*
-      IMPORTANT:
-      Networks are requested sequentially.
-      This avoids sending 7 requests at once.
+      Process all network results.
     */
-    for (const network of networks) {
+    for (const result of results) {
 
-      console.log(
-        `Loading GeckoTerminal network: ${network}`
-      );
-
-      const result =
-        await getPools(network);
+      const network =
+        result?.network || "";
 
       const pools =
-        Array.isArray(result.data)
+        Array.isArray(result?.data)
           ? result.data
           : [];
 
       const included =
-        Array.isArray(result.included)
+        Array.isArray(result?.included)
           ? result.included
           : [];
 
       for (const pool of pools) {
 
-        if (!pool?.id) continue;
+        if (!pool?.id) {
+          continue;
+        }
 
         const poolId =
           String(pool.id);
 
+        /*
+          Prevent duplicate pools.
+        */
         if (seenPools.has(poolId)) {
           continue;
         }
@@ -354,7 +364,7 @@ export default async function handler(req, res) {
           );
 
         /*
-          Remove very tiny / unusable pools.
+          Remove tiny / unusable pools.
         */
         if (volume24h < 5000) {
           continue;
@@ -375,8 +385,7 @@ export default async function handler(req, res) {
         );
 
         /*
-          Fallback if token relationships
-          are missing.
+          Fallback token names.
         */
         if (!tokenA || !tokenB) {
 
@@ -434,16 +443,21 @@ export default async function handler(req, res) {
 
         const change1h =
           Number(
-            attributes.price_change_percentage?.h1 ||
-            0
+            attributes
+              .price_change_percentage
+              ?.h1 || 0
           );
 
         const change24h =
           Number(
-            attributes.price_change_percentage?.h24 ||
-            0
+            attributes
+              .price_change_percentage
+              ?.h24 || 0
           );
 
+        /*
+          Revival calculation.
+        */
         const revival =
           calculateRevival({
             volume1h,
@@ -541,19 +555,10 @@ export default async function handler(req, res) {
               revival.buyPressure || 0
             ),
 
-          /*
-            Useful for frontend
-          */
           source:
             "GeckoTerminal"
         });
       }
-
-      /*
-        2 second gap between networks.
-        This keeps requests spread out.
-      */
-      await sleep(2000);
     }
 
     /*
@@ -566,7 +571,7 @@ export default async function handler(req, res) {
     );
 
     /*
-      Return up to 500 markets.
+      Return maximum 500 markets.
     */
     const finalMarkets =
       markets
@@ -577,9 +582,14 @@ export default async function handler(req, res) {
         }));
 
     /*
-      Cache the result.
-      This helps avoid hitting the public API
-      on every page refresh.
+      Cache result on Vercel.
+
+      s-maxage:
+      Vercel can reuse the successful response.
+
+      stale-while-revalidate:
+      old data can be shown while
+      fresh data is generated.
     */
     res.setHeader(
       "Cache-Control",
