@@ -1,10 +1,23 @@
 export default async function handler(req, res) {
   try {
-    const BASE = "https://api.geckoterminal.com/api/v2";
+    if (req.method && req.method !== "GET") {
+      return res.status(405).json({
+        error: "Method not allowed"
+      });
+    }
+
+    const BASE =
+      "https://api.geckoterminal.com/api/v2";
 
     const headers = {
       Accept: "application/json;version=20230203"
     };
+
+    /*
+      ============================================================
+      NETWORKS
+      ============================================================
+    */
 
     const networks = [
       "eth",
@@ -17,23 +30,9 @@ export default async function handler(req, res) {
     ];
 
     /*
-      Stablecoins
-
-      IMPORTANT:
-      Agar pair mein ANY stablecoin hai,
-      pair remove hoga.
-
-      Examples:
-
-      USDT / SOL   ❌
-      SOL / USDC   ❌
-      ETH / USDT   ❌
-      DAI / WETH   ❌
-
-      TROLL / SOL  ✅
-      BONK / SOL   ✅
-      PEPE / WETH  ✅
-      TROLL / WETH ✅
+      ============================================================
+      STABLECOINS
+      ============================================================
     */
 
     const stablecoins = new Set([
@@ -76,6 +75,12 @@ export default async function handler(req, res) {
       );
     }
 
+    /*
+      ============================================================
+      TOKEN INFORMATION
+      ============================================================
+    */
+
     function getTokenInfo(pool, included) {
       const baseId =
         pool?.relationships?.base_token?.data?.id || "";
@@ -83,17 +88,19 @@ export default async function handler(req, res) {
       const quoteId =
         pool?.relationships?.quote_token?.data?.id || "";
 
-      const baseToken = included.find(
-        item =>
-          String(item?.id || "") ===
-          String(baseId)
-      );
+      const baseToken =
+        included.find(
+          item =>
+            String(item?.id || "") ===
+            String(baseId)
+        );
 
-      const quoteToken = included.find(
-        item =>
-          String(item?.id || "") ===
-          String(quoteId)
-      );
+      const quoteToken =
+        included.find(
+          item =>
+            String(item?.id || "") ===
+            String(quoteId)
+        );
 
       return {
         tokenA: cleanSymbol(
@@ -104,23 +111,34 @@ export default async function handler(req, res) {
           quoteToken?.attributes?.symbol
         ),
 
-        tokenAAddress: String(
-          baseToken?.attributes?.address || ""
-        ),
+        tokenAAddress:
+          String(
+            baseToken?.attributes?.address || ""
+          ),
 
-        tokenBAddress: String(
-          quoteToken?.attributes?.address || ""
-        )
+        tokenBAddress:
+          String(
+            quoteToken?.attributes?.address || ""
+          )
       };
     }
+
+    /*
+      ============================================================
+      FALLBACK TOKEN INFORMATION
+      ============================================================
+    */
 
     function fallbackTokenInfo(pool) {
       const name =
         pool?.attributes?.name || "";
 
-      const parts = String(name)
-        .split("/")
-        .map(item => cleanSymbol(item));
+      const parts =
+        String(name)
+          .split("/")
+          .map(item =>
+            cleanSymbol(item)
+          );
 
       return {
         tokenA: parts[0] || "",
@@ -129,7 +147,9 @@ export default async function handler(req, res) {
     }
 
     /*
-      Revival / Buying Activity
+      ============================================================
+      REVIVAL / BUYING ACTIVITY
+      ============================================================
     */
 
     function calculateRevival(data) {
@@ -232,24 +252,30 @@ export default async function handler(req, res) {
     }
 
     /*
-      Get pools for each network
+      ============================================================
+      FETCH ONE PAGE OF TOP POOLS
+      ============================================================
     */
 
-    async function getPools(network) {
+    async function getPoolPage(
+      network,
+      page
+    ) {
       const url =
         `${BASE}/networks/${network}/pools` +
         `?include=base_token,quote_token` +
         `&sort=h24_volume_usd_desc` +
-        `&page=1`;
+        `&page=${page}`;
 
       try {
-        const response = await fetch(url, {
-          headers
-        });
+        const response =
+          await fetch(url, {
+            headers
+          });
 
         if (!response.ok) {
           console.log(
-            `${network} HTTP ${response.status}`
+            `${network} page ${page} HTTP ${response.status}`
           );
 
           return {
@@ -278,7 +304,7 @@ export default async function handler(req, res) {
 
       } catch (error) {
         console.log(
-          `${network} failed:`,
+          `${network} page ${page} failed:`,
           error?.message || error
         );
 
@@ -291,21 +317,109 @@ export default async function handler(req, res) {
     }
 
     /*
-      Load all networks together
+      ============================================================
+      FETCH NEW POOLS
+      ============================================================
     */
 
-    const results =
-      await Promise.all(
-        networks.map(network =>
-          getPools(network)
-        )
-      );
+    async function getNewPools(network) {
+      const url =
+        `${BASE}/networks/${network}/new_pools` +
+        `?include=base_token,quote_token` +
+        `&page=1`;
 
-    const markets = [];
-    const seenPools = new Set();
+      try {
+        const response =
+          await fetch(url, {
+            headers
+          });
+
+        if (!response.ok) {
+          console.log(
+            `${network} new pools HTTP ${response.status}`
+          );
+
+          return {
+            network,
+            data: [],
+            included: []
+          };
+        }
+
+        const json =
+          await response.json();
+
+        return {
+          network,
+
+          data:
+            Array.isArray(json?.data)
+              ? json.data
+              : [],
+
+          included:
+            Array.isArray(json?.included)
+              ? json.included
+              : []
+        };
+
+      } catch (error) {
+        console.log(
+          `${network} new pools failed:`,
+          error?.message || error
+        );
+
+        return {
+          network,
+          data: [],
+          included: []
+        };
+      }
+    }
 
     /*
-      Process all networks
+      ============================================================
+      LOAD MULTIPLE PAGES
+      ============================================================
+
+      2 pages per network
+      + new pools
+    */
+
+    const requests = [];
+
+    for (const network of networks) {
+      requests.push(
+        getPoolPage(network, 1)
+      );
+
+      requests.push(
+        getPoolPage(network, 2)
+      );
+
+      requests.push(
+        getNewPools(network)
+      );
+    }
+
+    const results =
+      await Promise.all(requests);
+
+    /*
+      ============================================================
+      MARKET STORAGE
+      ============================================================
+    */
+
+    const markets = [];
+
+    const seenPools =
+      new Set();
+
+    /*
+      ============================================================
+      PROCESS ALL RESULTS
+      ============================================================
     */
 
     for (const result of results) {
@@ -332,7 +446,13 @@ export default async function handler(req, res) {
         const poolId =
           String(pool.id);
 
-        if (seenPools.has(poolId)) {
+        /*
+          Remove duplicates
+        */
+
+        if (
+          seenPools.has(poolId)
+        ) {
           continue;
         }
 
@@ -341,8 +461,11 @@ export default async function handler(req, res) {
         const attributes =
           pool.attributes || {};
 
-        const transactions =
-          attributes.transactions?.h24 || {};
+        /*
+          ========================================================
+          VOLUME
+          ========================================================
+        */
 
         const volume24h =
           Number(
@@ -354,25 +477,34 @@ export default async function handler(req, res) {
             attributes.volume_usd?.h1 || 0
           );
 
+        /*
+          ========================================================
+          LIQUIDITY
+          ========================================================
+        */
+
         const liquidity =
           Number(
             attributes.reserve_in_usd || 0
           );
 
         /*
-          Remove very small markets
+          ========================================================
+          BASIC FILTER
+          ========================================================
         */
 
-        if (volume24h < 5000) {
-          continue;
-        }
-
-        if (liquidity < 50000) {
+        if (
+          volume24h < 5000 &&
+          liquidity < 50000
+        ) {
           continue;
         }
 
         /*
-          Get token information
+          ========================================================
+          TOKEN INFO
+          ========================================================
         */
 
         let {
@@ -380,19 +512,24 @@ export default async function handler(req, res) {
           tokenB,
           tokenAAddress,
           tokenBAddress
-        } = getTokenInfo(
-          pool,
-          included
-        );
+        } =
+          getTokenInfo(
+            pool,
+            included
+          );
 
         /*
-          Fallback
+          FALLBACK
         */
 
-        if (!tokenA || !tokenB) {
-
+        if (
+          !tokenA ||
+          !tokenB
+        ) {
           const fallback =
-            fallbackTokenInfo(pool);
+            fallbackTokenInfo(
+              pool
+            );
 
           tokenA =
             tokenA ||
@@ -404,27 +541,20 @@ export default async function handler(req, res) {
         }
 
         /*
-          Missing token names
+          Missing token
         */
 
-        if (!tokenA || !tokenB) {
+        if (
+          !tokenA ||
+          !tokenB
+        ) {
           continue;
         }
 
         /*
-          IMPORTANT FILTER
-
-          Remove every pair that contains
-          ANY stablecoin.
-
-          USDT / SOL  ❌
-          SOL / USDC  ❌
-          ETH / USDT  ❌
-          USDC / DAI  ❌
-
-          TROLL / SOL ✅
-          BONK / SOL  ✅
-          PEPE / WETH ✅
+          ========================================================
+          STABLECOIN FILTER
+          ========================================================
         */
 
         if (
@@ -436,19 +566,15 @@ export default async function handler(req, res) {
           continue;
         }
 
-      /*
-          Market data
+        /*
+          ========================================================
+          TRANSACTIONS
+          ========================================================
         */
 
-        const marketCap =
-          Number(
-            attributes.market_cap_usd || 0
-          );
-
-        const fdv =
-          Number(
-            attributes.fdv_usd || 0
-          );
+        const transactions =
+          attributes.transactions?.h24 ||
+          {};
 
         const buys24h =
           Number(
@@ -463,6 +589,12 @@ export default async function handler(req, res) {
         const transactions24h =
           buys24h +
           sells24h;
+
+        /*
+          ========================================================
+          PRICE CHANGES
+          ========================================================
+        */
 
         const change1h =
           Number(
@@ -479,21 +611,20 @@ export default async function handler(req, res) {
           );
 
         /*
-          Revival
+          ========================================================
+          MARKET CAP / FDV
+          ========================================================
         */
 
-        const revival =
-          calculateRevival({
-            volume1h,
-            volume24h,
-            buys: buys24h,
-            sells: sells24h,
-            change1h
-          });
+        const marketCap =
+          Number(
+            attributes.market_cap_usd || 0
+          );
 
-        /*
-          Market Cap / FDV
-        */
+        const fdv =
+          Number(
+            attributes.fdv_usd || 0
+          );
 
         const displayValue =
           marketCap > 0
@@ -510,27 +641,42 @@ export default async function handler(req, res) {
             : "N/A";
 
         /*
-          Final market object
+          ========================================================
+          REVIVAL
+          ========================================================
+        */
+
+        const revival =
+          calculateRevival({
+            volume1h,
+            volume24h,
+            buys: buys24h,
+            sells: sells24h,
+            change1h
+          });
+
+        /*
+          ========================================================
+          POOL CREATED TIME
+          ========================================================
+        */
+
+        const createdAt =
+          attributes.pool_created_at ||
+          null;
+
+        /*
+          ========================================================
+          FINAL MARKET OBJECT
+          ========================================================
         */
 
         markets.push({
 
           network,
 
-          pool: poolId,
-
-          /*
-            IMPORTANT:
-
-            Pair name comes from
-            actual on-chain token symbols.
-
-            Example:
-
-            TROLL / SOL
-            BONK / SOL
-            PEPE / WETH
-          */
+          pool:
+            poolId,
 
           name:
             `${tokenA} / ${tokenB}`,
@@ -539,9 +685,11 @@ export default async function handler(req, res) {
 
           tokenB,
 
-          tokenAAddress,
+          tokenAAddress:
+            tokenAAddress || "",
 
-          tokenBAddress,
+          tokenBAddress:
+            tokenBAddress || "",
 
           tokenAddress:
             tokenAAddress || "",
@@ -551,7 +699,8 @@ export default async function handler(req, res) {
 
           price:
             Number(
-              attributes.base_token_price_usd || 0
+              attributes
+                .base_token_price_usd || 0
             ),
 
           volume1h,
@@ -578,9 +727,7 @@ export default async function handler(req, res) {
 
           transactions24h,
 
-          createdAt:
-            attributes.pool_created_at ||
-            null,
+          createdAt,
 
           revival:
             revival.revival,
@@ -603,29 +750,43 @@ export default async function handler(req, res) {
     }
 
     /*
-      Highest 24H volume first
+      ============================================================
+      SORT
+      ============================================================
     */
 
     markets.sort(
       (a, b) =>
-        Number(b.volume24h || 0) -
-        Number(a.volume24h || 0)
+        Number(
+          b.volume24h || 0
+        ) -
+        Number(
+          a.volume24h || 0
+        )
     );
 
     /*
-      Maximum 500 markets
+      ============================================================
+      FINAL 500 MARKETS
+      ============================================================
     */
 
     const finalMarkets =
       markets
         .slice(0, 500)
-        .map((market, index) => ({
-          rank: index + 1,
-          ...market
-        }));
+        .map(
+          (market, index) => ({
+            rank:
+              index + 1,
+
+            ...market
+          })
+        );
 
     /*
-      Vercel cache
+      ============================================================
+      CACHE
+      ============================================================
     */
 
     res.setHeader(
@@ -637,6 +798,12 @@ export default async function handler(req, res) {
       "Content-Type",
       "application/json"
     );
+
+    /*
+      ============================================================
+      RESPONSE
+      ============================================================
+    */
 
     return res
       .status(200)
@@ -656,4 +823,4 @@ export default async function handler(req, res) {
           "On-chain market data failed"
       });
   }
-        }
+}
