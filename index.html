@@ -9,576 +9,604 @@
 *{box-sizing:border-box;margin:0;padding:0}
 
 body{
-  background:#06101f;
-  color:#e8eef7;
-  font-family:Arial,Helvetica,sans-serif;
-  min-height:100vh
+background:#06101f;
+color:#e8eef7;
+font-family:Arial,Helvetica,sans-serif;
+min-height:100vh
 }
 
 header{
-  height:64px;
-  background:#071525;
-  border-bottom:1px solid #14253a;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 22px;
-  position:sticky;
-  top:0;
-  z-index:20
+height:64px;
+background:#071525;
+border-bottom:1px solid #14253a;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 22px;
+position:sticky;
+top:0;
+z-index:20
 }
 
 .logo{
-  font-size:20px;
-  font-weight:800
+font-size:20px;
+font-weight:800
 }
 
 .logo span{
-  color:#42d6a4
+color:#42d6a4
 }
 
 nav{
-  display:flex;
-  gap:24px
+display:flex;
+gap:24px
 }
 
 nav a{
-  color:#8b9bb0;
-  text-decoration:none;
-  font-size:13px
+color:#8b9bb0;
+text-decoration:none;
+font-size:13px
 }
 
 .container{
-  width:min(1180px,calc(100% - 30px));
-  margin:auto
+width:min(1180px,calc(100% - 30px));
+margin:auto
 }
 
 .hero{
-  padding:38px 0 24px
+padding:38px 0 24px
 }
 
 .hero h1{
-  font-size:32px;
-  margin-bottom:12px
+font-size:32px;
+margin-bottom:12px
 }
 
 .hero p,.muted,.source{
-  color:#718399
+color:#718399
 }
 
 .hero p{
-  font-size:14px
+font-size:14px
 }
 
 .stats{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:14px;
-  margin-bottom:18px
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:14px;
+margin-bottom:18px
 }
 
-.stat,.panel-title,.table-wrap,.gainers-box,.activity-card,.revival-box,
-.detail-top,.detail-card,.detail-panel,.coming,.trading-coming{
-  background:#0b1a2c;
-  border:1px solid #172a40;
-  border-radius:11px
+.stat,
+.panel-title,
+.table-wrap,
+.gainers-box,
+.activity-card,
+.revival-box,
+.detail-top,
+.detail-card,
+.detail-panel,
+.coming,
+.trading-coming{
+background:#0b1a2c;
+border:1px solid #172a40;
+border-radius:11px
 }
 
 .stat{
-  padding:18px
+padding:18px
 }
 
 .stat-label{
-  color:#8999ad;
-  font-size:11px;
-  margin-bottom:7px
+color:#8999ad;
+font-size:11px;
+margin-bottom:7px
 }
 
 .stat-value{
-  font-size:19px;
-  font-weight:700
+font-size:19px;
+font-weight:700
 }
 
 .toolbar{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:12px;
-  margin-bottom:12px
+display:grid;
+grid-template-columns:1fr auto;
+gap:12px;
+margin-bottom:12px
 }
 
 .search{
-  width:100%;
-  background:#0b1a2c;
-  border:1px solid #172a40;
-  border-radius:9px;
-  color:#fff;
-  padding:12px;
-  outline:0
+width:100%;
+background:#0b1a2c;
+border:1px solid #172a40;
+border-radius:9px;
+color:#fff;
+padding:12px;
+outline:0
 }
 
 .tabs{
-  display:flex;
-  background:#0b1a2c;
-  border:1px solid #172a40;
-  border-radius:9px;
-  overflow:hidden
+display:flex;
+background:#0b1a2c;
+border:1px solid #172a40;
+border-radius:9px;
+overflow:hidden
 }
 
 .tab{
-  border:0;
-  background:transparent;
-  color:#8d9db0;
-  padding:0 15px;
-  font-size:12px;
-  cursor:pointer
+border:0;
+background:transparent;
+color:#8d9db0;
+padding:0 15px;
+font-size:12px;
+cursor:pointer
 }
 
 .tab.active{
-  background:#11263d;
-  color:#fff
+background:#11263d;
+color:#fff
 }
 
 .panel-title{
-  border-radius:11px 11px 0 0;
-  padding:15px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center
+border-radius:11px 11px 0 0;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center
 }
 
 .panel-title strong{
-  font-size:13px
+font-size:13px
 }
 
 .status{
-  color:#42d6a4;
-  font-size:11px
+color:#42d6a4;
+font-size:11px
 }
 
 .source{
-  font-size:10px;
-  margin-top:8px
+font-size:10px;
+margin-top:8px
 }
 
 .table-wrap{
-  width:100%;
-  overflow-x:auto;
-  border-radius:0 0 11px 11px
+width:100%;
+overflow-x:auto;
+border-radius:0 0 11px 11px
 }
 
 table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:720px
+width:100%;
+border-collapse:collapse;
+min-width:720px
 }
 
 th{
-  text-align:left;
-  color:#718399;
-  font-size:10px;
-  padding:13px 12px;
-  border-bottom:1px solid #172a40;
-  white-space:nowrap
+text-align:left;
+color:#718399;
+font-size:10px;
+padding:13px 12px;
+border-bottom:1px solid #172a40;
+white-space:nowrap
 }
 
 td{
-  padding:13px 12px;
-  font-size:12px;
-  border-bottom:1px solid #112237;
-  white-space:nowrap
+padding:13px 12px;
+font-size:12px;
+border-bottom:1px solid #112237;
+white-space:nowrap
 }
 
 .pair{
-  font-weight:700;
-  color:#fff
+font-weight:700;
+color:#fff
 }
 
 .positive{
-  color:#42d6a4
+color:#42d6a4
 }
 
 .negative{
-  color:#ff6d78
+color:#ff6d78
 }
 
 .loading{
-  text-align:center;
-  color:#8798ad;
-  padding:42px 20px
+text-align:center;
+color:#8798ad;
+padding:42px 20px
 }
 
 .error{
-  text-align:center;
-  color:#ff7a83;
-  padding:25px
+text-align:center;
+color:#ff7a83;
+padding:25px
 }
 
 .section{
-  margin-top:22px
+margin-top:22px
 }
 
 .section h2{
-  font-size:15px;
-  margin-bottom:10px
+font-size:15px;
+margin-bottom:10px
 }
 
 .gainers-box{
-  padding:18px
+padding:18px
 }
 
-.chain-filter,.revival-filter{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-  padding:12px;
-  background:#0b1a2c;
-  border:1px solid #172a40
+.chain-filter,
+.revival-filter{
+display:flex;
+flex-wrap:wrap;
+gap:7px;
+padding:12px;
+background:#0b1a2c;
+border:1px solid #172a40
 }
 
-.chain-btn,.time-btn,.revival-filter-btn,.chart-select-btn{
-  border:1px solid #20354c;
-  background:#0d2035;
-  color:#8999ad;
-  padding:7px 10px;
-  border-radius:7px;
-  cursor:pointer;
-  font-size:10px
+.chain-btn,
+.time-btn,
+.revival-filter-btn,
+.chart-select-btn{
+border:1px solid #20354c;
+background:#0d2035;
+color:#8999ad;
+padding:7px 10px;
+border-radius:7px;
+cursor:pointer;
+font-size:10px
 }
 
-.chain-btn.active,.time-btn.active,
-.revival-filter-btn.active,.chart-select-btn.active{
-  color:#fff;
-  border-color:#2d8e75;
-  background:#12352f
+.chain-btn.active,
+.time-btn.active,
+.revival-filter-btn.active,
+.chart-select-btn.active{
+color:#fff;
+border-color:#2d8e75;
+background:#12352f
 }
 
 .activity-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-  margin:12px 0
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:8px;
+margin:12px 0
 }
 
 .activity-card{
-  padding:12px;
-  cursor:pointer
+padding:12px;
+cursor:pointer
 }
 
 .activity-name{
-  font-size:11px;
-  font-weight:700
+font-size:11px;
+font-weight:700
 }
 
 .activity-pct{
-  font-size:17px;
-  font-weight:800;
-  margin-top:5px
+font-size:17px;
+font-weight:800;
+margin-top:5px
 }
 
 .activity-vol{
-  font-size:9px;
-  color:#718399;
-  margin-top:4px
+font-size:9px;
+color:#718399;
+margin-top:4px
 }
 
 .time-filter{
-  display:flex;
-  gap:7px;
-  margin:12px 0
+display:flex;
+gap:7px;
+margin:12px 0
 }
 
 .revival-box{
-  overflow:hidden
+overflow:hidden
 }
 
 .revival-head{
-  padding:13px 15px;
-  border-bottom:1px solid #172a40;
-  display:flex;
-  justify-content:space-between
+padding:13px 15px;
+border-bottom:1px solid #172a40;
+display:flex;
+justify-content:space-between
 }
 
 .revival-list{
-  overflow-x:auto
+overflow-x:auto
 }
 
 .revival-list table{
-  min-width:980px
+min-width:980px
 }
 
 .badge{
-  display:inline-block;
-  font-size:9px;
-  padding:3px 6px;
-  border-radius:4px;
-  background:#12352f;
-  color:#42d6a4
+display:inline-block;
+font-size:9px;
+padding:3px 6px;
+border-radius:4px;
+background:#12352f;
+color:#42d6a4
 }
 
 .hot{
-  background:#3b2920;
-  color:#ffb36b
+background:#3b2920;
+color:#ffb36b
 }
 
 .clickable{
-  cursor:pointer
+cursor:pointer
 }
 
 .clickable:hover{
-  background:#0d2135
+background:#0d2135
 }
 
 .detail-page{
-  display:none
+display:none
 }
 
 .detail-top{
-  padding:15px;
-  margin-bottom:12px
+padding:15px;
+margin-bottom:12px
 }
 
 .detail-back{
-  border:1px solid #1c334c;
-  background:#0d2035;
-  color:#aab8c8;
-  padding:7px 11px;
-  border-radius:7px;
-  cursor:pointer;
-  font-size:10px;
-  margin-bottom:14px
+border:1px solid #1c334c;
+background:#0d2035;
+color:#aab8c8;
+padding:7px 11px;
+border-radius:7px;
+cursor:pointer;
+font-size:10px;
+margin-bottom:14px
 }
 
 .detail-pair{
-  font-size:20px;
-  font-weight:800
+font-size:20px;
+font-weight:800
 }
 
 .detail-network{
-  color:#8090a4;
-  font-size:10px;
-  margin-top:5px
+color:#8090a4;
+font-size:10px;
+margin-top:5px
 }
 
 .detail-price{
-  font-size:25px;
-  font-weight:800;
-  margin-top:12px
+font-size:25px;
+font-weight:800;
+margin-top:12px
 }
 
 .detail-change{
-  font-size:12px;
-  margin-top:5px
+font-size:12px;
+margin-top:5px
 }
 
 .detail-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-  margin:12px 0
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:8px;
+margin:12px 0
 }
 
 .detail-card{
-  padding:13px
+padding:13px
 }
 
 .detail-label{
-  font-size:9px;
-  color:#718399;
-  margin-bottom:6px
+font-size:9px;
+color:#718399;
+margin-bottom:6px
 }
 
 .detail-value{
-  font-size:14px;
-  font-weight:700
+font-size:14px;
+font-weight:700
 }
 
 .detail-main{
-  display:grid;
-  grid-template-columns:1.7fr 1fr;
-  gap:12px
+display:grid;
+grid-template-columns:1.7fr 1fr;
+gap:12px
 }
 
 .detail-panel{
-  overflow:hidden
+overflow:hidden
 }
 
 .detail-panel-head{
-  padding:13px 15px;
-  border-bottom:1px solid #172a40;
-  display:flex;
-  justify-content:space-between
+padding:13px 15px;
+border-bottom:1px solid #172a40;
+display:flex;
+justify-content:space-between;
+align-items:center
 }
 
 .detail-chart{
-  height:430px;
-  position:relative;
-  background:#081525;
-  overflow:hidden
+height:430px;
+position:relative;
+background:#081525;
+overflow:hidden
 }
 
 .detail-chart-inner{
-  position:absolute;
-  inset:12% 5%;
-  border:1px dashed #20354c;
-  border-radius:8px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:20px
+position:absolute;
+inset:12% 5%;
+border:1px dashed #20354c;
+border-radius:8px;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+padding:20px
 }
 
 .chart-canvas{
-  width:100%;
-  height:100%;
-  display:block
+width:100%;
+height:100%;
+display:block
 }
 
 .chart-ohlc{
-  position:absolute;
-  left:12px;
-  top:8px;
-  color:#9fb0c3;
-  font-size:9px
+position:absolute;
+left:12px;
+top:8px;
+color:#9fb0c3;
+font-size:9px;
+z-index:2
 }
 
 .chart-volume-label{
-  position:absolute;
-  left:12px;
-  bottom:10px;
-  color:#718399;
-  font-size:9px
+position:absolute;
+left:12px;
+bottom:10px;
+color:#718399;
+font-size:9px
 }
 
 .chart-meta{
-  padding:7px 12px 10px;
-  color:#718399;
-  font-size:9px;
-  text-align:right
+padding:7px 12px 10px;
+color:#718399;
+font-size:9px;
+text-align:right
 }
 
 .chart-controls{
-  display:flex;
-  gap:4px;
-  flex-wrap:wrap
+display:flex;
+gap:4px;
+flex-wrap:wrap
 }
 
 .chart-plus{
-  border:1px solid #2d6b9b;
-  background:#0d2438;
-  color:#dbeafe;
-  border-radius:6px;
-  padding:5px 9px;
-  cursor:pointer
+border:1px solid #2d6b9b;
+background:#0d2438;
+color:#dbeafe;
+border-radius:6px;
+padding:5px 9px;
+cursor:pointer
 }
 
 .detail-stats{
-  display:grid;
-  grid-template-columns:1fr 1fr
+display:grid;
+grid-template-columns:1fr 1fr
 }
 
 .detail-stat{
-  padding:13px 15px;
-  border-bottom:1px solid #112237
+padding:13px 15px;
+border-bottom:1px solid #112237
 }
 
 .detail-stat-label{
-  font-size:9px;
-  color:#718399;
-  margin-bottom:5px
+font-size:9px;
+color:#718399;
+margin-bottom:5px
 }
 
 .detail-stat-value{
-  font-size:12px;
-  font-weight:700
+font-size:12px;
+font-weight:700
 }
 
 .trading-coming{
-  margin-top:12px;
-  padding:22px;
-  text-align:center
+margin-top:12px;
+padding:22px;
+text-align:center
 }
 
 .trading-coming strong{
-  display:block;
-  font-size:13px;
-  margin-bottom:7px
+display:block;
+font-size:13px;
+margin-bottom:7px
 }
 
 .trading-coming span{
-  font-size:10px;
-  color:#718399
+font-size:10px;
+color:#718399
 }
 
 .detail-info{
-  padding:15px;
-  font-size:11px;
-  color:#8999ad;
-  line-height:1.8
+padding:15px;
+font-size:11px;
+color:#8999ad;
+line-height:1.8
 }
 
 .trade-table{
-  min-width:620px
+min-width:620px
 }
 
 .trade-empty{
-  text-align:center!important;
-  color:#718399!important
+text-align:center!important;
+color:#718399!important
 }
 
 .trade-hash{
-  color:#8ab4d8
+color:#8ab4d8
 }
 
 .coming{
-  text-align:center;
-  padding:45px 20px;
-  color:#8292a6
+text-align:center;
+padding:45px 20px;
+color:#8292a6
 }
 
 footer{
-  text-align:center;
-  color:#617187;
-  font-size:10px;
-  padding:60px 0 35px
+text-align:center;
+color:#617187;
+font-size:10px;
+padding:60px 0 35px
 }
 
 @media(max-width:760px){
-  .stats{
-    grid-template-columns:1fr
-  }
 
-  .toolbar{
-    grid-template-columns:1fr
-  }
+.stats{
+grid-template-columns:1fr
+}
 
-  .detail-grid{
-    grid-template-columns:repeat(2,1fr)
-  }
+.toolbar{
+grid-template-columns:1fr
+}
 
-  .detail-main{
-    grid-template-columns:1fr
-  }
+.detail-grid{
+grid-template-columns:repeat(2,1fr)
+}
 
-  .detail-chart{
-    height:260px
-  }
+.detail-main{
+grid-template-columns:1fr
+}
 
-  .activity-grid{
-    grid-template-columns:repeat(2,1fr)
-  }
+.detail-chart{
+height:260px
+}
 
-  nav{
-    gap:12px
-  }
+.activity-grid{
+grid-template-columns:repeat(2,1fr)
+}
 
-  nav a{
-    font-size:9px
-  }
+nav{
+gap:12px
+}
 
-  .hero h1{
-    font-size:28px
-  }
+nav a{
+font-size:9px
+}
+
+.hero h1{
+font-size:28px
+}
+
+.detail-panel-head{
+align-items:flex-start;
+gap:8px
+}
+
+.chart-controls{
+justify-content:flex-end
+}
+
 }
 </style>
 </head>
@@ -586,778 +614,783 @@ footer{
 <body>
 
 <header>
-  <div class="logo">Flow<span>Rank</span></div>
+<div class="logo">Flow<span>Rank</span></div>
 
-  <nav>
-    <a href="#" onclick="switchTab('crypto');return false">Home</a>
-    <a href="#" onclick="switchTab('crypto');return false">Crypto</a>
-    <a href="#" onclick="switchTab('stocks');return false">Stocks</a>
-    <a href="#" onclick="switchTab('forex');return false">Forex</a>
-    <a href="#" onclick="switchTab('onchain');return false">On-Chain</a>
-  </nav>
+<nav>
+<a href="#" onclick="switchTab('crypto');return false">Home</a>
+<a href="#" onclick="switchTab('crypto');return false">Crypto</a>
+<a href="#" onclick="switchTab('stocks');return false">Stocks</a>
+<a href="#" onclick="switchTab('forex');return false">Forex</a>
+<a href="#" onclick="switchTab('onchain');return false">On-Chain</a>
+</nav>
 </header>
 
 <main class="container">
 
 <section class="hero">
-  <h1>See Where The Volume Flows.</h1>
-  <p>FlowRank tracks market activity across crypto and on-chain markets.</p>
+<h1>See Where The Volume Flows.</h1>
+<p>FlowRank tracks market activity across crypto and on-chain markets.</p>
 </section>
 
 <section class="stats">
 
-  <div class="stat">
-    <div class="stat-label">Crypto Markets</div>
-    <div class="stat-value" id="cryptoStat">Loading...</div>
-  </div>
+<div class="stat">
+<div class="stat-label">Crypto Markets</div>
+<div class="stat-value" id="cryptoStat">Loading...</div>
+</div>
 
-  <div class="stat">
-    <div class="stat-label">Chains</div>
-    <div class="stat-value" id="chainStat">Loading...</div>
-  </div>
+<div class="stat">
+<div class="stat-label">Chains</div>
+<div class="stat-value" id="chainStat">Loading...</div>
+</div>
 
-  <div class="stat">
-    <div class="stat-label">Current View</div>
-    <div class="stat-value" id="viewStat">Crypto</div>
-  </div>
+<div class="stat">
+<div class="stat-label">Current View</div>
+<div class="stat-value" id="viewStat">Crypto</div>
+</div>
 
 </section>
 
 <section class="toolbar">
 
-  <input
-    id="search"
-    class="search"
-    placeholder="Search assets, pairs or networks..."
-  >
+<input
+id="search"
+class="search"
+placeholder="Search assets, pairs or networks..."
+>
 
-  <div class="tabs">
-    <button id="tabCrypto" class="tab active" onclick="switchTab('crypto')">Crypto</button>
-    <button id="tabStocks" class="tab" onclick="switchTab('stocks')">Stocks</button>
-    <button id="tabForex" class="tab" onclick="switchTab('forex')">Forex</button>
-    <button id="tabOnchain" class="tab" onclick="switchTab('onchain')">On-Chain</button>
-  </div>
+<div class="tabs">
 
+<button id="tabCrypto" class="tab active" onclick="switchTab('crypto')">
+Crypto
+</button>
+
+<button id="tabStocks" class="tab" onclick="switchTab('stocks')">
+Stocks
+</button>
+
+<button id="tabForex" class="tab" onclick="switchTab('forex')">
+Forex
+</button>
+
+<button id="tabOnchain" class="tab" onclick="switchTab('onchain')">
+On-Chain
+</button>
+
+</div>
 </section>
-
-<!-- CRYPTO -->
 
 <section id="cryptoView">
 
-  <div class="panel-title">
+<div class="panel-title">
 
-    <div>
-      <strong>Top Crypto Pairs by 24h Volume</strong>
+<div>
+<strong>Top Crypto Pairs by 24h Volume</strong>
 
-      <div class="source">
-        Source: <b>Binance</b>
-      </div>
-    </div>
+<div class="source">
+Source: <b>Binance</b>
+</div>
+</div>
 
-    <span id="cryptoStatus" class="status">
-      Loading...
-    </span>
+<span id="cryptoStatus" class="status">
+Loading...
+</span>
 
-  </div>
+</div>
 
-  <div class="table-wrap">
+<div class="table-wrap">
 
-    <table>
+<table>
 
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>PAIR</th>
-          <th>EXCHANGE</th>
-          <th>PRICE</th>
-          <th>24H VOLUME</th>
-          <th>24H CHANGE</th>
-        </tr>
-      </thead>
+<thead>
+<tr>
+<th>#</th>
+<th>PAIR</th>
+<th>EXCHANGE</th>
+<th>PRICE</th>
+<th>24H VOLUME</th>
+<th>24H CHANGE</th>
+</tr>
+</thead>
 
-      <tbody id="cryptoBody"></tbody>
+<tbody id="cryptoBody"></tbody>
 
-    </table>
+</table>
 
-  </div>
+</div>
 
-  <div class="section">
+<div class="section">
 
-    <h2>Top Gainers (24h)</h2>
+<h2>Top Gainers (24h)</h2>
 
-    <div id="gainers" class="gainers-box"></div>
+<div id="gainers" class="gainers-box"></div>
 
-  </div>
+</div>
 
 </section>
-
-<!-- ONCHAIN -->
 
 <section id="onchainView" style="display:none">
 
-  <div class="panel-title">
+<div class="panel-title">
 
-    <div>
-      <strong>Top On-Chain DEX Markets</strong>
+<div>
+<strong>Top On-Chain DEX Markets</strong>
 
-      <div class="source">
-        Source: <b>GeckoTerminal</b> · Ranking: 24h DEX volume
-      </div>
-    </div>
+<div class="source">
+Source: <b>GeckoTerminal</b> · Ranking: 24h DEX volume
+</div>
+</div>
 
-    <span id="marketStatus" class="status">
-      Loading...
-    </span>
+<span id="marketStatus" class="status">
+Loading...
+</span>
 
-  </div>
+</div>
 
-  <div class="section">
+<div class="section">
 
-    <h2>Chain Volume Activity</h2>
+<h2>Chain Volume Activity</h2>
 
-    <div id="activityGrid" class="activity-grid"></div>
+<div id="activityGrid" class="activity-grid"></div>
 
-  </div>
+</div>
 
-  <div class="section">
+<div class="section">
 
-    <div class="panel-title">
-      <strong id="chainViewTitle">
-        All Chains — Highest Volume
-      </strong>
-    </div>
+<div class="panel-title">
+<strong id="chainViewTitle">All Chains — Highest Volume</strong>
+</div>
 
-    <div class="chain-filter">
+<div class="chain-filter">
 
-      <button class="chain-btn active" data-chain="all" onclick="setChain('all')">
-        All Chains
-      </button>
+<button class="chain-btn active" data-chain="all" onclick="setChain('all')">
+All Chains
+</button>
 
-      <button class="chain-btn" data-chain="solana" onclick="setChain('solana')">
-        Solana
-      </button>
+<button class="chain-btn" data-chain="solana" onclick="setChain('solana')">
+Solana
+</button>
 
-      <button class="chain-btn" data-chain="eth" onclick="setChain('eth')">
-        Ethereum
-      </button>
+<button class="chain-btn" data-chain="eth" onclick="setChain('eth')">
+Ethereum
+</button>
 
-      <button class="chain-btn" data-chain="base" onclick="setChain('base')">
-        Base
-      </button>
+<button class="chain-btn" data-chain="base" onclick="setChain('base')">
+Base
+</button>
 
-      <button class="chain-btn" data-chain="bsc" onclick="setChain('bsc')">
-        BNB
-      </button>
+<button class="chain-btn" data-chain="bsc" onclick="setChain('bsc')">
+BNB
+</button>
 
-      <button class="chain-btn" data-chain="arbitrum" onclick="setChain('arbitrum')">
-        Arbitrum
-      </button>
+<button class="chain-btn" data-chain="arbitrum" onclick="setChain('arbitrum')">
+Arbitrum
+</button>
 
-      <button class="chain-btn" data-chain="polygon_pos" onclick="setChain('polygon_pos')">
-        Polygon
-      </button>
+<button class="chain-btn" data-chain="polygon_pos" onclick="setChain('polygon_pos')">
+Polygon
+</button>
 
-      <button class="chain-btn" data-chain="avalanche" onclick="setChain('avalanche')">
-        Avalanche
-      </button>
+<button class="chain-btn" data-chain="avalanche" onclick="setChain('avalanche')">
+Avalanche
+</button>
 
-    </div>
+</div>
 
-    <div class="time-filter">
+<div class="time-filter">
 
-      <button class="time-btn active" data-time="24h" onclick="setTimeframe('24h')">
-        24H
-      </button>
+<button class="time-btn active" data-time="24h" onclick="setTimeframe('24h')">
+24H
+</button>
 
-      <button class="time-btn" data-time="1h" onclick="setTimeframe('1h')">
-        1H
-      </button>
+<button class="time-btn" data-time="1h" onclick="setTimeframe('1h')">
+1H
+</button>
 
-    </div>
+</div>
 
-    <div class="table-wrap">
+<div class="table-wrap">
 
-      <table>
+<table>
 
-        <thead>
+<thead>
 
-          <tr>
-            <th>#</th>
-            <th>PAIR</th>
-            <th>NETWORK</th>
-            <th>PRICE</th>
-            <th>MARKET CAP / FDV</th>
-            <th>LIQUIDITY</th>
-            <th>24H VOLUME</th>
-            <th>24H CHANGE</th>
-            <th>TXNS</th>
-            <th>BUYS</th>
-            <th>SELLS</th>
-            <th>AGE</th>
-          </tr>
+<tr>
+<th>#</th>
+<th>PAIR</th>
+<th>NETWORK</th>
+<th>PRICE</th>
+<th>MARKET CAP / FDV</th>
+<th>LIQUIDITY</th>
+<th>24H VOLUME</th>
+<th>24H CHANGE</th>
+<th>TXNS</th>
+<th>BUYS</th>
+<th>SELLS</th>
+<th>AGE</th>
+</tr>
 
-        </thead>
+</thead>
 
-        <tbody id="marketBody"></tbody>
+<tbody id="marketBody"></tbody>
 
-      </table>
+</table>
 
-    </div>
+</div>
 
-  </div>
+</div>
 
-  <!-- REVIVAL -->
+<div class="section">
 
-  <div class="section">
+<h2>🔥 Revival / Buying Started</h2>
 
-    <h2>🔥 Revival / Buying Started</h2>
+<div class="revival-box">
 
-    <div class="revival-box">
+<div class="revival-head">
 
-      <div class="revival-head">
+<strong>Markets showing renewed activity</strong>
 
-        <strong>Markets showing renewed activity</strong>
+<span id="revivalStatus" class="status">
+Scanning...
+</span>
 
-        <span id="revivalStatus" class="status">
-          Scanning...
-        </span>
+</div>
 
-      </div>
+<div class="revival-filter">
 
-      <div class="revival-filter">
+<button
+class="revival-filter-btn active"
+data-revival-filter="all"
+onclick="setRevivalFilter('all')">
+All
+</button>
 
-        <button
-          class="revival-filter-btn active"
-          data-revival-filter="all"
-          onclick="setRevivalFilter('all')">
-          All
-        </button>
+<button
+class="revival-filter-btn"
+data-revival-filter="buying"
+onclick="setRevivalFilter('buying')">
+Buying Started
+</button>
 
-        <button
-          class="revival-filter-btn"
-          data-revival-filter="buying"
-          onclick="setRevivalFilter('buying')">
-          Buying Started
-        </button>
+<button
+class="revival-filter-btn"
+data-revival-filter="reviving"
+onclick="setRevivalFilter('reviving')">
+Reviving
+</button>
 
-        <button
-          class="revival-filter-btn"
-          data-revival-filter="reviving"
-          onclick="setRevivalFilter('reviving')">
-          Reviving
-        </button>
+</div>
 
-      </div>
+<div class="revival-list">
 
-      <div class="revival-list">
+<table>
 
-        <table>
+<thead>
 
-          <thead>
+<tr>
+<th>PAIR</th>
+<th>NETWORK</th>
+<th>PRICE</th>
+<th>1H VOLUME</th>
+<th>24H VOLUME</th>
+<th>BUY PRESSURE</th>
+<th>BUYS</th>
+<th>SELLS</th>
+<th>1H CHANGE</th>
+<th>STATUS</th>
+</tr>
 
-            <tr>
-              <th>PAIR</th>
-              <th>NETWORK</th>
-              <th>PRICE</th>
-              <th>1H VOLUME</th>
-              <th>24H VOLUME</th>
-              <th>BUY PRESSURE</th>
-              <th>BUYS</th>
-              <th>SELLS</th>
-              <th>1H CHANGE</th>
-              <th>STATUS</th>
-            </tr>
+</thead>
 
-          </thead>
+<tbody id="revivalBody"></tbody>
 
-          <tbody id="revivalBody"></tbody>
+</table>
 
-        </table>
+</div>
 
-      </div>
+</div>
 
-    </div>
-
-  </div>
+</div>
 
 </section>
-
-<!-- DETAIL -->
 
 <section id="detailView" class="detail-page">
 
-  <div class="detail-top">
+<div class="detail-top">
 
-    <button class="detail-back" onclick="closeTokenDetail()">
-      ← Back to On-Chain
-    </button>
+<button class="detail-back" onclick="closeTokenDetail()">
+← Back to On-Chain
+</button>
 
-    <div id="detailPair" class="detail-pair">—</div>
+<div id="detailPair" class="detail-pair">—</div>
 
-    <div id="detailNetwork" class="detail-network">—</div>
+<div id="detailNetwork" class="detail-network">—</div>
 
-    <div id="detailPrice" class="detail-price">—</div>
+<div id="detailPrice" class="detail-price">—</div>
 
-    <div id="detailChange" class="detail-change">—</div>
+<div id="detailChange" class="detail-change">—</div>
 
-  </div>
+</div>
 
-  <div class="detail-grid">
+<div class="detail-grid">
 
-    <div class="detail-card">
-      <div class="detail-label">Market Cap / FDV</div>
-      <div id="detailMarketCap" class="detail-value">—</div>
-    </div>
+<div class="detail-card">
+<div class="detail-label">Market Cap / FDV</div>
+<div id="detailMarketCap" class="detail-value">—</div>
+</div>
 
-    <div class="detail-card">
-      <div class="detail-label">Liquidity</div>
-      <div id="detailLiquidity" class="detail-value">—</div>
-    </div>
+<div class="detail-card">
+<div class="detail-label">Liquidity</div>
+<div id="detailLiquidity" class="detail-value">—</div>
+</div>
 
-    <div class="detail-card">
-      <div class="detail-label">24H Volume</div>
-      <div id="detailVolume" class="detail-value">—</div>
-    </div>
+<div class="detail-card">
+<div class="detail-label">24H Volume</div>
+<div id="detailVolume" class="detail-value">—</div>
+</div>
 
-    <div class="detail-card">
-      <div class="detail-label">Pool Age</div>
-      <div id="detailAge" class="detail-value">—</div>
-    </div>
+<div class="detail-card">
+<div class="detail-label">Pool Age</div>
+<div id="detailAge" class="detail-value">—</div>
+</div>
 
-  </div>
+</div>
 
-  <div class="detail-main">
+<div class="detail-main">
 
-    <!-- CHART -->
+<div class="detail-panel">
 
-    <div class="detail-panel">
+<div class="detail-panel-head">
 
-      <div class="detail-panel-head">
+<strong>Price Chart</strong>
 
-        <strong>Price Chart</strong>
+<div class="chart-controls" id="chartTimeframes">
 
-        <div class="chart-controls" id="chartTimeframes">
+<button
+class="chart-select-btn"
+data-chart-tf="24h"
+onclick="loadDetailChart('24h')">
+24H
+</button>
 
-          <button
-            class="chart-select-btn"
-            data-chart-tf="24h"
-            onclick="loadDetailChart('24h')">
-            24H
-          </button>
+<button
+class="chart-select-btn"
+data-chart-tf="7d"
+onclick="loadDetailChart('7d')">
+7D
+</button>
 
-          <button
-            class="chart-select-btn"
-            data-chart-tf="7d"
-            onclick="loadDetailChart('7d')">
-            7D
-          </button>
+<button
+class="chart-select-btn active"
+data-chart-tf="1h"
+onclick="loadDetailChart('1h')">
+1H
+</button>
 
-          <button
-            class="chart-select-btn active"
-            data-chart-tf="1h"
-            onclick="loadDetailChart('1h')">
-            1H
-          </button>
+<button
+class="chart-select-btn"
+data-chart-tf="4h"
+onclick="loadDetailChart('4h')">
+4H
+</button>
 
-          <button
-            class="chart-select-btn"
-            data-chart-tf="4h"
-            onclick="loadDetailChart('4h')">
-            4H
-          </button>
+<button
+class="chart-select-btn"
+data-chart-tf="1d"
+onclick="loadDetailChart('1d')">
+1D
+</button>
 
-          <button
-            class="chart-select-btn"
-            data-chart-tf="1d"
-            onclick="loadDetailChart('1d')">
-            1D
-          </button>
+<button
+class="chart-plus"
+onclick="addCustomTimeframe()">
++
+</button>
 
-          <button
-            class="chart-plus"
-            onclick="addCustomTimeframe()">
-            +
-          </button>
+</div>
 
-        </div>
+</div>
 
-      </div>
+<div class="detail-chart">
 
-      <div class="detail-chart">
+<div id="chartLoading" class="detail-chart-inner">
+Loading live price history...
+</div>
 
-        <div id="chartLoading" class="detail-chart-inner">
-          Loading live price history...
-        </div>
+<div id="chartOhlc" class="chart-ohlc"></div>
 
-        <div id="chartOhlc" class="chart-ohlc"></div>
+<svg
+id="priceChartSvg"
+class="chart-canvas"
+viewBox="0 0 900 430"
+preserveAspectRatio="none"
+style="display:none">
+</svg>
 
-        <svg
-          id="priceChartSvg"
-          class="chart-canvas"
-          viewBox="0 0 900 430"
-          preserveAspectRatio="none"
-          style="display:none">
-        </svg>
+<div class="chart-volume-label">
+Volume
+</div>
 
-        <div class="chart-volume-label">
-          Volume
-        </div>
+</div>
 
-      </div>
+<div id="chartMeta" class="chart-meta">
+Live pool history
+</div>
 
-      <div id="chartMeta" class="chart-meta">
-        Live pool history
-      </div>
+</div>
 
-    </div>
+<div class="detail-panel">
 
-    <!-- MARKET ACTIVITY -->
+<div class="detail-panel-head">
 
-    <div class="detail-panel">
+<strong>Market Activity</strong>
 
-      <div class="detail-panel-head">
+<span class="muted">
+Live pool data
+</span>
 
-        <strong>Market Activity</strong>
+</div>
 
-        <span class="muted">
-          Live pool data
-        </span>
+<div class="detail-stats">
 
-      </div>
+<div class="detail-stat">
+<div class="detail-stat-label">1H Volume</div>
+<div id="detail1hVolume" class="detail-stat-value">—</div>
+</div>
 
-      <div class="detail-stats">
+<div class="detail-stat">
+<div class="detail-stat-label">24H Volume</div>
+<div id="detail24hVolume" class="detail-stat-value">—</div>
+</div>
 
-        <div class="detail-stat">
-          <div class="detail-stat-label">1H Volume</div>
-          <div id="detail1hVolume" class="detail-stat-value">—</div>
-        </div>
+<div class="detail-stat">
+<div class="detail-stat-label">Buys</div>
+<div id="detailBuys" class="detail-stat-value positive">—</div>
+</div>
 
-        <div class="detail-stat">
-          <div class="detail-stat-label">24H Volume</div>
-          <div id="detail24hVolume" class="detail-stat-value">—</div>
-        </div>
+<div class="detail-stat">
+<div class="detail-stat-label">Sells</div>
+<div id="detailSells" class="detail-stat-value negative">—</div>
+</div>
 
-        <div class="detail-stat">
-          <div class="detail-stat-label">Buys</div>
-          <div id="detailBuys" class="detail-stat-value positive">—</div>
-        </div>
+<div class="detail-stat">
+<div class="detail-stat-label">Transactions</div>
+<div id="detailTxns" class="detail-stat-value">—</div>
+</div>
 
-        <div class="detail-stat">
-          <div class="detail-stat-label">Sells</div>
-          <div id="detailSells" class="detail-stat-value negative">—</div>
-        </div>
+<div class="detail-stat">
+<div class="detail-stat-label">1H Change</div>
+<div id="detail1hChange" class="detail-stat-value">—</div>
+</div>
 
-        <div class="detail-stat">
-          <div class="detail-stat-label">Transactions</div>
-          <div id="detailTxns" class="detail-stat-value">—</div>
-        </div>
+<div class="detail-stat">
+<div class="detail-stat-label">24H Change</div>
+<div id="detail24hChange" class="detail-stat-value">—</div>
+</div>
 
-        <div class="detail-stat">
-          <div class="detail-stat-label">1H Change</div>
-          <div id="detail1hChange" class="detail-stat-value">—</div>
-        </div>
+<div class="detail-stat">
+<div class="detail-stat-label">Revival</div>
+<div id="detailRevival" class="detail-stat-value">—</div>
+</div>
 
-        <div class="detail-stat">
-          <div class="detail-stat-label">24H Change</div>
-          <div id="detail24hChange" class="detail-stat-value">—</div>
-        </div>
+</div>
 
-        <div class="detail-stat">
-          <div class="detail-stat-label">Revival</div>
-          <div id="detailRevival" class="detail-stat-value">—</div>
-        </div>
+</div>
 
-      </div>
+</div>
 
-    </div>
+<div class="trading-coming">
 
-  </div>
+<strong>Trading Interface — Coming Soon</strong>
 
-  <div class="trading-coming">
+<span>
+Trading will be added in a future FlowRank phase.
+This dashboard is data-only for now.
+</span>
 
-    <strong>Trading Interface — Coming Soon</strong>
+</div>
 
-    <span>
-      Trading will be added in a future FlowRank phase.
-      This dashboard is data-only for now.
-    </span>
+<div class="detail-panel" style="margin-top:12px">
 
-  </div>
+<div class="detail-panel-head">
 
-  <!-- TRADES -->
+<strong>Recent Transactions</strong>
 
-  <div class="detail-panel" style="margin-top:12px">
+<span id="tradeStatus" class="muted">
+Loading...
+</span>
 
-    <div class="detail-panel-head">
+</div>
 
-      <strong>Recent Transactions</strong>
+<div class="table-wrap">
 
-      <span id="tradeStatus" class="muted">
-        Loading...
-      </span>
+<table class="trade-table">
 
-    </div>
+<thead>
 
-    <div class="table-wrap">
+<tr>
+<th>TYPE</th>
+<th>TIME</th>
+<th>PRICE</th>
+<th>VALUE</th>
+<th>FROM</th>
+<th>TO</th>
+<th>TX</th>
+</tr>
 
-      <table class="trade-table">
+</thead>
 
-        <thead>
+<tbody id="tradeBody"></tbody>
 
-          <tr>
-            <th>TYPE</th>
-            <th>TIME</th>
-            <th>PRICE</th>
-            <th>VALUE</th>
-            <th>FROM</th>
-            <th>TO</th>
-            <th>TX</th>
-          </tr>
+</table>
 
-        </thead>
+</div>
 
-        <tbody id="tradeBody"></tbody>
+</div>
 
-      </table>
+<div class="detail-panel" style="margin-top:12px">
 
-    </div>
+<div class="detail-panel-head">
+<strong>Pool Information</strong>
+</div>
 
-  </div>
+<div class="detail-info">
 
-  <!-- POOL INFORMATION -->
+<div>
+<b>Pool:</b>
+<span id="detailPool">—</span>
+</div>
 
-  <div class="detail-panel" style="margin-top:12px">
+<div>
+<b>Network:</b>
+<span id="detailNetworkInfo">—</span>
+</div>
 
-    <div class="detail-panel-head">
-      <strong>Pool Information</strong>
-    </div>
+<div>
+<b>Pair:</b>
+<span id="detailPairInfo">—</span>
+</div>
 
-    <div class="detail-info">
+<div>
+<b>Value type:</b>
+<span id="detailValueType">—</span>
+</div>
 
-      <div>
-        <b>Pool:</b>
-        <span id="detailPool">—</span>
-      </div>
+<div>
+<b>Token / Mint Address:</b>
+<span id="detailTokenAddress">—</span>
 
-      <div>
-        <b>Network:</b>
-        <span id="detailNetworkInfo">—</span>
-      </div>
+<button class="chain-btn" onclick="copyTokenAddress()">
+Copy
+</button>
 
-      <div>
-        <b>Pair:</b>
-        <span id="detailPairInfo">—</span>
-      </div>
+</div>
 
-      <div>
-        <b>Value type:</b>
-        <span id="detailValueType">—</span>
-      </div>
+<div>
+<b>Pool Address:</b>
+<span id="detailPoolAddress">—</span>
 
-      <div>
-        <b>Token / Mint Address:</b>
-        <span id="detailTokenAddress">—</span>
+<button class="chain-btn" onclick="copyPoolAddress()">
+Copy
+</button>
 
-        <button class="chain-btn" onclick="copyTokenAddress()">
-          Copy
-        </button>
-      </div>
+</div>
 
-      <div>
-        <b>Pool Address:</b>
-        <span id="detailPoolAddress">—</span>
+</div>
 
-        <button class="chain-btn" onclick="copyPoolAddress()">
-          Copy
-        </button>
-      </div>
-
-    </div>
-
-  </div>
+</div>
 
 </section>
-
-<!-- STOCKS -->
 
 <section id="stocksView" style="display:none">
 
-  <div class="coming">
-    Stock market data is coming next.
-  </div>
+<div class="coming">
+Stock market data is coming next.
+</div>
 
 </section>
 
-<!-- FOREX -->
-
 <section id="forexView" style="display:none">
 
-  <div class="coming">
-    Forex market data is coming next.
-  </div>
+<div class="coming">
+Forex market data is coming next.
+</div>
 
 </section>
 
 </main>
 
 <footer>
-  FlowRank — Market data dashboard.<br>
-  Data may be delayed or incomplete.
+FlowRank — Market data dashboard.<br>
+Data may be delayed or incomplete.
 </footer>
 
 <script>
 
-let cryptoData = [];
-let chainData = [];
-let marketData = [];
+let cryptoData=[];
+let chainData=[];
+let marketData=[];
 
-let currentTab = "crypto";
-let currentChain = "all";
-let currentTimeframe = "24h";
-let revivalFilter = "all";
+let currentTab="crypto";
+let currentChain="all";
+let currentTimeframe="24h";
+let revivalFilter="all";
+let activeDetailMarket=null;
+let activeChartTimeframe="1h";
+let activeChartPoints=[];
 
-let activeDetailMarket = null;
-let activeChartTimeframe = "1h";
-let activeChartPoints = [];
-
-
-const $ = id => document.getElementById(id);
+const $=id=>document.getElementById(id);
 
 
 /* =========================
-   FORMATTERS
+   FORMAT HELPERS
 ========================= */
+
+function validNumber(v){
+let n=Number(v);
+return Number.isFinite(n);
+}
+
+function safeNumber(v){
+let n=Number(v);
+return Number.isFinite(n)?n:0;
+}
 
 function formatNumber(v){
 
-  let n = Number(v || 0);
+let n=Number(v);
 
-  if(!Number.isFinite(n)){
-    return "—";
-  }
+if(!Number.isFinite(n) || n<=0){
+return n===0 ? "$0.00" : "—";
+}
 
-  if(n >= 1e9){
-    return "$" + (n / 1e9).toFixed(2) + "B";
-  }
+if(n>=1e12)return"$"+(n/1e12).toFixed(2)+"T";
+if(n>=1e9)return"$"+(n/1e9).toFixed(2)+"B";
+if(n>=1e6)return"$"+(n/1e6).toFixed(2)+"M";
+if(n>=1e3)return"$"+(n/1e3).toFixed(2)+"K";
 
-  if(n >= 1e6){
-    return "$" + (n / 1e6).toFixed(2) + "M";
-  }
+return"$"+n.toFixed(2);
+}
 
-  if(n >= 1e3){
-    return "$" + (n / 1e3).toFixed(2) + "K";
-  }
 
-  return "$" + n.toFixed(2);
+function formatNumberNullable(v){
+
+let n=Number(v);
+
+if(!Number.isFinite(n) || n<=0){
+return"—";
+}
+
+if(n>=1e12)return"$"+(n/1e12).toFixed(2)+"T";
+if(n>=1e9)return"$"+(n/1e9).toFixed(2)+"B";
+if(n>=1e6)return"$"+(n/1e6).toFixed(2)+"M";
+if(n>=1e3)return"$"+(n/1e3).toFixed(2)+"K";
+
+return"$"+n.toFixed(2);
 }
 
 
 function formatPrice(v){
 
-  let n = Number(v || 0);
+let n=Number(v);
 
-  if(!Number.isFinite(n)){
-    return "—";
-  }
+if(!Number.isFinite(n) || n<=0){
+return"—";
+}
 
-  if(n >= 1000){
-    return "$" + n.toLocaleString("en-US",{
-      maximumFractionDigits:2
-    });
-  }
+if(n>=1000){
+return"$"+n.toLocaleString("en-US",{
+maximumFractionDigits:2
+});
+}
 
-  if(n >= 1){
-    return "$" + n.toFixed(2);
-  }
+if(n>=1){
+return"$"+n.toFixed(2);
+}
 
-  if(n >= 0.01){
-    return "$" + n.toFixed(4);
-  }
+if(n>=.01){
+return"$"+n.toFixed(4);
+}
 
-  return "$" + n.toFixed(8);
+if(n>=.000001){
+return"$"+n.toFixed(8);
+}
+
+return"$"+n.toPrecision(8);
+}
+
+
+function formatPriceNullable(v){
+
+let n=Number(v);
+
+if(!Number.isFinite(n) || n<=0){
+return"—";
+}
+
+return formatPrice(n);
 }
 
 
 function pct(v){
 
-  let n = Number(v || 0);
+let n=Number(v);
 
-  if(!Number.isFinite(n)){
-    return "—";
-  }
+if(!Number.isFinite(n)){
+return"—";
+}
 
-  let cls =
-    n > 0
-      ? "positive"
-      : n < 0
-      ? "negative"
-      : "muted";
-
-  return `
-    <span class="${cls}">
-      ${n > 0 ? "+" : ""}
-      ${n.toFixed(2)}%
-    </span>
-  `;
+return'<span class="'+
+(n>0?'positive':n<0?'negative':'muted')+
+'">'+
+(n>0?'+':'')+
+n.toFixed(2)+
+'%</span>';
 }
 
 
 function esc(v){
 
-  return String(v ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+return String(v??"")
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
 }
 
 
 function net(n){
 
-  return ({
-    eth:"Ethereum",
-    ethereum:"Ethereum",
-    solana:"Solana",
-    base:"Base",
-    bsc:"BNB Chain",
-    arbitrum:"Arbitrum",
-    polygon_pos:"Polygon",
-    avalanche:"Avalanche"
-  })[n] || n || "Unknown";
+return({
+eth:"Ethereum",
+ethereum:"Ethereum",
+solana:"Solana",
+base:"Base",
+bsc:"BNB Chain",
+arbitrum:"Arbitrum",
+polygon_pos:"Polygon",
+avalanche:"Avalanche"
+})[n]||n||"Unknown";
+
 }
 
 
 function age(v){
 
-  if(!v){
-    return "—";
-  }
+if(!v)return"—";
 
-  let d = new Date(v);
+let d=new Date(v);
 
-  if(isNaN(d)){
-    return "—";
-  }
+if(isNaN(d))return"—";
 
-  let days =
-    Math.floor(
-      (Date.now() - d) / 86400000
-    );
+let days=Math.floor((Date.now()-d)/86400000);
 
-  if(days <= 0){
-    return "New";
-  }
+if(days<=0)return"New";
+if(days<30)return days+"d";
+if(days<365)return Math.floor(days/30)+"mo";
 
-  if(days < 30){
-    return days + "d";
-  }
-
-  if(days < 365){
-    return Math.floor(days / 30) + "mo";
-  }
-
-  return Math.floor(days / 365) + "y";
+return Math.floor(days/365)+"y";
 }
 
 
@@ -1365,51 +1398,40 @@ function age(v){
    API
 ========================= */
 
-async function api(path, timeout = 60000){
+async function api(path,timeout=60000){
 
-  let controller = new AbortController();
+let c=new AbortController();
 
-  let timer =
-    setTimeout(
-      () => controller.abort(),
-      timeout
-    );
+let t=setTimeout(()=>{
+c.abort();
+},timeout);
 
-  try{
+try{
 
-    let separator =
-      path.includes("?")
-        ? "&"
-        : "?";
+let separator=path.includes("?")?"&":"?";
 
-    let url =
-      path +
-      separator +
-      "_=" +
-      Date.now();
+let r=await fetch(
+path+separator+"_="+Date.now(),
+{
+cache:"no-store",
+signal:c.signal
+}
+);
 
-    let response =
-      await fetch(url,{
-        cache:"no-store",
-        signal:controller.signal
-      });
+let s=await r.text();
 
-    let text =
-      await response.text();
+if(!r.ok){
+throw Error("HTTP "+r.status);
+}
 
-    if(!response.ok){
-      throw Error(
-        "HTTP " + response.status
-      );
-    }
+return JSON.parse(s);
 
-    return JSON.parse(text);
+}finally{
 
-  }finally{
+clearTimeout(t);
 
-    clearTimeout(timer);
+}
 
-  }
 }
 
 
@@ -1419,1568 +1441,37 @@ async function api(path, timeout = 60000){
 
 async function loadCrypto(){
 
-  try{
+try{
 
-    let data =
-      await api("/api/crypto");
+let d=await api("/api/crypto");
 
-    cryptoData =
-      Array.isArray(data)
-        ? data
-        : [];
+cryptoData=Array.isArray(d)?d:[];
 
-    $("cryptoStat").textContent =
-      cryptoData.length + " Pairs";
+$("cryptoStat").textContent=
+cryptoData.length+" Pairs";
 
-    $("cryptoStatus").textContent =
-      "Live";
+$("cryptoStatus").textContent="Live";
 
-    renderCrypto();
+renderCrypto();
 
-  }catch(error){
+}catch(e){
 
-    console.error(error);
+$("cryptoStatus").textContent="API Error";
 
-    $("cryptoStatus").textContent =
-      "API Error";
+$("cryptoBody").innerHTML=
+'<tr><td colspan="6" class="error">'+
+'Crypto data failed to load.'+
+'</td></tr>';
 
-    $("cryptoBody").innerHTML =
-      `
-      <tr>
-        <td colspan="6" class="error">
-          Crypto data failed to load.
-        </td>
-      </tr>
-      `;
-
-  }
+}
 
 }
 
 
 function renderCrypto(){
 
-  let q =
-    $("search").value
-      .toLowerCase();
-
-  let rows =
-    cryptoData.filter(x =>
-      !q ||
-      String(x.pair || "")
-        .toLowerCase()
-        .includes(q)
-    );
-
-  $("cryptoBody").innerHTML =
-    rows.length
-
-      ? rows.map((x,i) => `
-
-        <tr>
-
-          <td>${i + 1}</td>
-
-          <td class="pair">
-            ${esc(x.pair)}
-          </td>
-
-          <td class="muted">
-            ${esc(x.exchange)}
-          </td>
-
-          <td>
-            ${formatPrice(x.price)}
-          </td>
-
-          <td>
-            ${formatNumber(x.volume24h)}
-          </td>
-
-          <td>
-            ${pct(x.change24h)}
-          </td>
-
-        </tr>
-
-      `).join("")
-
-      :
-
-      `
-      <tr>
-        <td colspan="6" class="loading">
-          No matching markets found.
-        </td>
-      </tr>
-      `;
-
-
-  let gainers =
-    [...cryptoData]
-      .filter(x =>
-        Number(x.change24h) > 0
-      )
-      .sort(
-        (a,b) =>
-          Number(b.change24h) -
-          Number(a.change24h)
-      )
-      .slice(0,5);
-
-
-  $("gainers").innerHTML =
-    gainers.length
-
-      ? gainers.map(x => `
-
-        <div style="
-          display:flex;
-          justify-content:space-between;
-          padding:8px
-        ">
-
-          <b>
-            ${esc(x.pair)}
-          </b>
-
-          <span class="positive">
-            +${Number(x.change24h).toFixed(2)}%
-          </span>
-
-        </div>
-
-      `).join("")
-
-      :
-
-      `
-      <div class="loading">
-        No positive movers found.
-      </div>
-      `;
-
-}
-
-
-/* =========================
-   CHAINS
-========================= */
-
-async function loadChains(){
-
-  try{
-
-    let data =
-      await api("/api/onchain");
-
-    chainData =
-      Array.isArray(data)
-        ? data
-        : [];
-
-    $("chainStat").textContent =
-      chainData.length + " Chains";
-
-  }catch(error){
-
-    console.error(error);
-
-    $("chainStat").textContent =
-      "Error";
-
-  }
-
-}
-
-
-/* =========================
-   ACTIVITY
-========================= */
-
-function activity(){
-
-  let volumes = {};
-
-  marketData.forEach(x => {
-
-    let network =
-      x.network || "unknown";
-
-    volumes[network] =
-      (volumes[network] || 0) +
-      Number(x.volume24h || 0);
-
-  });
-
-
-  let total =
-    Object.values(volumes)
-      .reduce(
-        (a,b) => a + b,
-        0
-      );
-
-
-  let sorted =
-    Object.entries(volumes)
-      .sort(
-        (a,b) => b[1] - a[1]
-      );
-
-
-  $("activityGrid").innerHTML =
-
-    sorted.length
-
-      ? sorted
-          .slice(0,8)
-          .map(x => `
-
-            <div
-              class="activity-card"
-              onclick="setChain('${esc(x[0])}')"
-            >
-
-              <div class="activity-name">
-                ${esc(net(x[0]))}
-              </div>
-
-              <div class="activity-pct">
-                ${
-                  total
-                    ? (
-                        x[1] /
-                        total *
-                        100
-                      ).toFixed(1)
-                    : 0
-                }%
-              </div>
-
-              <div class="activity-vol">
-                ${formatNumber(x[1])}
-                24H volume
-              </div>
-
-            </div>
-
-          `).join("")
-
-      :
-
-      `
-      <div class="loading">
-        No chain activity data.
-      </div>
-      `;
-
-}
-
-
-/* =========================
-   MARKETS
-========================= */
-
-function renderMarkets(){
-
-  let q =
-    $("search").value
-      .toLowerCase();
-
-
-  let rows =
-    marketData
-
-      .filter(x =>
-        currentChain === "all" ||
-        x.network === currentChain
-      )
-
-      .filter(x => {
-
-        if(!q){
-          return true;
-        }
-
-        return [
-          x.name,
-          x.tokenA,
-          x.tokenB,
-          x.network
-        ].some(v =>
-          String(v || "")
-            .toLowerCase()
-            .includes(q)
-        );
-
-      });
-
-
-  rows.sort(
-    (a,b) =>
-
-      Number(
-        b[
-          currentTimeframe === "1h"
-            ? "volume1h"
-            : "volume24h"
-        ] || 0
-      )
-
-      -
-
-      Number(
-        a[
-          currentTimeframe === "1h"
-            ? "volume1h"
-            : "volume24h"
-        ] || 0
-      )
-  );
-
-
-  rows =
-    rows.slice(0,100);
-
-
-  $("marketBody").innerHTML =
-
-    rows.length
-
-      ? rows.map((x,i) => `
-
-        <tr
-          class="clickable"
-          onclick="openTokenDetail(${marketData.indexOf(x)})"
-        >
-
-          <td>
-            ${i + 1}
-          </td>
-
-          <td class="pair">
-
-            ${esc(
-              x.name ||
-              (
-                (x.tokenA || "") +
-                " / " +
-                (x.tokenB || "")
-              )
-            )}
-
-            ${
-              x.revival
-                ? `
-                  <span class="badge hot">
-                    REVIVAL
-                  </span>
-                `
-                : ""
-            }
-
-          </td>
-
-          <td class="muted">
-            ${esc(net(x.network))}
-          </td>
-
-          <td>
-            ${formatPrice(x.price)}
-          </td>
-
-          <td>
-            ${formatNumber(x.displayValue)}
-          </td>
-
-          <td>
-            ${formatNumber(x.liquidity)}
-          </td>
-
-          <td>
-            ${formatNumber(x.volume24h)}
-          </td>
-
-          <td>
-            ${pct(x.change24h)}
-          </td>
-
-          <td>
-            ${Number(
-              x.transactions24h || 0
-            ).toLocaleString()}
-          </td>
-
-          <td>
-            ${Number(
-              x.buys24h || 0
-            ).toLocaleString()}
-          </td>
-
-          <td>
-            ${Number(
-              x.sells24h || 0
-            ).toLocaleString()}
-          </td>
-
-          <td>
-            ${age(x.createdAt)}
-          </td>
-
-        </tr>
-
-      `).join("")
-
-      :
-
-      `
-      <tr>
-        <td colspan="12" class="loading">
-          No matching on-chain markets found.
-        </td>
-      </tr>
-      `;
-
-}
-
-
-/* =========================
-   REVIVAL
-========================= */
-
-function renderRevival(){
-
-  let rows =
-    marketData.filter(x =>
-      x.revival &&
-      (
-        currentChain === "all" ||
-        x.network === currentChain
-      )
-    );
-
-
-  if(revivalFilter === "buying"){
-
-    rows =
-      rows.filter(x =>
-        x.revivalStatus ===
-        "Buying Started"
-      );
-
-  }
-
-
-  if(revivalFilter === "reviving"){
-
-    rows =
-      rows.filter(x =>
-        x.revivalStatus !==
-        "Buying Started"
-      );
-
-  }
-
-
-  $("revivalStatus").textContent =
-    rows.length + " found";
-
-
-  $("revivalBody").innerHTML =
-
-    rows.length
-
-      ? rows
-          .slice(0,30)
-          .map(x => {
-
-            let total =
-              Number(x.buys24h || 0) +
-              Number(x.sells24h || 0);
-
-            let buyPressure =
-              total
-                ? (
-                    Number(x.buys24h || 0) /
-                    total *
-                    100
-                  )
-                : 0;
-
-
-            return `
-
-              <tr
-                class="clickable"
-                onclick="openTokenDetail(${marketData.indexOf(x)})"
-              >
-
-                <td class="pair">
-                  ${esc(x.name || "—")}
-                </td>
-
-                <td>
-                  ${esc(net(x.network))}
-                </td>
-
-                <td>
-                  ${formatPrice(x.price)}
-                </td>
-
-                <td>
-                  ${formatNumber(x.volume1h)}
-                </td>
-
-                <td>
-                  ${formatNumber(x.volume24h)}
-                </td>
-
-                <td>
-                  ${buyPressure.toFixed(1)}%
-                </td>
-
-                <td>
-                  ${Number(
-                    x.buys24h || 0
-                  )}
-                </td>
-
-                <td>
-                  ${Number(
-                    x.sells24h || 0
-                  )}
-                </td>
-
-                <td>
-                  ${pct(x.change1h)}
-                </td>
-
-                <td>
-                  <span class="badge">
-                    ${esc(
-                      x.revivalStatus ||
-                      "Reviving"
-                    )}
-                  </span>
-                </td>
-
-              </tr>
-
-            `;
-
-          })
-          .join("")
-
-      :
-
-      `
-      <tr>
-        <td colspan="10" class="loading">
-          No matching revival activity detected yet.
-        </td>
-      </tr>
-      `;
-
-}
-
-
-/* =========================
-   LOAD MARKETS
-========================= */
-
-async function loadMarkets(){
-
-  $("marketStatus").textContent =
-    "Connecting...";
-
-
-  try{
-
-    let data =
-      await api(
-        "/api/markets",
-        180000
-      );
-
-
-    if(!Array.isArray(data)){
-      throw Error(
-        "Invalid markets response"
-      );
-    }
-
-
-    marketData = data;
-
-
-    $("chainStat").textContent =
-      new Set(
-        marketData.map(x => x.network)
-      ).size +
-      " Chains";
-
-
-    activity();
-
-    renderMarkets();
-
-    renderRevival();
-
-
-    $("marketStatus").textContent =
-      data.length +
-      " Markets";
-
-
-  }catch(error){
-
-    console.error(error);
-
-    $("marketStatus").textContent =
-      "API Error";
-
-
-    $("marketBody").innerHTML =
-
-      `
-      <tr>
-        <td colspan="12" class="error">
-          On-chain data failed to load.
-        </td>
-      </tr>
-      `;
-
-  }
-
-}
-
-
-/* =========================
-   FILTERS
-========================= */
-
-function setChain(c){
-
-  currentChain = c;
-
-
-  document
-    .querySelectorAll(".chain-btn")
-    .forEach(button => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.chain === c
-      );
-
-    });
-
-
-  $("chainViewTitle").textContent =
-    (
-      c === "all"
-        ? "All Chains"
-        : net(c)
-    ) +
-    " — Highest Volume";
-
-
-  renderMarkets();
-
-  renderRevival();
-
-}
-
-
-function setTimeframe(t){
-
-  currentTimeframe = t;
-
-
-  document
-    .querySelectorAll(".time-btn")
-    .forEach(button => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.time === t
-      );
-
-    });
-
-
-  renderMarkets();
-
-}
-
-
-function setRevivalFilter(f){
-
-  revivalFilter = f;
-
-
-  document
-    .querySelectorAll(".revival-filter-btn")
-    .forEach(button => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.revivalFilter === f
-      );
-
-    });
-
-
-  renderRevival();
-
-}
-
-
-/* =========================
-   TOKEN DETAIL
-========================= */
-
-function openTokenDetail(i){
-
-  let x =
-    marketData[i];
-
-  if(!x){
-    return;
-  }
-
-
-  activeDetailMarket = x;
-
-
-  history.pushState(
-    {token:true},
-    "",
-    location.pathname +
-    location.search +
-    "#token"
-  );
-
-
-  [
-    "cryptoView",
-    "onchainView",
-    "stocksView",
-    "forexView"
-  ].forEach(id => {
-
-    $(id).style.display =
-      "none";
-
-  });
-
-
-  $("detailView").style.display =
-    "block";
-
-
-  let pair =
-    x.name ||
-    (
-      (x.tokenA || "") +
-      " / " +
-      (x.tokenB || "")
-    );
-
-
-  $("detailPair").textContent =
-    pair;
-
-  $("detailNetwork").textContent =
-    net(x.network);
-
-  $("detailPrice").textContent =
-    formatPrice(x.price);
-
-  $("detailChange").innerHTML =
-    "24H " +
-    pct(x.change24h);
-
-
-  $("detailMarketCap").textContent =
-    formatNumber(x.displayValue);
-
-  $("detailLiquidity").textContent =
-    formatNumber(x.liquidity);
-
-  $("detailVolume").textContent =
-    formatNumber(x.volume24h);
-
-  $("detailAge").textContent =
-    age(x.createdAt);
-
-
-  $("detail1hVolume").textContent =
-    formatNumber(x.volume1h);
-
-  $("detail24hVolume").textContent =
-    formatNumber(x.volume24h);
-
-  $("detailBuys").textContent =
-    Number(
-      x.buys24h || 0
-    ).toLocaleString();
-
-  $("detailSells").textContent =
-    Number(
-      x.sells24h || 0
-    ).toLocaleString();
-
-  $("detailTxns").textContent =
-    Number(
-      x.transactions24h || 0
-    ).toLocaleString();
-
-  $("detail1hChange").innerHTML =
-    pct(x.change1h);
-
-  $("detail24hChange").innerHTML =
-    pct(x.change24h);
-
-  $("detailRevival").textContent =
-    x.revivalStatus ||
-    "Normal";
-
-
-  $("detailPool").textContent =
-    x.pool ||
-    "—";
-
-  $("detailNetworkInfo").textContent =
-    net(x.network);
-
-  $("detailPairInfo").textContent =
-    pair;
-
-  $("detailValueType").textContent =
-    x.valueType ||
-    "—";
-
-  $("detailTokenAddress").textContent =
-    x.tokenAddress ||
-    x.baseTokenAddress ||
-    "—";
-
-  $("detailPoolAddress").textContent =
-    x.pool ||
-    "—";
-
-
-  loadDetailChart("24h");
-
-  loadTrades();
-
-
-  window.scrollTo({
-    top:0,
-    behavior:"instant"
-  });
-
-}
-
-
-/* =========================
-   CLOSE DETAIL
-========================= */
-
-function closeTokenDetail(){
-
-  activeDetailMarket = null;
-
-
-  $("detailView").style.display =
-    "none";
-
-  $("cryptoView").style.display =
-    "none";
-
-  $("stocksView").style.display =
-    "none";
-
-  $("forexView").style.display =
-    "none";
-
-  $("onchainView").style.display =
-    "block";
-
-
-  currentTab = "onchain";
-
-
-  document
-    .querySelectorAll(".tab")
-    .forEach(button =>
-      button.classList.remove("active")
-    );
-
-
-  $("tabOnchain")
-    .classList.add("active");
-
-
-  $("viewStat").textContent =
-    "On-Chain";
-
-
-  if(marketData.length){
-
-    activity();
-
-    renderMarkets();
-
-    renderRevival();
-
-  }else{
-
-    loadMarkets();
-
-  }
-
-
-  history.replaceState(
-    null,
-    "",
-    location.pathname +
-    location.search
-  );
-
-
-  window.scrollTo({
-    top:0,
-    behavior:"instant"
-  });
-
-}
-
-
-/* =========================
-   TABS
-========================= */
-
-function switchTab(t){
-
-  currentTab =
-    t === "home"
-      ? "crypto"
-      : t;
-
-
-  [
-    "crypto",
-    "stocks",
-    "forex",
-    "onchain"
-  ].forEach(x => {
-
-    $(x + "View").style.display =
-      currentTab === x
-        ? "block"
-        : "none";
-
-  });
-
-
-  $("detailView").style.display =
-    "none";
-
-
-  document
-    .querySelectorAll(".tab")
-    .forEach(button =>
-      button.classList.remove("active")
-    );
-
-
-  let tab =
-    $("tab" +
-      currentTab.charAt(0).toUpperCase() +
-      currentTab.slice(1));
-
-
-  if(tab){
-    tab.classList.add("active");
-  }
-
-
-  $("viewStat").textContent =
-    currentTab === "onchain"
-      ? "On-Chain"
-      : currentTab.charAt(0).toUpperCase() +
-        currentTab.slice(1);
-
-
-  if(currentTab === "onchain"){
-
-    if(marketData.length){
-
-      activity();
-
-      renderMarkets();
-
-      renderRevival();
-
-    }else{
-
-      loadMarkets();
-
-    }
-
-  }
-
-}
-
-
-/* =========================
-   CHART
-========================= */
-
-async function loadDetailChart(tf){
-
-  if(!activeDetailMarket){
-    return;
-  }
-
-
-  document
-    .querySelectorAll("[data-chart-tf]")
-    .forEach(button => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.chartTf === tf
-      );
-
-    });
-
-
-  activeChartTimeframe = tf;
-
-
-  $("chartLoading").style.display =
-    "flex";
-
-  $("chartLoading").textContent =
-    "Loading " +
-    tf +
-    " price history...";
-
-
-  $("priceChartSvg").style.display =
-    "none";
-
-
-  try{
-
-    let data =
-      await api(
-        "/api/history?pool=" +
-        encodeURIComponent(
-          activeDetailMarket.pool || ""
-        ) +
-        "&timeframe=" +
-        encodeURIComponent(tf),
-        20000
-      );
-
-
-    activeChartPoints =
-      Array.isArray(data)
-        ? data
-        : [];
-
-
-    renderChart(
-      activeChartPoints
-    );
-
-
-  }catch(error){
-
-    console.error(error);
-
-    $("chartLoading").textContent =
-      "No price history available for this pool.";
-
-    $("chartMeta").textContent =
-      "No historical data returned";
-
-  }
-
-}
-
-
-/* =========================
-   RENDER CHART
-========================= */
-
-function renderChart(points){
-
-  let svg =
-    $("priceChartSvg");
-
-
-  if(!points.length){
-
-    svg.style.display =
-      "none";
-
-    $("chartLoading").style.display =
-      "flex";
-
-    return;
-
-  }
-
-
-  let width = 900;
-  let height = 430;
-  let pad = 45;
-
-
-  let values =
-    points
-      .map(x => Number(x.close))
-      .filter(Number.isFinite);
-
-
-  if(!values.length){
-
-    svg.style.display =
-      "none";
-
-    $("chartLoading").style.display =
-      "flex";
-
-    return;
-
-  }
-
-
-  let min =
-    Math.min(...values);
-
-  let max =
-    Math.max(...values);
-
-
-  if(min === max){
-
-    min *= 0.99;
-    max *= 1.01;
-
-  }
-
-
-  let path =
-    points.map((x,i) => {
-
-      let value =
-        Number(x.close);
-
-
-      if(!Number.isFinite(value)){
-        return "";
-      }
-
-
-      let xx =
-        pad +
-        i *
-        (
-          (width - 2 * pad) /
-          Math.max(
-            1,
-            points.length - 1
-          )
-        );
-
-
-      let yy =
-        35 +
-        (
-          (max - value) /
-          (max - min)
-        ) *
-        300;
-
-
-      return (
-        i
-          ? "L"
-          : "M"
-      ) +
-      xx.toFixed(1) +
-      " " +
-      yy.toFixed(1);
-
-    }).join(" ");
-
-
-  svg.innerHTML = `
-    <path
-      d="${path}"
-      fill="none"
-      stroke="#49d3ff"
-      stroke-width="2.5"
-    />
-  `;
-
-
-  svg.style.display =
-    "block";
-
-
-  $("chartLoading").style.display =
-    "none";
-
-
-  $("chartMeta").textContent =
-    "Live pool history • " +
-    points.length +
-    " candles • " +
-    activeChartTimeframe;
-
-
-  let last =
-    values[values.length - 1];
-
-
-  $("chartOhlc").textContent =
-    "Price: " +
-    formatPrice(last);
-
-}
-
-
-/* =========================
-   CUSTOM TIMEFRAME
-========================= */
-
-function addCustomTimeframe(){
-
-  let value =
-    prompt(
-      "Enter timeframe (example: 2h, 6h, 3d)"
-    );
-
-
-  if(
-    value &&
-    /^\d+(m|h|d|w)$/.test(
-      value.trim()
-    )
-  ){
-
-    let button =
-      document.createElement("button");
-
-
-    button.className =
-      "chart-select-btn";
-
-
-    button.textContent =
-      value.trim();
-
-
-    button.dataset.chartTf =
-      value.trim();
-
-
-    button.onclick =
-      () =>
-        loadDetailChart(
-          value.trim()
-        );
-
-
-    let plus =
-      document.querySelector(
-        ".chart-plus"
-      );
-
-
-    document
-      .getElementById(
-        "chartTimeframes"
-      )
-      .insertBefore(
-        button,
-        plus
-      );
-
-
-    loadDetailChart(
-      value.trim()
-    );
-
-  }
-
-}
-
-
-/* =========================
-   TRADES
-========================= */
-
-async function loadTrades(){
-
-  let body =
-    $("tradeBody");
-
-
-  $("tradeStatus").textContent =
-    "Loading...";
-
-
-  body.innerHTML =
-    `
-    <tr>
-      <td colspan="7" class="loading">
-        Loading recent transactions...
-      </td>
-    </tr>
-    `;
-
-
-  try{
-
-    let data =
-      await api(
-        "/api/trades?pool=" +
-        encodeURIComponent(
-          activeDetailMarket.pool || ""
-        ),
-        20000
-      );
-
-
-    let rows =
-      Array.isArray(data)
-        ? data
-        : [];
-
-
-    body.innerHTML =
-
-      rows
-        .slice(0,30)
-        .map(t => `
-
-          <tr>
-
-            <td>
-              ${esc(
-                String(
-                  t.kind ||
-                  "trade"
-                ).toUpperCase()
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                t.blockTimestamp ||
-                "—"
-              )}
-            </td>
-
-            <td>
-              ${formatPrice(
-                t.priceUsd
-              )}
-            </td>
-
-            <td>
-              ${formatNumber(
-                t.volumeUsd
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                t.fromTokenAmount ||
-                "—"
-              )}
-            </td>
-
-            <td>
-              ${esc(
-                t.toTokenAmount ||
-                "—"
-              )}
-            </td>
-
-            <td class="trade-hash">
-              ${esc(
-                String(
-                  t.txHash ||
-                  "—"
-                ).slice(0,12)
-              )}
-            </td>
-
-          </tr>
-
-        `)
-        .join("")
-
-      ||
-
-      `
-      <tr>
-        <td colspan="7" class="trade-empty">
-          No recent transactions available.
-        </td>
-      </tr>
-      `;
-
-
-    $("tradeStatus").textContent =
-      rows.length +
-      " trades";
-
-
-  }catch(error){
-
-    console.error(error);
-
-
-    body.innerHTML =
-      `
-      <tr>
-        <td colspan="7" class="trade-empty">
-          Transactions unavailable.
-        </td>
-      </tr>
-      `;
-
-
-    $("tradeStatus").textContent =
-      "Unavailable";
-
-  }
-
-}
-
-
-/* =========================
-   COPY
-========================= */
-
-function copyTokenAddress(){
-
-  let value =
-    $("detailTokenAddress")
-      .textContent;
-
-
-  if(
-    value &&
-    value !== "—" &&
-    navigator.clipboard
-  ){
-
-    navigator.clipboard
-      .writeText(value);
-
-  }
-
-}
-
-
-function copyPoolAddress(){
-
-  let value =
-    $("detailPoolAddress")
-      .textContent;
-
-
-  if(
-    value &&
-    value !== "—" &&
-    navigator.clipboard
-  ){
-
-    navigator.clipboard
-      .writeText(value);
-
-  }
-
-}
-
-
-/* =========================
-   SEARCH
-========================= */
-
-$("search")
-  .addEventListener(
-    "input",
-    () => {
-
-      if(
-        currentTab ===
-        "crypto"
-      ){
-
-        renderCrypto();
-
-      }
-
-
-      if(
-        currentTab ===
-        "onchain"
-      ){
-
-        renderMarkets();
-
-        renderRevival();
-
-      }
-
-    }
-  );
-
-
-/* =========================
-   BROWSER BACK
-========================= */
-
-window.addEventListener(
-  "popstate",
-  () => {
-
-    if(
-      $("detailView")
-        .style
-        .display === "block"
-    ){
-
-      closeTokenDetail();
-
-    }
-
-  }
-);
-
-
-/* =========================
-   INITIAL LOAD
-========================= */
-
-loadCrypto();
-
-loadChains();
-
-</script>
-
-</body>
-</html>
+let q=$("search").value.toLowerCase();
+
+let rows=cryptoData.filter(x=>
+!q ||
+String(x.pair||"").toLower
