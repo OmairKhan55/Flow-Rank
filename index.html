@@ -33,9 +33,90 @@ function openTokenDetail(i){let x=marketData[i];if(!x)return;activeDetailMarket=
 function closeTokenDetail(){activeDetailMarket=null;$('detailView').style.display='none';$('cryptoView').style.display='none';$('stocksView').style.display='none';$('forexView').style.display='none';$('onchainView').style.display='block';currentTab='onchain';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));$('tabOnchain').classList.add('active');$('viewStat').textContent='On-Chain';if(marketData.length){activity();renderMarkets();renderRevival()}else loadMarkets();history.replaceState(null,'',location.pathname+location.search);window.scrollTo({top:0,behavior:'instant'})}
 function switchTab(t){currentTab=t==='home'?'crypto':t;['crypto','stocks','forex','onchain'].forEach(x=>$(x+'View').style.display=currentTab===x?'block':'none');document.getElementById('detailView').style.display='none';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));$('tab'+currentTab.charAt(0).toUpperCase()+currentTab.slice(1)).classList.add('active');$('viewStat').textContent=currentTab==='onchain'?'On-Chain':currentTab.charAt(0).toUpperCase()+currentTab.slice(1);if(currentTab==='onchain'){if(marketData.length){activity();renderMarkets();renderRevival()}else loadMarkets()}}
 async function loadDetailChart(tf){if(!activeDetailMarket)return;document.querySelectorAll('[data-chart-tf]').forEach(b=>b.classList.toggle('active',b.dataset.chartTf===tf));activeChartTimeframe=tf;$('chartLoading').style.display='flex';$('chartLoading').textContent='Loading '+tf+' price history...';$('priceChartSvg').style.display='none';try{let d=await api('/api/history?pool='+encodeURIComponent(activeDetailMarket.pool||'')+'&timeframe='+encodeURIComponent(tf),20000);activeChartPoints=Array.isArray(d)?d:[];renderChart(activeChartPoints)}catch(e){$('chartLoading').textContent='No price history available for this pool.';$('chartMeta').textContent='No historical data returned'}}
-function renderChart(p){let svg=$('priceChartSvg');if(!p.length){svg.style.display='none';$('chartLoading').style.display='flex';return}let w=900,h=430,pad=45,vals=p.map(x=>Number(x.close)).filter(Number.isFinite),min=Math.min(...vals),max=Math.max(...vals);if(min===max){min*=.99;max*=1.01}let path=p.map((x,i)=>{let xx=pad+i*(w-2*pad)/Math.max(1,p.length-1),yy=35+(max-Number(x.close))/(max-min)*300;return(i?'L':'M')+xx.toFixed(1)+' '+yy.toFixed(1)}).join('');svg.innerHTML='<path d="'+path+'" fill="none" stroke="#49d3ff" stroke-width="2.5"/>';svg.style.display='block';$('chartLoading').style.display='none';$('chartMeta').textContent='Live pool history • '+p.length+' candles • '+activeChartTimeframe}
-function addCustomTimeframe(){let v=prompt('Enter timeframe (example: 2h, 6h, 3d)');if(v&&/^\d+(m|h|d|w)$/.test(v.trim())){let b=document.createElement('button');b.className='chart-select-btn';b.textContent=v;b.dataset.chartTf=v; b.onclick=()=>loadDetailChart(v);document.getElementById('chartTimeframes').insertBefore(b,document.querySelector('.chart-plus'));loadDetailChart(v)}}
-async function loadTrades(){let b=$('tradeBody');$('tradeStatus').textContent='Loading...';try{let d=await api('/api/trades?pool='+encodeURIComponent(activeDetailMarket.pool||''),20000),rows=Array.isArray(d)?d:[];b.innerHTML=rows.slice(0,30).map(t=>'<tr><td>'+esc(String(t.kind||'trade').toUpperCase())+'</td><td>'+esc(t.blockTimestamp||'—')+'</td><td>'+formatPrice(t.priceUsd)+'</td><td>'+formatNumber(t.volumeUsd)+'</td><td>'+esc(t.fromTokenAmount||'—')+'</td><td>'+esc(t.toTokenAmount||'—')+'</td><td class="trade-hash">'+esc(String(t.txHash||'—').slice(0,12))+'</td></tr>').join('')||'<tr><td colspan="7" class="trade-empty">No recent transactions available.</td></tr>';$('tradeStatus').textContent=rows.length+' trades'}catch(e){b.innerHTML='<tr><td colspan="7" class="trade-empty">Transactions unavailable.</td></tr>';$('tradeStatus').textContent='Unavailable'}}
-function copyTokenAddress(){navigator.clipboard?.writeText($('detailTokenAddress').textContent)}function copyPoolAddress(){navigator.clipboard?.writeText($('detailPoolAddress').textContent)}
-$('search').addEventListener('input',()=>{if(currentTab==='crypto')renderCrypto();if(currentTab==='onchain'){renderMarkets();renderRevival()}});window.addEventListener('popstate',()=>{if($('detailView').style.display==='block')closeTokenDetail()});loadCrypto();loadChains();
-</script></body></html>
+function renderChart(p){
+  let svg=$('priceChartSvg');
+
+  if(!p.length){
+    svg.style.display='none';
+    $('chartLoading').style.display='flex';
+    return;
+  }
+
+  let w=900,h=430,pad=45;
+  let data=p.map(x=>({
+    open:Number(x.open),
+    high:Number(x.high),
+    low:Number(x.low),
+    close:Number(x.close)
+  })).filter(x=>
+    Number.isFinite(x.open) &&
+    Number.isFinite(x.high) &&
+    Number.isFinite(x.low) &&
+    Number.isFinite(x.close)
+  );
+
+  if(!data.length){
+    svg.style.display='none';
+    $('chartLoading').style.display='flex';
+    return;
+  }
+
+  let min=Math.min(...data.map(x=>x.low));
+  let max=Math.max(...data.map(x=>x.high));
+
+  if(min===max){
+    min*=0.99;
+    max*=1.01;
+  }
+
+  let chartTop=35;
+  let chartBottom=335;
+  let chartHeight=chartBottom-chartTop;
+  let chartWidth=w-2*pad;
+  let candleWidth=Math.max(2,Math.min(12,chartWidth/data.length*0.65));
+
+  const y=value =>
+    chartTop+(max-value)/(max-min)*chartHeight;
+
+  let candles=data.map((x,i)=>{
+    let xx=pad+i*chartWidth/Math.max(1,data.length-1);
+
+    let yo=y(x.open);
+    let yc=y(x.close);
+    let yh=y(x.high);
+    let yl=y(x.low);
+
+    let rising=x.close>=x.open;
+    let color=rising ? '#22c55e' : '#ef4444';
+
+    let bodyY=Math.min(yo,yc);
+    let bodyH=Math.max(1,Math.abs(yc-yo));
+
+    return `
+      <line
+        x1="${xx.toFixed(1)}"
+        y1="${yh.toFixed(1)}"
+        x2="${xx.toFixed(1)}"
+        y2="${yl.toFixed(1)}"
+        stroke="${color}"
+        stroke-width="1.2"
+      />
+
+      <rect
+        x="${(xx-candleWidth/2).toFixed(1)}"
+        y="${bodyY.toFixed(1)}"
+        width="${candleWidth.toFixed(1)}"
+        height="${bodyH.toFixed(1)}"
+        fill="${color}"
+      />
+    `;
+  }).join('');
+
+  svg.innerHTML=candles;
+  svg.style.display='block';
+  $('chartLoading').style.display='none';
+
+  $('chartMeta').textContent=
+    'Live pool history • '+data.length+
+    ' candles • '+activeChartTimeframe;
+}
