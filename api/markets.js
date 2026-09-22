@@ -6,7 +6,6 @@ export default async function handler(req, res) {
       Accept: "application/json;version=20230203"
     };
 
-    // Supported chains
     const networks = [
       "eth",
       "solana",
@@ -16,6 +15,26 @@ export default async function handler(req, res) {
       "polygon_pos",
       "avalanche"
     ];
+
+    /*
+      Stablecoins
+
+      IMPORTANT:
+      Agar pair mein ANY stablecoin hai,
+      pair remove hoga.
+
+      Examples:
+
+      USDT / SOL   ❌
+      SOL / USDC   ❌
+      ETH / USDT   ❌
+      DAI / WETH   ❌
+
+      TROLL / SOL  ✅
+      BONK / SOL   ✅
+      PEPE / WETH  ✅
+      TROLL / WETH ✅
+    */
 
     const stablecoins = new Set([
       "USDT",
@@ -50,8 +69,11 @@ export default async function handler(req, res) {
         .toUpperCase();
     }
 
-    function isStablePair(a, b) {
-      return stablecoins.has(a) && stablecoins.has(b);
+    function hasStablecoin(tokenA, tokenB) {
+      return (
+        stablecoins.has(tokenA) ||
+        stablecoins.has(tokenB)
+      );
     }
 
     function getTokenInfo(pool, included) {
@@ -62,11 +84,15 @@ export default async function handler(req, res) {
         pool?.relationships?.quote_token?.data?.id || "";
 
       const baseToken = included.find(
-        x => String(x?.id || "") === String(baseId)
+        item =>
+          String(item?.id || "") ===
+          String(baseId)
       );
 
       const quoteToken = included.find(
-        x => String(x?.id || "") === String(quoteId)
+        item =>
+          String(item?.id || "") ===
+          String(quoteId)
       );
 
       return {
@@ -94,7 +120,7 @@ export default async function handler(req, res) {
 
       const parts = String(name)
         .split("/")
-        .map(x => cleanSymbol(x));
+        .map(item => cleanSymbol(item));
 
       return {
         tokenA: parts[0] || "",
@@ -104,10 +130,8 @@ export default async function handler(req, res) {
 
     /*
       Revival / Buying Activity
-
-      DATA-BASED HEURISTIC.
-      It does not guarantee future price movement.
     */
+
     function calculateRevival(data) {
       const volume1h =
         Number(data.volume1h || 0);
@@ -154,9 +178,6 @@ export default async function handler(req, res) {
 
       let score = 0;
 
-      /*
-        Volume acceleration
-      */
       if (acceleration >= 3) {
         score += 40;
       } else if (acceleration >= 2) {
@@ -167,9 +188,6 @@ export default async function handler(req, res) {
         score += 10;
       }
 
-      /*
-        Buy pressure
-      */
       if (buyPressure >= 0.65) {
         score += 35;
       } else if (buyPressure >= 0.60) {
@@ -180,9 +198,6 @@ export default async function handler(req, res) {
         score += 10;
       }
 
-      /*
-        Positive 1H movement
-      */
       if (change1h >= 10) {
         score += 25;
       } else if (change1h >= 5) {
@@ -195,21 +210,13 @@ export default async function handler(req, res) {
 
       let status = "Normal";
 
-      /*
-        Buying Started
-      */
       if (
         acceleration >= 1.2 &&
         buyPressure >= 0.55 &&
         change1h >= 0
       ) {
         status = "Buying Started";
-      }
-
-      /*
-        Reviving
-      */
-      else if (
+      } else if (
         acceleration >= 1.5 &&
         buyPressure >= 0.50
       ) {
@@ -225,12 +232,9 @@ export default async function handler(req, res) {
     }
 
     /*
-      Get pools for ONE network.
-
-      IMPORTANT:
-      No long sleep here.
-      All supported networks can load in parallel.
+      Get pools for each network
     */
+
     async function getPools(network) {
       const url =
         `${BASE}/networks/${network}/pools` +
@@ -255,18 +259,21 @@ export default async function handler(req, res) {
           };
         }
 
-        const json = await response.json();
+        const json =
+          await response.json();
 
         return {
           network,
 
-          data: Array.isArray(json?.data)
-            ? json.data
-            : [],
+          data:
+            Array.isArray(json?.data)
+              ? json.data
+              : [],
 
-          included: Array.isArray(json?.included)
-            ? json.included
-            : []
+          included:
+            Array.isArray(json?.included)
+              ? json.included
+              : []
         };
 
       } catch (error) {
@@ -284,18 +291,9 @@ export default async function handler(req, res) {
     }
 
     /*
-      =====================================================
-      FAST NETWORK LOADING
-      =====================================================
-
-      OLD:
-      Ethereum -> wait -> Solana -> wait -> Base -> etc.
-
-      NEW:
-      All 7 networks request data together.
-
-      This is the main speed improvement.
+      Load all networks together
     */
+
     const results =
       await Promise.all(
         networks.map(network =>
@@ -307,8 +305,9 @@ export default async function handler(req, res) {
     const seenPools = new Set();
 
     /*
-      Process all network results.
+      Process all networks
     */
+
     for (const result of results) {
 
       const network =
@@ -333,9 +332,6 @@ export default async function handler(req, res) {
         const poolId =
           String(pool.id);
 
-        /*
-          Prevent duplicate pools.
-        */
         if (seenPools.has(poolId)) {
           continue;
         }
@@ -364,8 +360,9 @@ export default async function handler(req, res) {
           );
 
         /*
-          Remove tiny / unusable pools.
+          Remove very small markets
         */
+
         if (volume24h < 5000) {
           continue;
         }
@@ -373,6 +370,10 @@ export default async function handler(req, res) {
         if (liquidity < 50000) {
           continue;
         }
+
+        /*
+          Get token information
+        */
 
         let {
           tokenA,
@@ -385,8 +386,9 @@ export default async function handler(req, res) {
         );
 
         /*
-          Fallback token names.
+          Fallback
         */
+
         if (!tokenA || !tokenB) {
 
           const fallback =
@@ -401,21 +403,42 @@ export default async function handler(req, res) {
             fallback.tokenB;
         }
 
+        /*
+          Missing token names
+        */
+
         if (!tokenA || !tokenB) {
           continue;
         }
 
         /*
-          Remove stablecoin / stablecoin pairs.
+          IMPORTANT FILTER
+
+          Remove every pair that contains
+          ANY stablecoin.
+
+          USDT / SOL  ❌
+          SOL / USDC  ❌
+          ETH / USDT  ❌
+          USDC / DAI  ❌
+
+          TROLL / SOL ✅
+          BONK / SOL  ✅
+          PEPE / WETH ✅
         */
+
         if (
-          isStablePair(
+          hasStablecoin(
             tokenA,
             tokenB
           )
         ) {
           continue;
         }
+
+      /*
+          Market data
+        */
 
         const marketCap =
           Number(
@@ -456,8 +479,9 @@ export default async function handler(req, res) {
           );
 
         /*
-          Revival calculation.
+          Revival
         */
+
         const revival =
           calculateRevival({
             volume1h,
@@ -466,6 +490,10 @@ export default async function handler(req, res) {
             sells: sells24h,
             change1h
           });
+
+        /*
+          Market Cap / FDV
+        */
 
         const displayValue =
           marketCap > 0
@@ -481,14 +509,30 @@ export default async function handler(req, res) {
             ? "FDV"
             : "N/A";
 
+        /*
+          Final market object
+        */
+
         markets.push({
 
           network,
 
           pool: poolId,
 
+          /*
+            IMPORTANT:
+
+            Pair name comes from
+            actual on-chain token symbols.
+
+            Example:
+
+            TROLL / SOL
+            BONK / SOL
+            PEPE / WETH
+          */
+
           name:
-            attributes.name ||
             `${tokenA} / ${tokenB}`,
 
           tokenA,
@@ -538,9 +582,6 @@ export default async function handler(req, res) {
             attributes.pool_created_at ||
             null,
 
-          /*
-            Revival information
-          */
           revival:
             revival.revival,
 
@@ -562,8 +603,9 @@ export default async function handler(req, res) {
     }
 
     /*
-      Highest 24H volume first.
+      Highest 24H volume first
     */
+
     markets.sort(
       (a, b) =>
         Number(b.volume24h || 0) -
@@ -571,8 +613,9 @@ export default async function handler(req, res) {
     );
 
     /*
-      Return maximum 500 markets.
+      Maximum 500 markets
     */
+
     const finalMarkets =
       markets
         .slice(0, 500)
@@ -582,15 +625,9 @@ export default async function handler(req, res) {
         }));
 
     /*
-      Cache result on Vercel.
-
-      s-maxage:
-      Vercel can reuse the successful response.
-
-      stale-while-revalidate:
-      old data can be shown while
-      fresh data is generated.
+      Vercel cache
     */
+
     res.setHeader(
       "Cache-Control",
       "s-maxage=180, stale-while-revalidate=600"
@@ -619,4 +656,4 @@ export default async function handler(req, res) {
           "On-chain market data failed"
       });
   }
-}
+        }
