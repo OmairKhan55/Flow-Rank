@@ -23,11 +23,46 @@ export default async function handler(req, res) {
     ];
 
     const stablecoins = new Set([
-      "USDT","USDC","DAI","FDUSD","USDE","PYUSD",
-      "USDS","USDP","TUSD","BUSD","FRAX","USDG",
-      "RLUSD","USDD","GUSD","LUSD","SUSD",
-      "EURC","EURI","USDC.E","USDT.E"
-    ]);
+  "USDT",
+  "USDC",
+  "USDS",
+  "USDE",
+  "USD1",
+  "USDA",
+  "USAD",
+  "USDG",
+  "USDP",
+  "PYUSD",
+  "RLUSD",
+  "DAI",
+  "BUSD",
+  "TUSD",
+  "FDUSD",
+  "FRAX",
+  "USDD",
+  "GUSD",
+  "LUSD",
+  "SUSD",
+  "EURC",
+  "EURI",
+  "USDC.E",
+  "USDT.E",
+  "USDB",
+  "DOLA",
+  "FUSD",
+  "MUSD",
+  "PUSD",
+  "USDH",
+  "USDV",
+  "TRUSD",
+  "FXUSD",
+  "CUSD",
+  "FRXUSD",
+  "USDAT",
+  "HLUSD",
+  "USDCV",
+  "YUSD"
+]);
 
     function cleanSymbol(value) {
       if (!value) return "";
