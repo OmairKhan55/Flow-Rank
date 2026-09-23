@@ -6,18 +6,11 @@ export default async function handler(req, res) {
       });
     }
 
-    const BASE =
-      "https://api.geckoterminal.com/api/v2";
+    const BASE = "https://api.geckoterminal.com/api/v2";
 
     const headers = {
       Accept: "application/json;version=20230203"
     };
-
-    /*
-      ============================================================
-      NETWORKS
-      ============================================================
-    */
 
     const networks = [
       "eth",
@@ -28,12 +21,6 @@ export default async function handler(req, res) {
       "polygon_pos",
       "avalanche"
     ];
-
-    /*
-      ============================================================
-      STABLECOINS
-      ============================================================
-    */
 
     const stablecoins = new Set([
       "USDT",
@@ -68,18 +55,9 @@ export default async function handler(req, res) {
         .toUpperCase();
     }
 
-    function hasStablecoin(tokenA, tokenB) {
-      return (
-        stablecoins.has(tokenA) ||
-        stablecoins.has(tokenB)
-      );
+    function hasStablecoin(a, b) {
+      return stablecoins.has(a) || stablecoins.has(b);
     }
-
-    /*
-      ============================================================
-      TOKEN INFORMATION
-      ============================================================
-    */
 
     function getTokenInfo(pool, included) {
       const baseId =
@@ -88,19 +66,15 @@ export default async function handler(req, res) {
       const quoteId =
         pool?.relationships?.quote_token?.data?.id || "";
 
-      const baseToken =
-        included.find(
-          item =>
-            String(item?.id || "") ===
-            String(baseId)
-        );
+      const baseToken = included.find(
+        item =>
+          String(item?.id || "") === String(baseId)
+      );
 
-      const quoteToken =
-        included.find(
-          item =>
-            String(item?.id || "") ===
-            String(quoteId)
-        );
+      const quoteToken = included.find(
+        item =>
+          String(item?.id || "") === String(quoteId)
+      );
 
       return {
         tokenA: cleanSymbol(
@@ -123,22 +97,13 @@ export default async function handler(req, res) {
       };
     }
 
-    /*
-      ============================================================
-      FALLBACK TOKEN INFORMATION
-      ============================================================
-    */
-
     function fallbackTokenInfo(pool) {
       const name =
         pool?.attributes?.name || "";
 
-      const parts =
-        String(name)
-          .split("/")
-          .map(item =>
-            cleanSymbol(item)
-          );
+      const parts = String(name)
+        .split("/")
+        .map(item => cleanSymbol(item));
 
       return {
         tokenA: parts[0] || "",
@@ -148,8 +113,18 @@ export default async function handler(req, res) {
 
     /*
       ============================================================
-      REVIVAL / BUYING ACTIVITY
+      REVIVAL / BUYING STARTED
       ============================================================
+
+      Only OLD markets:
+      30+ days
+
+      Buying Started requires:
+      - 1H volume above normal hourly average
+      - buyers >= sellers
+      - positive 1H price movement
+
+      Stronger activity = higher score.
     */
 
     function calculateRevival(data) {
@@ -171,13 +146,6 @@ export default async function handler(req, res) {
       const ageDays =
         Number(data.ageDays || 0);
 
-      /*
-        Revival is only for OLD markets.
-
-        Minimum age:
-        30 days
-      */
-
       if (
         ageDays < 30 ||
         volume1h <= 0 ||
@@ -191,12 +159,6 @@ export default async function handler(req, res) {
         };
       }
 
-      /*
-        ==========================================================
-        1H VOLUME ACCELERATION
-        ==========================================================
-      */
-
       const hourlyAverage =
         volume24h / 24;
 
@@ -204,12 +166,6 @@ export default async function handler(req, res) {
         hourlyAverage > 0
           ? volume1h / hourlyAverage
           : 0;
-
-      /*
-        ==========================================================
-        BUY PRESSURE
-        ==========================================================
-      */
 
       const totalTrades =
         buys + sells;
@@ -222,30 +178,21 @@ export default async function handler(req, res) {
       let score = 0;
 
       /*
-        ==========================================================
-        VOLUME SCORE
-        ==========================================================
+        VOLUME PICKUP
       */
 
-      if (acceleration >= 4) {
+      if (acceleration >= 3) {
         score += 40;
-      } else if (acceleration >= 3) {
-        score += 30;
       } else if (acceleration >= 2) {
+        score += 30;
+      } else if (acceleration >= 1.5) {
         score += 20;
-      } else {
-        return {
-          score: 0,
-          status: "Normal",
-          revival: false,
-          buyPressure
-        };
+      } else if (acceleration >= 1.2) {
+        score += 10;
       }
 
       /*
-        ==========================================================
-        BUYING SCORE
-        ==========================================================
+        BUY PRESSURE
       */
 
       if (buyPressure >= 0.65) {
@@ -254,60 +201,80 @@ export default async function handler(req, res) {
         score += 30;
       } else if (buyPressure >= 0.55) {
         score += 20;
-      } else {
-        return {
-          score: 0,
-          status: "Normal",
-          revival: false,
-          buyPressure
-        };
+      } else if (buyPressure >= 0.52) {
+        score += 10;
       }
 
       /*
-        ==========================================================
-        1H PRICE MOVE
-        ==========================================================
+        1H PRICE ACTION
       */
 
       if (change1h >= 10) {
         score += 25;
       } else if (change1h >= 5) {
         score += 20;
-      } else if (change1h >= 3) {
-        score += 15;
-      } else {
+      } else if (change1h >= 2) {
+        score += 10;
+      } else if (change1h > 0) {
+        score += 5;
+      }
+
+      /*
+        BUYING STARTED
+
+        Minimum:
+        - 1.2x hourly volume
+        - 52% buying pressure
+        - positive 1H move
+      */
+
+      if (
+        acceleration >= 1.2 &&
+        buyPressure >= 0.52 &&
+        change1h > 0
+      ) {
         return {
-          score: 0,
-          status: "Normal",
-          revival: false,
+          score,
+          status: "Buying Started",
+          revival: true,
           buyPressure
         };
       }
 
       /*
-        ==========================================================
-        BUYING STARTED
-        ==========================================================
+        REVIVING
+
+        Slightly weaker activity.
       */
+
+      if (
+        acceleration >= 1.5 &&
+        buyPressure >= 0.50 &&
+        change1h >= 0
+      ) {
+        return {
+          score,
+          status: "Reviving",
+          revival: true,
+          buyPressure
+        };
+      }
 
       return {
         score,
-        status: "Buying Started",
-        revival: true,
+        status: "Normal",
+        revival: false,
         buyPressure
       };
     }
 
     /*
       ============================================================
-      FETCH ONE PAGE OF TOP POOLS
+      GET TOP POOLS
       ============================================================
     */
 
-    async function getPoolPage(
-      network,
-      page
-    ) {
+    async function getPoolPage(network, page) {
       const url =
         `${BASE}/networks/${network}/pools` +
         `?include=base_token,quote_token` +
@@ -315,10 +282,9 @@ export default async function handler(req, res) {
         `&page=${page}`;
 
       try {
-        const response =
-          await fetch(url, {
-            headers
-          });
+        const response = await fetch(url, {
+          headers
+        });
 
         if (!response.ok) {
           console.log(
@@ -332,8 +298,7 @@ export default async function handler(req, res) {
           };
         }
 
-        const json =
-          await response.json();
+        const json = await response.json();
 
         return {
           network,
@@ -348,7 +313,6 @@ export default async function handler(req, res) {
               ? json.included
               : []
         };
-
       } catch (error) {
         console.log(
           `${network} page ${page} failed:`,
@@ -365,7 +329,7 @@ export default async function handler(req, res) {
 
     /*
       ============================================================
-      FETCH NEW POOLS
+      NEW POOLS
       ============================================================
     */
 
@@ -376,10 +340,9 @@ export default async function handler(req, res) {
         `&page=1`;
 
       try {
-        const response =
-          await fetch(url, {
-            headers
-          });
+        const response = await fetch(url, {
+          headers
+        });
 
         if (!response.ok) {
           console.log(
@@ -393,8 +356,7 @@ export default async function handler(req, res) {
           };
         }
 
-        const json =
-          await response.json();
+        const json = await response.json();
 
         return {
           network,
@@ -409,7 +371,6 @@ export default async function handler(req, res) {
               ? json.included
               : []
         };
-
       } catch (error) {
         console.log(
           `${network} new pools failed:`,
@@ -426,11 +387,8 @@ export default async function handler(req, res) {
 
     /*
       ============================================================
-      LOAD MULTIPLE PAGES
+      REQUESTS
       ============================================================
-
-      2 pages per network
-      + new pools
     */
 
     const requests = [];
@@ -454,23 +412,20 @@ export default async function handler(req, res) {
 
     /*
       ============================================================
-      MARKET STORAGE
+      MARKETS
       ============================================================
     */
 
     const markets = [];
-
-    const seenPools =
-      new Set();
+    const seenPools = new Set();
 
     /*
       ============================================================
-      PROCESS ALL RESULTS
+      PROCESS
       ============================================================
     */
 
     for (const result of results) {
-
       const network =
         result?.network || "";
 
@@ -485,23 +440,12 @@ export default async function handler(req, res) {
           : [];
 
       for (const pool of pools) {
-
-        if (!pool?.id) {
-          continue;
-        }
+        if (!pool?.id) continue;
 
         const poolId =
           String(pool.id);
 
-        /*
-          ========================================================
-          REMOVE DUPLICATES
-          ========================================================
-        */
-
-        if (
-          seenPools.has(poolId)
-        ) {
+        if (seenPools.has(poolId)) {
           continue;
         }
 
@@ -511,9 +455,7 @@ export default async function handler(req, res) {
           pool.attributes || {};
 
         /*
-          ========================================================
           VOLUME
-          ========================================================
         */
 
         const volume24h =
@@ -527,9 +469,7 @@ export default async function handler(req, res) {
           );
 
         /*
-          ========================================================
           LIQUIDITY
-          ========================================================
         */
 
         const liquidity =
@@ -538,9 +478,7 @@ export default async function handler(req, res) {
           );
 
         /*
-          ========================================================
           BASIC FILTER
-          ========================================================
         */
 
         if (
@@ -551,9 +489,7 @@ export default async function handler(req, res) {
         }
 
         /*
-          ========================================================
           TOKEN INFO
-          ========================================================
         */
 
         let {
@@ -567,20 +503,9 @@ export default async function handler(req, res) {
             included
           );
 
-        /*
-          ========================================================
-          FALLBACK
-          ========================================================
-        */
-
-        if (
-          !tokenA ||
-          !tokenB
-        ) {
+        if (!tokenA || !tokenB) {
           const fallback =
-            fallbackTokenInfo(
-              pool
-            );
+            fallbackTokenInfo(pool);
 
           tokenA =
             tokenA ||
@@ -591,23 +516,12 @@ export default async function handler(req, res) {
             fallback.tokenB;
         }
 
-        /*
-          ========================================================
-          MISSING TOKEN
-          ========================================================
-        */
-
-        if (
-          !tokenA ||
-          !tokenB
-        ) {
+        if (!tokenA || !tokenB) {
           continue;
         }
 
         /*
-          ========================================================
           STABLECOIN FILTER
-          ========================================================
         */
 
         if (
@@ -620,9 +534,7 @@ export default async function handler(req, res) {
         }
 
         /*
-          ========================================================
           TRANSACTIONS
-          ========================================================
         */
 
         const transactions =
@@ -644,9 +556,7 @@ export default async function handler(req, res) {
           sells24h;
 
         /*
-          ========================================================
           PRICE CHANGES
-          ========================================================
         */
 
         const change1h =
@@ -664,9 +574,7 @@ export default async function handler(req, res) {
           );
 
         /*
-          ========================================================
           MARKET CAP / FDV
-          ========================================================
         */
 
         const marketCap =
@@ -695,7 +603,7 @@ export default async function handler(req, res) {
 
         /*
           ========================================================
-          POOL CREATED TIME
+          CREATED DATE
           ========================================================
         */
 
@@ -703,20 +611,25 @@ export default async function handler(req, res) {
           attributes.pool_created_at ||
           null;
 
-        /*
-          ========================================================
-          MARKET AGE
-          ========================================================
-        */
+        let ageDays = 0;
 
-        const ageDays =
-          createdAt
-            ? Math.floor(
-                (Date.now() -
-                  new Date(createdAt).getTime()) /
-                86400000
-              )
-            : 0;
+        if (createdAt) {
+          const createdTime =
+            new Date(createdAt).getTime();
+
+          if (
+            Number.isFinite(createdTime) &&
+            createdTime > 0
+          ) {
+            ageDays =
+              Math.floor(
+                (
+                  Date.now() -
+                  createdTime
+                ) / 86400000
+              );
+          }
+        }
 
         /*
           ========================================================
@@ -736,12 +649,11 @@ export default async function handler(req, res) {
 
         /*
           ========================================================
-          FINAL MARKET OBJECT
+          FINAL OBJECT
           ========================================================
         */
 
         markets.push({
-
           network,
 
           pool:
@@ -798,6 +710,8 @@ export default async function handler(req, res) {
 
           createdAt,
 
+          ageDays,
+
           revival:
             revival.revival,
 
@@ -820,23 +734,19 @@ export default async function handler(req, res) {
 
     /*
       ============================================================
-      SORT
+      SORT BY 24H VOLUME
       ============================================================
     */
 
     markets.sort(
       (a, b) =>
-        Number(
-          b.volume24h || 0
-        ) -
-        Number(
-          a.volume24h || 0
-        )
+        Number(b.volume24h || 0) -
+        Number(a.volume24h || 0)
     );
 
     /*
       ============================================================
-      FINAL 500 MARKETS
+      FINAL 500
       ============================================================
     */
 
@@ -845,9 +755,7 @@ export default async function handler(req, res) {
         .slice(0, 500)
         .map(
           (market, index) => ({
-            rank:
-              index + 1,
-
+            rank: index + 1,
             ...market
           })
         );
@@ -879,7 +787,6 @@ export default async function handler(req, res) {
       .json(finalMarkets);
 
   } catch (error) {
-
     console.error(
       "FlowRank Markets API Error:",
       error?.message || error
