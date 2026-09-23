@@ -56,7 +56,10 @@ export default async function handler(req, res) {
     }
 
     function hasStablecoin(a, b) {
-      return stablecoins.has(a) || stablecoins.has(b);
+      return (
+        stablecoins.has(a) ||
+        stablecoins.has(b)
+      );
     }
 
     function getTokenInfo(pool, included) {
@@ -68,12 +71,14 @@ export default async function handler(req, res) {
 
       const baseToken = included.find(
         item =>
-          String(item?.id || "") === String(baseId)
+          String(item?.id || "") ===
+          String(baseId)
       );
 
       const quoteToken = included.find(
         item =>
-          String(item?.id || "") === String(quoteId)
+          String(item?.id || "") ===
+          String(quoteId)
       );
 
       return {
@@ -101,9 +106,10 @@ export default async function handler(req, res) {
       const name =
         pool?.attributes?.name || "";
 
-      const parts = String(name)
-        .split("/")
-        .map(item => cleanSymbol(item));
+      const parts =
+        String(name)
+          .split("/")
+          .map(item => cleanSymbol(item));
 
       return {
         tokenA: parts[0] || "",
@@ -113,21 +119,286 @@ export default async function handler(req, res) {
 
     /*
       ============================================================
-      REVIVAL / BUYING STARTED
+      HISTORICAL 1H CANDLES
       ============================================================
-
-      Only OLD markets:
-      30+ days
-
-      Buying Started requires:
-      - 1H volume above normal hourly average
-      - buyers >= sellers
-      - positive 1H price movement
-
-      Stronger activity = higher score.
     */
 
-    function calculateRevival(data) {
+    async function getHourlyCandles(network, poolId) {
+      try {
+        const prefix = `${network}_`;
+
+        if (!String(poolId).startsWith(prefix)) {
+          return [];
+        }
+
+        const poolAddress =
+          String(poolId).slice(prefix.length);
+
+        if (!poolAddress) {
+          return [];
+        }
+
+        const url =
+          `${BASE}/networks/${network}/pools/${poolAddress}/ohlcv/hour` +
+          `?aggregate=1&limit=48`;
+
+        const response =
+          await fetch(url, {
+            headers
+          });
+
+        if (!response.ok) {
+          return [];
+        }
+
+        const json =
+          await response.json();
+
+        const list =
+          json?.data?.attributes?.ohlcv_list;
+
+        if (!Array.isArray(list)) {
+          return [];
+        }
+
+        return list
+          .map(c => {
+            if (!Array.isArray(c) || c.length < 6) {
+              return null;
+            }
+
+            return {
+              time: Number(c[0] || 0),
+              open: Number(c[1] || 0),
+              high: Number(c[2] || 0),
+              low: Number(c[3] || 0),
+              close: Number(c[4] || 0),
+              volume: Number(c[5] || 0)
+            };
+          })
+          .filter(
+            c =>
+              c &&
+              c.open > 0 &&
+              c.high > 0 &&
+              c.low > 0 &&
+              c.close > 0
+          )
+          .sort(
+            (a, b) => a.time - b.time
+          );
+
+      } catch (error) {
+        return [];
+      }
+    }
+
+    /*
+      ============================================================
+      HISTORICAL REVIVAL DETECTION
+      ============================================================
+
+      Looks for:
+
+      OLD MARKET
+          ↓
+      WEAKNESS / DIP
+          ↓
+      BASE / STABILIZATION
+          ↓
+      RECENT BULLISH RECOVERY
+          ↓
+      BUYING STARTED
+    */
+
+    function detectHistoricalRevival(candles) {
+      if (
+        !Array.isArray(candles) ||
+        candles.length < 18
+      ) {
+        return {
+          historical: false,
+          dip: false,
+          base: false,
+          recovery: false,
+          score: 0
+        };
+      }
+
+      const recent =
+        candles.slice(-6);
+
+      const previous =
+        candles.slice(-18, -6);
+
+      if (
+        recent.length < 4 ||
+        previous.length < 6
+      ) {
+        return {
+          historical: false,
+          dip: false,
+          base: false,
+          recovery: false,
+          score: 0
+        };
+      }
+
+      const previousHigh =
+        Math.max(
+          ...previous.map(c => c.high)
+        );
+
+      const previousLow =
+        Math.min(
+          ...previous.map(c => c.low)
+        );
+
+      const recentLow =
+        Math.min(
+          ...recent.map(c => c.low)
+        );
+
+      const recentHigh =
+        Math.max(
+          ...recent.map(c => c.high)
+        );
+
+      const last =
+        candles[candles.length - 1];
+
+      const beforeLast =
+        candles[candles.length - 2];
+
+      /*
+        DIP
+
+        Price must have moved meaningfully
+        below the previous high.
+      */
+
+      const dipPercent =
+        previousHigh > 0
+          ? (
+              (previousHigh - recentLow) /
+              previousHigh
+            ) * 100
+          : 0;
+
+      const dip =
+        dipPercent >= 8;
+
+      /*
+        BASE
+
+        Recent candles should stop falling
+        and stay relatively close together.
+      */
+
+      const baseRange =
+        recentLow > 0
+          ? (
+              (recentHigh - recentLow) /
+              recentLow
+            ) * 100
+          : 999;
+
+      const base =
+        baseRange <= 25;
+
+      /*
+        RECOVERY
+
+        Current price should recover
+        from the recent low.
+      */
+
+      const recoveryPercent =
+        recentLow > 0
+          ? (
+              (last.close - recentLow) /
+              recentLow
+            ) * 100
+          : 0;
+
+      const recovery =
+        recoveryPercent >= 3;
+
+      /*
+        BULLISH LAST CANDLE
+      */
+
+      const bullishCandle =
+        last.close > last.open &&
+        last.close > beforeLast.close;
+
+      /*
+        VOLUME RETURN
+
+        Last candle should have more volume
+        than the recent average.
+      */
+
+      const earlierRecent =
+        recent.slice(0, -1);
+
+      const averageVolume =
+        earlierRecent.length
+          ? earlierRecent.reduce(
+              (sum, c) =>
+                sum + Number(c.volume || 0),
+              0
+            ) /
+            earlierRecent.length
+          : 0;
+
+      const volumeReturn =
+        averageVolume > 0
+          ? last.volume / averageVolume
+          : 0;
+
+      const volumeConfirmed =
+        volumeReturn >= 1.2;
+
+      let score = 0;
+
+      if (dip) score += 25;
+      if (base) score += 20;
+      if (recovery) score += 20;
+      if (bullishCandle) score += 20;
+      if (volumeConfirmed) score += 15;
+
+      /*
+        Require the important parts:
+        dip + base/recovery + bullish recovery
+      */
+
+      const historical =
+        dip &&
+        base &&
+        recovery &&
+        bullishCandle;
+
+      return {
+        historical,
+        dip,
+        base,
+        recovery,
+        bullishCandle,
+        volumeConfirmed,
+        recoveryPercent,
+        volumeReturn,
+        score
+      };
+    }
+
+    /*
+      ============================================================
+      CURRENT REVIVAL DATA
+      ============================================================
+    */
+
+    function calculateCurrentActivity(data) {
       const volume1h =
         Number(data.volume1h || 0);
 
@@ -152,10 +423,10 @@ export default async function handler(req, res) {
         volume24h <= 0
       ) {
         return {
+          candidate: false,
           score: 0,
-          status: "Normal",
-          revival: false,
-          buyPressure: 0
+          buyPressure: 0,
+          acceleration: 0
         };
       }
 
@@ -175,11 +446,18 @@ export default async function handler(req, res) {
           ? buys / totalTrades
           : 0;
 
-      let score = 0;
-
       /*
-        VOLUME PICKUP
+        Candidate threshold intentionally
+        remains moderate so valid markets
+        can reach historical analysis.
       */
+
+      const candidate =
+        acceleration >= 1.1 &&
+        buyPressure >= 0.50 &&
+        change1h > 0;
+
+      let score = 0;
 
       if (acceleration >= 3) {
         score += 40;
@@ -187,13 +465,9 @@ export default async function handler(req, res) {
         score += 30;
       } else if (acceleration >= 1.5) {
         score += 20;
-      } else if (acceleration >= 1.2) {
+      } else if (acceleration >= 1.1) {
         score += 10;
       }
-
-      /*
-        BUY PRESSURE
-      */
 
       if (buyPressure >= 0.65) {
         score += 35;
@@ -201,13 +475,9 @@ export default async function handler(req, res) {
         score += 30;
       } else if (buyPressure >= 0.55) {
         score += 20;
-      } else if (buyPressure >= 0.52) {
+      } else if (buyPressure >= 0.50) {
         score += 10;
       }
-
-      /*
-        1H PRICE ACTION
-      */
 
       if (change1h >= 10) {
         score += 25;
@@ -219,58 +489,17 @@ export default async function handler(req, res) {
         score += 5;
       }
 
-      /*
-        BUYING STARTED
-
-        Minimum:
-        - 1.2x hourly volume
-        - 52% buying pressure
-        - positive 1H move
-      */
-
-      if (
-        acceleration >= 1.2 &&
-        buyPressure >= 0.52 &&
-        change1h > 0
-      ) {
-        return {
-          score,
-          status: "Buying Started",
-          revival: true,
-          buyPressure
-        };
-      }
-
-      /*
-        REVIVING
-
-        Slightly weaker activity.
-      */
-
-      if (
-        acceleration >= 1.5 &&
-        buyPressure >= 0.50 &&
-        change1h >= 0
-      ) {
-        return {
-          score,
-          status: "Reviving",
-          revival: true,
-          buyPressure
-        };
-      }
-
       return {
+        candidate,
         score,
-        status: "Normal",
-        revival: false,
-        buyPressure
+        buyPressure,
+        acceleration
       };
     }
 
     /*
       ============================================================
-      GET TOP POOLS
+      FETCH TOP POOLS
       ============================================================
     */
 
@@ -282,15 +511,12 @@ export default async function handler(req, res) {
         `&page=${page}`;
 
       try {
-        const response = await fetch(url, {
-          headers
-        });
+        const response =
+          await fetch(url, {
+            headers
+          });
 
         if (!response.ok) {
-          console.log(
-            `${network} page ${page} HTTP ${response.status}`
-          );
-
           return {
             network,
             data: [],
@@ -298,7 +524,8 @@ export default async function handler(req, res) {
           };
         }
 
-        const json = await response.json();
+        const json =
+          await response.json();
 
         return {
           network,
@@ -313,12 +540,8 @@ export default async function handler(req, res) {
               ? json.included
               : []
         };
-      } catch (error) {
-        console.log(
-          `${network} page ${page} failed:`,
-          error?.message || error
-        );
 
+      } catch (error) {
         return {
           network,
           data: [],
@@ -340,15 +563,12 @@ export default async function handler(req, res) {
         `&page=1`;
 
       try {
-        const response = await fetch(url, {
-          headers
-        });
+        const response =
+          await fetch(url, {
+            headers
+          });
 
         if (!response.ok) {
-          console.log(
-            `${network} new pools HTTP ${response.status}`
-          );
-
           return {
             network,
             data: [],
@@ -356,7 +576,8 @@ export default async function handler(req, res) {
           };
         }
 
-        const json = await response.json();
+        const json =
+          await response.json();
 
         return {
           network,
@@ -371,12 +592,8 @@ export default async function handler(req, res) {
               ? json.included
               : []
         };
-      } catch (error) {
-        console.log(
-          `${network} new pools failed:`,
-          error?.message || error
-        );
 
+      } catch (error) {
         return {
           network,
           data: [],
@@ -387,7 +604,7 @@ export default async function handler(req, res) {
 
     /*
       ============================================================
-      REQUESTS
+      LOAD DATA
       ============================================================
     */
 
@@ -412,18 +629,12 @@ export default async function handler(req, res) {
 
     /*
       ============================================================
-      MARKETS
+      BUILD MARKETS
       ============================================================
     */
 
     const markets = [];
     const seenPools = new Set();
-
-    /*
-      ============================================================
-      PROCESS
-      ============================================================
-    */
 
     for (const result of results) {
       const network =
@@ -440,7 +651,9 @@ export default async function handler(req, res) {
           : [];
 
       for (const pool of pools) {
-        if (!pool?.id) continue;
+        if (!pool?.id) {
+          continue;
+        }
 
         const poolId =
           String(pool.id);
@@ -454,10 +667,6 @@ export default async function handler(req, res) {
         const attributes =
           pool.attributes || {};
 
-        /*
-          VOLUME
-        */
-
         const volume24h =
           Number(
             attributes.volume_usd?.h24 || 0
@@ -468,18 +677,10 @@ export default async function handler(req, res) {
             attributes.volume_usd?.h1 || 0
           );
 
-        /*
-          LIQUIDITY
-        */
-
         const liquidity =
           Number(
             attributes.reserve_in_usd || 0
           );
-
-        /*
-          BASIC FILTER
-        */
 
         if (
           volume24h < 5000 &&
@@ -487,10 +688,6 @@ export default async function handler(req, res) {
         ) {
           continue;
         }
-
-        /*
-          TOKEN INFO
-        */
 
         let {
           tokenA,
@@ -520,10 +717,6 @@ export default async function handler(req, res) {
           continue;
         }
 
-        /*
-          STABLECOIN FILTER
-        */
-
         if (
           hasStablecoin(
             tokenA,
@@ -532,10 +725,6 @@ export default async function handler(req, res) {
         ) {
           continue;
         }
-
-        /*
-          TRANSACTIONS
-        */
 
         const transactions =
           attributes.transactions?.h24 ||
@@ -555,10 +744,6 @@ export default async function handler(req, res) {
           buys24h +
           sells24h;
 
-        /*
-          PRICE CHANGES
-        */
-
         const change1h =
           Number(
             attributes
@@ -572,10 +757,6 @@ export default async function handler(req, res) {
               .price_change_percentage
               ?.h24 || 0
           );
-
-        /*
-          MARKET CAP / FDV
-        */
 
         const marketCap =
           Number(
@@ -601,12 +782,6 @@ export default async function handler(req, res) {
             ? "FDV"
             : "N/A";
 
-        /*
-          ========================================================
-          CREATED DATE
-          ========================================================
-        */
-
         const createdAt =
           attributes.pool_created_at ||
           null;
@@ -631,14 +806,8 @@ export default async function handler(req, res) {
           }
         }
 
-        /*
-          ========================================================
-          REVIVAL
-          ========================================================
-        */
-
-        const revival =
-          calculateRevival({
+        const current =
+          calculateCurrentActivity({
             volume1h,
             volume24h,
             buys: buys24h,
@@ -647,23 +816,14 @@ export default async function handler(req, res) {
             ageDays
           });
 
-        /*
-          ========================================================
-          FINAL OBJECT
-          ========================================================
-        */
-
         markets.push({
           network,
-
-          pool:
-            poolId,
+          pool: poolId,
 
           name:
             `${tokenA} / ${tokenB}`,
 
           tokenA,
-
           tokenB,
 
           tokenAAddress:
@@ -685,46 +845,42 @@ export default async function handler(req, res) {
             ),
 
           volume1h,
-
           volume24h,
-
           liquidity,
 
           marketCap,
-
           fdv,
 
           displayValue,
-
           valueType,
 
           change1h,
-
           change24h,
 
           buys24h,
-
           sells24h,
-
           transactions24h,
 
           createdAt,
-
           ageDays,
 
-          revival:
-            revival.revival,
-
-          revivalScore:
-            revival.score,
-
-          revivalStatus:
-            revival.status,
+          revival: false,
+          revivalScore: 0,
+          revivalStatus: "Normal",
 
           buyPressure:
             Number(
-              revival.buyPressure || 0
+              current.buyPressure || 0
             ),
+
+          currentCandidate:
+            current.candidate,
+
+          currentScore:
+            current.score,
+
+          acceleration:
+            current.acceleration,
 
           source:
             "GeckoTerminal"
@@ -734,7 +890,7 @@ export default async function handler(req, res) {
 
     /*
       ============================================================
-      SORT BY 24H VOLUME
+      SORT MAIN MARKETS
       ============================================================
     */
 
@@ -743,6 +899,122 @@ export default async function handler(req, res) {
         Number(b.volume24h || 0) -
         Number(a.volume24h || 0)
     );
+
+    /*
+      ============================================================
+      HISTORICAL REVIVAL ANALYSIS
+      ============================================================
+
+      Only analyse candidates.
+
+      Maximum 100 candidates to avoid
+      excessive API requests.
+    */
+
+    const candidates =
+      markets
+        .filter(
+          market =>
+            market.ageDays >= 30 &&
+            market.currentCandidate === true
+        )
+        .sort(
+          (a, b) =>
+            Number(b.currentScore || 0) -
+            Number(a.currentScore || 0)
+        )
+        .slice(0, 100);
+
+    /*
+      Process historical requests in small
+      batches.
+    */
+
+    const batchSize = 10;
+
+    for (
+      let start = 0;
+      start < candidates.length;
+      start += batchSize
+    ) {
+      const batch =
+        candidates.slice(
+          start,
+          start + batchSize
+        );
+
+      await Promise.all(
+        batch.map(
+          async market => {
+            const candles =
+              await getHourlyCandles(
+                market.network,
+                market.pool
+              );
+
+            const historical =
+              detectHistoricalRevival(
+                candles
+              );
+
+            /*
+              Historical confirmation.
+
+              Need:
+              - historical dip
+              - base
+              - recovery
+              - bullish candle
+            */
+
+            if (
+              historical.historical
+            ) {
+              market.revival = true;
+
+              market.revivalStatus =
+                "Buying Started";
+
+              market.revivalScore =
+                Math.min(
+                  100,
+                  Number(
+                    market.currentScore || 0
+                  ) +
+                  Number(
+                    historical.score || 0
+                  )
+                );
+
+              market.historicalDip =
+                historical.dip;
+
+              market.historicalBase =
+                historical.base;
+
+              market.historicalRecovery =
+                historical.recovery;
+
+              market.historicalBullish =
+                historical.bullishCandle;
+
+              market.historicalVolume =
+                historical.volumeConfirmed;
+
+              market.recoveryPercent =
+                Number(
+                  historical.recoveryPercent || 0
+                );
+
+              market.volumeReturn =
+                Number(
+                  historical.volumeReturn || 0
+                );
+            }
+          }
+        )
+      );
+    }
 
     /*
       ============================================================
@@ -775,12 +1047,6 @@ export default async function handler(req, res) {
       "Content-Type",
       "application/json"
     );
-
-    /*
-      ============================================================
-      RESPONSE
-      ============================================================
-    */
 
     return res
       .status(200)
