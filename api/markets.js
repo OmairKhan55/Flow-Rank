@@ -153,102 +153,93 @@ export default async function handler(req, res) {
     */
 
     function calculateRevival(data) {
-      const volume1h =
-        Number(data.volume1h || 0);
+  const volume1h = Number(data.volume1h || 0);
+  const volume24h = Number(data.volume24h || 0);
+  const buys = Number(data.buys || 0);
+  const sells = Number(data.sells || 0);
+  const change1h = Number(data.change1h || 0);
+  const ageDays = Number(data.ageDays || 0);
 
-      const volume24h =
-        Number(data.volume24h || 0);
+  if (
+    ageDays < 30 ||
+    volume1h <= 0 ||
+    volume24h <= 0
+  ) {
+    return {
+      score: 0,
+      status: "Normal",
+      revival: false,
+      buyPressure: 0
+    };
+  }
 
-      const buys =
-        Number(data.buys || 0);
+  const hourlyAverage = volume24h / 24;
 
-      const sells =
-        Number(data.sells || 0);
+  const acceleration =
+    hourlyAverage > 0
+      ? volume1h / hourlyAverage
+      : 0;
 
-      const change1h =
-        Number(data.change1h || 0);
+  const totalTrades = buys + sells;
 
-      if (
-        volume1h <= 0 ||
-        volume24h <= 0
-      ) {
-        return {
-          score: 0,
-          status: "Normal",
-          revival: false,
-          buyPressure: 0
-        };
-      }
+  const buyPressure =
+    totalTrades > 0
+      ? buys / totalTrades
+      : 0;
 
-      const hourlyAverage =
-        volume24h / 24;
+  let score = 0;
 
-      const acceleration =
-        hourlyAverage > 0
-          ? volume1h / hourlyAverage
-          : 0;
+  if (acceleration >= 4) {
+    score += 40;
+  } else if (acceleration >= 3) {
+    score += 30;
+  } else if (acceleration >= 2) {
+    score += 20;
+  } else {
+    return {
+      score: 0,
+      status: "Normal",
+      revival: false,
+      buyPressure
+    };
+  }
 
-      const totalTrades =
-        buys + sells;
+  if (buyPressure >= 0.65) {
+    score += 35;
+  } else if (buyPressure >= 0.60) {
+    score += 30;
+  } else if (buyPressure >= 0.55) {
+    score += 20;
+  } else {
+    return {
+      score: 0,
+      status: "Normal",
+      revival: false,
+      buyPressure
+    };
+  }
 
-      const buyPressure =
-        totalTrades > 0
-          ? buys / totalTrades
-          : 0;
+  if (change1h >= 10) {
+    score += 25;
+  } else if (change1h >= 5) {
+    score += 20;
+  } else if (change1h >= 3) {
+    score += 15;
+  } else {
+    return {
+      score: 0,
+      status: "Normal",
+      revival: false,
+      buyPressure
+    };
+  }
 
-      let score = 0;
-
-      if (acceleration >= 3) {
-        score += 40;
-      } else if (acceleration >= 2) {
-        score += 30;
-      } else if (acceleration >= 1.5) {
-        score += 20;
-      } else if (acceleration >= 1.2) {
-        score += 10;
-      }
-
-      if (buyPressure >= 0.65) {
-        score += 35;
-      } else if (buyPressure >= 0.60) {
-        score += 30;
-      } else if (buyPressure >= 0.55) {
-        score += 20;
-      } else if (buyPressure >= 0.52) {
-        score += 10;
-      }
-
-      if (change1h >= 10) {
-        score += 25;
-      } else if (change1h >= 5) {
-        score += 20;
-      } else if (change1h >= 2) {
-        score += 10;
-      } else if (change1h > 0) {
-        score += 5;
-      }
-
-      let status = "Normal";
-
-      if (
-        acceleration >= 1.2 &&
-        buyPressure >= 0.55 &&
-        change1h >= 0
-      ) {
-        status = "Buying Started";
-      } else if (
-        acceleration >= 1.5 &&
-        buyPressure >= 0.50
-      ) {
-        status = "Reviving";
-      }
-
-      return {
-        score,
-        status,
-        revival: status !== "Normal",
-        buyPressure
-      };
+  return {
+    score,
+    status: "Buying Started",
+    revival: true,
+    buyPressure
+  };
     }
 
     /*
@@ -646,24 +637,28 @@ export default async function handler(req, res) {
           ========================================================
         */
 
-        const revival =
-          calculateRevival({
-            volume1h,
-            volume24h,
-            buys: buys24h,
-            sells: sells24h,
-            change1h
-          });
-
-        /*
-          ========================================================
-          POOL CREATED TIME
-          ========================================================
-        */
-
         const createdAt =
-          attributes.pool_created_at ||
-          null;
+  attributes.pool_created_at ||
+  null;
+
+const ageDays =
+  createdAt
+    ? Math.floor(
+        (Date.now() - new Date(createdAt).getTime()) /
+        86400000
+      )
+    : 0;
+
+const revival =
+  calculateRevival({
+    volume1h,
+    volume24h,
+    buys: buys24h,
+    sells: sells24h,
+    change1h,
+    ageDays
+  });
+
 
         /*
           ========================================================
