@@ -1,44 +1,21 @@
 export default async function handler(req, res) {
   try {
     if (req.method && req.method !== "GET") {
-      return res.status(405).json({
-        error: "Method not allowed"
-      });
+      return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const rawPool = String(
-      req.query?.pool || ""
-    ).trim();
-
-    const suppliedNetwork = String(
-      req.query?.network || ""
-    ).trim();
+    const rawPool = String(req.query?.pool || "").trim();
+    const suppliedNetwork = String(req.query?.network || "").trim();
 
     const timeframe = String(
       req.query?.timeframe ||
       req.query?.range ||
       "24h"
-    )
-      .trim()
-      .toLowerCase();
+    ).trim().toLowerCase();
 
     if (!rawPool) {
-      return res.status(400).json({
-        error: "Missing pool"
-      });
+      return res.status(400).json({ error: "Missing pool" });
     }
-
-    /*
-      Pool can be:
-
-      solana_POOL_ADDRESS
-      eth_0xPOOL_ADDRESS
-      base_0xPOOL_ADDRESS
-
-      Or:
-
-      ?network=solana&pool=POOL_ADDRESS
-    */
 
     let network = suppliedNetwork;
     let poolAddress = rawPool;
@@ -47,34 +24,24 @@ export default async function handler(req, res) {
       const separator = rawPool.indexOf("_");
 
       if (separator > 0) {
-        network = rawPool
-          .slice(0, separator)
-          .trim();
-
-        poolAddress = rawPool
-          .slice(separator + 1)
-          .trim();
+        network = rawPool.slice(0, separator).trim();
+        poolAddress = rawPool.slice(separator + 1).trim();
       }
     }
 
     if (!network || !poolAddress) {
-      return res.status(400).json({
-        error: "Invalid pool"
-      });
+      return res.status(400).json({ error: "Invalid pool" });
     }
 
     const BASE =
       "https://api.geckoterminal.com/api/v2";
 
     const headers = {
-      Accept:
-        "application/json;version=20230203"
+      Accept: "application/json;version=20230203"
     };
 
     /*
-      --------------------------------------------------
       TIMEFRAME
-      --------------------------------------------------
     */
 
     let endpoint = "ohlcv/hour";
@@ -109,34 +76,26 @@ export default async function handler(req, res) {
     }
 
     /*
-      --------------------------------------------------
       OHLCV REQUEST
-      --------------------------------------------------
     */
 
-    async function requestOHLCV(extraQuery = "") {
+    async function getOHLCV(extra = "") {
       const url =
-        `${BASE}/networks/` +
-        `${encodeURIComponent(network)}` +
-        `/pools/` +
-        `${encodeURIComponent(poolAddress)}/` +
-        `${endpoint}` +
+        `${BASE}/networks/${encodeURIComponent(network)}` +
+        `/pools/${encodeURIComponent(poolAddress)}` +
+        `/${endpoint}` +
         `?aggregate=${aggregate}` +
         `&limit=${limit}` +
-        `&currency=usd` +
-        extraQuery;
+        `&currency=usd${extra}`;
 
       try {
-        const response = await fetch(
-          url,
-          {
-            headers
-          }
-        );
+        const response = await fetch(url, {
+          headers
+        });
 
         if (!response.ok) {
           console.log(
-            "FlowRank OHLCV:",
+            "History OHLCV error:",
             response.status,
             network,
             poolAddress
@@ -145,19 +104,16 @@ export default async function handler(req, res) {
           return [];
         }
 
-        const json =
-          await response.json();
+        const json = await response.json();
 
         const list =
           json?.data?.attributes?.ohlcv_list;
 
-        return Array.isArray(list)
-          ? list
-          : [];
+        return Array.isArray(list) ? list : [];
 
       } catch (error) {
         console.log(
-          "FlowRank OHLCV request failed:",
+          "History OHLCV request failed:",
           error?.message || error
         );
 
@@ -166,72 +122,41 @@ export default async function handler(req, res) {
     }
 
     /*
-      First try the normal GeckoTerminal
-      OHLCV endpoint.
+      Try normal OHLCV first.
     */
 
-    let list =
-      await requestOHLCV("");
+    let list = await getOHLCV("");
 
     /*
-      Some pools need explicit base-token
-      pricing.
+      Try base token.
     */
 
     if (!list.length) {
-      list =
-        await requestOHLCV(
-          "&token=base"
-        );
+      list = await getOHLCV("&token=base");
     }
 
     /*
-      Some pools expose quote-token history.
+      Try quote token.
     */
 
     if (!list.length) {
-      list =
-        await requestOHLCV(
-          "&token=quote"
-        );
+      list = await getOHLCV("&token=quote");
     }
 
     /*
-      --------------------------------------------------
-      CONVERT OHLCV
-      --------------------------------------------------
+      Convert OHLCV.
     */
 
-    function convertOHLCV(rows) {
+    function convertRows(rows) {
       return rows
         .map(row => ({
-          time: Number(
-            row?.[0] || 0
-          ),
-
-          timestamp: Number(
-            row?.[0] || 0
-          ),
-
-          open: Number(
-            row?.[1] || 0
-          ),
-
-          high: Number(
-            row?.[2] || 0
-          ),
-
-          low: Number(
-            row?.[3] || 0
-          ),
-
-          close: Number(
-            row?.[4] || 0
-          ),
-
-          volume: Number(
-            row?.[5] || 0
-          )
+          time: Number(row?.[0] || 0),
+          timestamp: Number(row?.[0] || 0),
+          open: Number(row?.[1] || 0),
+          high: Number(row?.[2] || 0),
+          low: Number(row?.[3] || 0),
+          close: Number(row?.[4] || 0),
+          volume: Number(row?.[5] || 0)
         }))
         .filter(point =>
           point.timestamp > 0 &&
@@ -248,149 +173,142 @@ export default async function handler(req, res) {
         );
     }
 
-    let points =
-      convertOHLCV(list);
+    let points = convertRows(list);
 
     /*
-      --------------------------------------------------
-      FALLBACK:
-      BUILD CANDLES FROM RECENT TRADES
-      --------------------------------------------------
-
-      If GeckoTerminal OHLCV is empty,
-      use the pool's trade feed and aggregate
-      trades into candles.
+      ==================================================
+      FALLBACK
+      BUILD CANDLES FROM GECKOTERMINAL TRADES
+      ==================================================
     */
 
     if (!points.length) {
 
-      async function getTrades() {
-        const url =
-          `${BASE}/networks/` +
-          `${encodeURIComponent(network)}` +
-          `/pools/` +
-          `${encodeURIComponent(poolAddress)}` +
-          `/trades?limit=300`;
+      const tradesUrl =
+        `${BASE}/networks/${encodeURIComponent(network)}` +
+        `/pools/${encodeURIComponent(poolAddress)}` +
+        `/trades?page=1`;
 
-        try {
-          const response =
-            await fetch(
-              url,
-              {
-                headers
-              }
-            );
+      let trades = [];
 
-          if (!response.ok) {
-            console.log(
-              "FlowRank trades fallback:",
-              response.status,
-              network,
-              poolAddress
-            );
-
-            return [];
+      try {
+        const response = await fetch(
+          tradesUrl,
+          {
+            headers
           }
+        );
 
-          const json =
-            await response.json();
+        if (response.ok) {
+          const json = await response.json();
 
-          return Array.isArray(
-            json?.data
-          )
+          trades = Array.isArray(json?.data)
             ? json.data
             : [];
-
-        } catch (error) {
-          console.log(
-            "FlowRank trades fallback failed:",
-            error?.message || error
-          );
-
-          return [];
         }
+
+      } catch (error) {
+        console.log(
+          "History trades fallback failed:",
+          error?.message || error
+        );
       }
 
-      const trades =
-        await getTrades();
-
       /*
-        Convert GeckoTerminal trades
-        into simple price points.
+        Convert trades to price points.
       */
 
-      const tradePoints =
-        trades
-          .map(item => {
+      const tradePoints = trades
+        .map(item => {
+          const a = item?.attributes || {};
 
-            const a =
-              item?.attributes || {};
+          const rawTimestamp =
+            a.block_timestamp ||
+            a.blockTimestamp ||
+            "";
 
-            const timestamp =
-              Date.parse(
-                a.block_timestamp ||
-                a.blockTimestamp ||
-                ""
-              );
+          let timestamp = 0;
 
-            let price =
+          if (
+            typeof rawTimestamp === "number"
+          ) {
+            timestamp =
+              rawTimestamp > 100000000000
+                ? Math.floor(rawTimestamp / 1000)
+                : rawTimestamp;
+          } else {
+            const parsed =
+              Date.parse(String(rawTimestamp));
+
+            if (Number.isFinite(parsed)) {
+              timestamp =
+                Math.floor(parsed / 1000);
+            }
+          }
+
+          /*
+            GeckoTerminal trade price fields.
+          */
+
+          let price =
+            Number(
+              a.price_to_in_usd || 0
+            );
+
+          if (
+            !Number.isFinite(price) ||
+            price <= 0
+          ) {
+            price =
               Number(
                 a.price_from_in_usd || 0
               );
+          }
 
-            if (
-              !Number.isFinite(price) ||
-              price <= 0
-            ) {
-              price =
-                Number(
-                  a.price_to_in_usd || 0
-                );
-            }
-
-            if (
-              !Number.isFinite(price) ||
-              price <= 0
-            ) {
-              price =
-                Number(
-                  a.base_token_price_usd || 0
-                );
-            }
-
-            const volume =
+          if (
+            !Number.isFinite(price) ||
+            price <= 0
+          ) {
+            price =
               Number(
-                a.volume_in_usd || 0
+                a.price_usd || 0
               );
+          }
 
-            return {
-              timestamp:
-                Number.isFinite(timestamp)
-                  ? Math.floor(
-                      timestamp / 1000
-                    )
-                  : 0,
+          /*
+            Trade volume.
+          */
 
-              price,
+          let volume =
+            Number(
+              a.volume_in_usd || 0
+            );
 
-              volume:
-                Number.isFinite(volume)
-                  ? volume
-                  : 0
-            };
-          })
-          .filter(x =>
-            x.timestamp > 0 &&
-            Number.isFinite(x.price) &&
-            x.price > 0
-          )
-          .sort(
-            (a, b) =>
-              a.timestamp - b.timestamp
-          );
+          if (
+            !Number.isFinite(volume)
+          ) {
+            volume = 0;
+          }
+
+          return {
+            timestamp,
+            price,
+            volume
+          };
+        })
+        .filter(x =>
+          x.timestamp > 0 &&
+          Number.isFinite(x.price) &&
+          x.price > 0
+        )
+        .sort(
+          (a, b) =>
+            a.timestamp - b.timestamp
+        );
 
       /*
-        Nothing available at all.
+        If there are no usable trade prices,
+        return empty array.
       */
 
       if (!tradePoints.length) {
@@ -399,37 +317,29 @@ export default async function handler(req, res) {
           "s-maxage=30, stale-while-revalidate=120"
         );
 
-        return res
-          .status(200)
-          .json([]);
+        return res.status(200).json([]);
       }
 
       /*
         Candle size.
       */
 
-      let candleSeconds =
-        60 * 60;
+      let candleSeconds = 3600;
 
       if (timeframe === "1h") {
-        candleSeconds =
-          5 * 60;
+        candleSeconds = 60;
       }
 
       else if (timeframe === "4h") {
-        candleSeconds =
-          5 * 60;
+        candleSeconds = 300;
       }
 
-      else if (
-        timeframe === "7d"
-      ) {
-        candleSeconds =
-          4 * 60 * 60;
+      else if (timeframe === "7d") {
+        candleSeconds = 14400;
       }
 
       /*
-        Group trades into candles.
+        Build candles.
       */
 
       const candles = new Map();
@@ -444,20 +354,19 @@ export default async function handler(req, res) {
           candleSeconds;
 
         if (!candles.has(bucket)) {
-          candles.set(
-            bucket,
-            {
-              timestamp: bucket,
-              open: trade.price,
-              high: trade.price,
-              low: trade.price,
-              close: trade.price,
-              volume: trade.volume
-            }
-          );
-        }
 
-        else {
+          candles.set(bucket, {
+            time: bucket,
+            timestamp: bucket,
+            open: trade.price,
+            high: trade.price,
+            low: trade.price,
+            close: trade.price,
+            volume: trade.volume
+          });
+
+        } else {
+
           const candle =
             candles.get(bucket);
 
@@ -482,69 +391,39 @@ export default async function handler(req, res) {
       }
 
       points =
-        Array.from(
-          candles.values()
-        )
+        Array.from(candles.values())
           .sort(
             (a, b) =>
               a.timestamp -
               b.timestamp
-          )
-          .map(candle => ({
-            time:
-              candle.timestamp,
-
-            timestamp:
-              candle.timestamp,
-
-            open:
-              candle.open,
-
-            high:
-              candle.high,
-
-            low:
-              candle.low,
-
-            close:
-              candle.close,
-
-            volume:
-              candle.volume
-          }));
+          );
 
       /*
-        Keep the chart from becoming too large.
+        Limit candles.
       */
 
       if (timeframe === "1h") {
-        points =
-          points.slice(-60);
+        points = points.slice(-60);
       }
 
       else if (timeframe === "4h") {
-        points =
-          points.slice(-48);
+        points = points.slice(-48);
       }
 
       else if (
         timeframe === "24h" ||
         timeframe === "1d"
       ) {
-        points =
-          points.slice(-24);
+        points = points.slice(-24);
       }
 
       else if (timeframe === "7d") {
-        points =
-          points.slice(-42);
+        points = points.slice(-42);
       }
     }
 
     /*
-      --------------------------------------------------
-      FINAL RESPONSE
-      --------------------------------------------------
+      RESPONSE
     */
 
     res.setHeader(
@@ -572,4 +451,4 @@ export default async function handler(req, res) {
       .status(200)
       .json([]);
   }
-  }
+}
